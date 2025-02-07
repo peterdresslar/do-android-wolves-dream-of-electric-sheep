@@ -1,4 +1,4 @@
-### do-android-wolves-dream-of-electric-sheep
+### Do Android Wolves Dream of Electric Sheep?
 
 An investigation of agent-based modeling, LLM interactions, and the representation of time.
 
@@ -76,7 +76,5 @@ Below is our rough roadmap:
 ## Getting Started
 
 - **Run the Notebook**: Clone this repo and open `notebooks/agent-wolf.ipynb`.  
-- **Check Out**: `agents.py` and `domain.py` for how sheep and wolves are defined.  
-- **Explore**: Our “Subliminal Wolf” notebook for the idea behind the `theta` parameter and `agent_factor`.
+- WIP! Work In Progress!
 
-We hope this project provides a fun demonstration of both agent-based modeling and integrating AI into a predator-prey scenario. Stay tuned as we add more features and climb through the levels of complexity!
