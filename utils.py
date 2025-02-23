@@ -45,8 +45,9 @@ def build_prompt_high_information(
 ) -> str:
     """
     Build the prompt text to send to the LLM, providing more details
-    about the predator-prey model and the role of 'theta'.
-    
+    about the predator-prey model (Lotka-Volterra) plus new concepts
+    like 'crowding' or 'fighting' among wolves.
+
     Parameters:
     -----------
     s : float
@@ -60,7 +61,7 @@ def build_prompt_high_information(
     s_max : float
         The maximum capacity (or upper bound) for sheep.
     alpha, beta, gamma, delta : float, optional
-        Model parameters if you'd like to pass them in. 
+        Model parameters if you'd like to pass them in.
         By default None, in case you don't want to show them to the LLM.
     extra_hints : bool
         If True, the LLM will be given extra hints about the model.
@@ -72,13 +73,13 @@ def build_prompt_high_information(
     Returns:
     --------
     prompt : str
-        A text prompt describing the current system state and 
-        requesting a new theta.
+        A text prompt that describes the system state, along with
+        new conceptual details about crowding/fighting, requesting
+        a new theta to balance classic LV behavior and new constraints.
     """
-
-    # Base info about the current state
     prompt = [
-        "You are controlling the parameter 'theta' in a predator-prey model.",
+        "You are controlling the parameter 'theta' in a modified Lotka-Volterra model.",
+        "Wolves can exhibit 'fighting' or 'crowding' behavior, which adds new dynamics:",
         "",
         "Current system state:",
         f"- Time step: {step}",
@@ -88,7 +89,7 @@ def build_prompt_high_information(
         f"- Maximum sheep capacity (s_max): {s_max:.2f}",
     ]
 
-    # Optionally show the user these Lotka-Volterra parameters
+    # Optionally show LV parameters
     if alpha is not None:
         prompt.append(f"- alpha (sheep growth rate): {alpha}")
     if beta is not None:
@@ -100,101 +101,93 @@ def build_prompt_high_information(
 
     prompt.append("")
 
-    # Explanation of theta and the model goals
+    # Explanation of theta, crowding/fighting, and the model's objectives
     if extra_hints:
-        prompt.append("Parameter 'theta' modifies how aggressively wolves hunt scarce sheep.")
-        prompt.append("If theta = 1.0, wolves hunt at full intensity.")
-        prompt.append("If theta = 0.0, wolves drastically reduce hunting when sheep are scarce.")
+        prompt.append(
+            "Parameter 'theta' modifies how aggressively wolves hunt when sheep are scarce. "
+            "Additionally, crowding or fighting among wolves can reduce their effective hunting "
+            "or reproduction rate if too many wolves occupy the same region. "
+            "If theta = 1.0, wolves hunt at full intensity, but risk over-hunting or intensifying "
+            "crowding. If theta = 0.0, wolves drastically reduce hunting when sheep are scarce "
+            "and might mitigate fighting by dispersing more."
+        )
     else:
         prompt.append(
-            "In this model, 'theta' adjusts how aggressively wolves hunt when sheep are scarce.\n"
-            "When sheep are abundant, wolves behave similarly to standard Lotka-Volterra.\n"
-            "When sheep become scarce, a lower theta makes wolves back off to avoid over-hunting.\n"
+            "In this model, 'theta' adjusts how aggressively wolves hunt when sheep are scarce. "
+            "We also consider potential crowding (intra-species competition) among wolves. "
             "Thus, theta ranges from 0.0 (very cautious) to 1.0 (fully aggressive)."
         )
 
     prompt.append("")
     prompt.append("Your main objectives:")
-    prompt.append("1. Prevent wolves (w) from going extinct (avoid w = 0).")
-    prompt.append("2. Maximize the wolf population over time.")
+    prompt.append("1. Prevent the wolves (w) from going extinct (avoid w = 0).")
+    prompt.append("2. Maximize the wolf population over time while maintaining enough sheep.")
+    prompt.append("3. Consider that high wolf density can lead to crowding/fighting, harming growth.")
 
     if give_explanation and give_vocalization:
         prompt.append("Please provide a short explanation of your reasoning for choosing theta.")
-        prompt.append("Please also provide a short vocalization of your mood.")
-    
-    prompt.append("Please respond with a JSON object in this exact format:")
-    prompt.append("""
+        prompt.append("Please also provide a short vocalization expressing the wolf pack's mood.")
+
+    prompt.append("Please respond with a JSON object in this format:")
+    prompt.append(
+        """
 {
     "theta": 0.5,  // float between 0 and 1
     "explanation": "I chose this theta because...",
     "vocalization": "Howl! The sheep are..."
 }
-    """)
+        """
+    )
 
-    # Combine into one string
     return "\n".join(prompt)
 
 def build_prompt_low_information(
-    s,
-    w,
-    delta_s,
-    delta_w,
-    old_aggression,
-    step,
-    give_explanation=False,
-    give_vocalization=False
+    s: float,
+    w: float,
+    delta_s: float,
+    delta_w: float,
+    old_aggression: float,
+    step: int,
+    give_explanation: bool = False,
+    give_vocalization: bool = False
 ) -> str:
     """
-    Build a more 'roleplay' style prompt for the LLM to decide on a hunting aggressiveness 
-    level (similar to 'theta') between 0 and 1.
-
-    Parameters:
-    -----------
-    s : float
-        Current number of sheep.
-    w : float
-        Current number of wolves.
-    delta_s : float
-        Net change in the sheep population since the last step (s_now - s_previous).
-    delta_w : float
-        Net change in the wolf population since the last step (w_now - w_previous).
-    old_aggression : float
-        The previous time step's aggressiveness level [0,1].
-    step : int
-        Current simulation step.
-
-    Returns:
-    --------
-    prompt : str
-        A textual prompt describing the scenario from a wolf's perspective, 
-        requesting a new aggressiveness value in [0,1].
+    A more 'roleplay' style prompt focusing on the wolf's internal perspective.
+    You can optionally mention crowding/fighting in a simpler way, without
+    as much numeric detail as the high-information prompt.
     """
-
-    # Summarize how the sheep/wolf counts have changed
     sheep_trend = "increased" if delta_s > 0 else "decreased" if delta_s < 0 else "stayed the same"
     wolves_trend = "increased" if delta_w > 0 else "decreased" if delta_w < 0 else "stayed the same"
 
     prompt_lines = [
-        "You are the alpha wolf leading a pack on the plains. You rely on sheep for food, but you must be careful:",
-        "if you hunt too aggressively, the sheep might all die out, leaving you and your pack to starve.",
-        "On the other hand, if you don't hunt enough, your pack might not grow and could weaken over time.",
+        "You are the alpha wolf leading your pack. You must decide a new hunting aggressiveness.",
+        "However, if your pack is too large or hunts too aggressively, crowding/fighting may occur.",
         "",
         f"Step {step} - Current situation:",
         f"- Sheep count: {s:.2f} (it has {sheep_trend} by {abs(delta_s):.2f} since last time)",
-        f"- Wolf pack size: {w:.2f} (it has {wolves_trend} by {abs(delta_w):.2f} since last time)",
-        f"- Last time, you chose an aggressiveness level of: {old_aggression:.2f}",
+        f"- Wolf count: {w:.2f} (it has {wolves_trend} by {abs(delta_w):.2f} since last time)",
+        f"- Last aggressiveness: {old_aggression:.2f}",
         "",
-        "Now, choose a NEW 'aggressiveness' level between 0 and 1.",
-        " - 0 means you'll hunt very cautiously (risking fewer resources for your pack).",
-        " - 1 means you'll hunt as aggressively as possible (risking sheep collapse).",
+        "Set a NEW 'aggressiveness' (0 to 1). If you go too high, the sheep might die out or your wolves "
+        "could get into fights; too low, and you might miss vital food opportunities. Balance carefully.",
         "",
-        "Your goals are:",
-        "1. Ensure your wolf pack does not go extinct (avoid zero wolves).",
-        "2. Keep enough sheep alive so your pack can grow strong.",
-        "",
-        "Please respond with a single decimal in [0,1], and no extra explanation."
+        "1. Keep your wolf pack alive long-term.",
+        "2. Avoid over-hunting the sheep population.",
+        "3. Mitigate wolf crowding or fighting.",
+        ""
     ]
 
+    if give_explanation and give_vocalization:
+        prompt_lines.append(
+            "Please provide a short explanation of your final choice, as well as a quick vocalization."
+        )
+        response_format = (
+            'Please respond with a JSON object: {"theta": 0.5, "explanation": "...", "vocalization": "..."}'
+        )
+    else:
+        response_format = "Please respond with a single decimal in [0,1], and no extra explanation."
+
+    prompt_lines.append(response_format)
     return "\n".join(prompt_lines)
 
 def call_llm(
