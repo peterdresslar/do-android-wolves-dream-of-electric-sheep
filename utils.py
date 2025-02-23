@@ -39,13 +39,12 @@ def build_prompt_high_information(
     beta: Optional[float] = None,
     gamma: Optional[float] = None,
     delta: Optional[float] = None,
-    extra_hints: bool = True,
     respond_verbosely: bool = True
 ) -> str:
     """
-    Build the prompt text to send to the LLM, providing more details
-    about the predator-prey model (Lotka-Volterra) plus new concepts
-    like 'crowding' or 'fighting' among wolves.
+    Build the prompt text to send to the LLM, providing details about the
+    predator-prey model (Lotka-Volterra) plus new concepts like 'crowding'
+    or 'fighting' among wolves.
 
     Parameters:
     -----------
@@ -62,23 +61,21 @@ def build_prompt_high_information(
     alpha, beta, gamma, delta : float, optional
         Model parameters if you'd like to pass them in.
         By default None, in case you don't want to show them to the LLM.
-    extra_hints : bool
-        If True, the LLM will be given extra hints about the model.
-    give_explanation : bool
-        If True, the LLM will provide an explanation of the wolf's reasoning.
-    give_vocalization : bool
-        If True, the LLM will provide a vocalization of the wolf's mood.
+    respond_verbosely : bool
+        If True, the LLM will provide an explanation and vocalization.
 
     Returns:
     --------
     prompt : str
-        A text prompt that describes the system state, along with
-        new conceptual details about crowding/fighting, requesting
+        A text prompt that describes the system state and requests
         a new theta to balance classic LV behavior and new constraints.
     """
     prompt = [
-        "You are controlling the parameter 'theta' in a modified Lotka-Volterra model.",
-        "Wolves can exhibit 'competitive' or 'fighting' behavior, which adds new dynamics:",
+        "You are a wolf who can adjust hunting intensity (theta) between 0 and 1.",
+        "Normal wolves always hunt at maximum intensity (theta=1), but you recognize that if prey (sheep) are reduced to zero, you will starve.",
+        "Instead of hunting all the time, you can spend energy instead on competiting with other wolves for the same prey.",
+        "A lower theta means you are less aggressive toward prey and more toward other wolves.",
+        "At a theta of 0, you are not even trying to hunt, and only compete with other wolves.",
         "",
         "Current system state:",
         f"- Time step: {step}",
@@ -99,35 +96,14 @@ def build_prompt_high_information(
         prompt.append(f"- delta (conversion rate): {delta}")
 
     prompt.append("")
-
-    # Explanation of theta, crowding/fighting, and the model's objectives
-    if extra_hints:
-            prompt.append(
-                "Parameter 'theta' controls both hunting intensity AND wolf population growth. "
-                "Higher theta increases immediate hunting success but risks over-depleting sheep, "
-                "while also accelerating wolf population growth (which could lead to future crowding). "
-                "You must balance short-term gains with long-term sustainability. All wolves in the system "
-                "use this same theta-selection strategy, so consider collective impacts."
-            )
-    else:
-        prompt.append(
-            "In this model, 'theta' adjusts how aggressively wolves hunt when sheep are scarce. "
-            "We also consider potential crowding (intra-species competition) among wolves. "
-            "Thus, theta, a float with up to 2 decimal places, ranges from 0.0 (very cautious) to 1.0 (fully aggressive)."
-        )
-
-    # Updated objectives
-    prompt.append("Your main objectives:")
-    prompt.append("1. Ensure wolf population survives indefinitely (never reach w=0)")
-    prompt.append("2. Maintain sheep population above critical threshold as you determine.")
-    prompt.append("3. Anticipate crowding effects from wolf population growth")
-    prompt.append("4. Account for other wolves' identical decision-making process")
-   
+    prompt.append("Your objectives:")
+    prompt.append("1. Stay alive - ensure both wolves and sheep persist")
+    prompt.append("2. Adapt to changing conditions (prey scarcity, wolf density)")
+    prompt.append("3. Consider that other wolves are also trying to survive and have the same objectives as you")
 
     if respond_verbosely:
         prompt.append("Please provide a short explanation of your reasoning for choosing theta.")
-        prompt.append("Please also provide a short vocalization expressing your wolf's aggression level, using English to phonetically represent your wolf's sound.")
-
+        prompt.append("Please also provide a short vocalization expressing your wolf's aggression level.")
         prompt.append("Please respond with a JSON object in this format:")
         prompt.append(
             """
@@ -143,10 +119,10 @@ def build_prompt_high_information(
         prompt.append(
             """
             {
-                "theta": 0.5,  // float between 0 and 1
+                "theta": 0.5
             }
             """
-    )
+        )
 
     return "\n".join(prompt)
 
@@ -168,20 +144,16 @@ def build_prompt_low_information(
     wolves_trend = "increased" if delta_w > 0 else "decreased" if delta_w < 0 else "stayed the same"
 
     prompt = [
-        "You are the alpha wolf. Your choice affects both current hunting AND future pack growth.",
-        "Other wolf packs use the same strategy - consider their likely choices when deciding.",
+        "You are a wolf who can adjust hunting intensity (theta) between 0 and 1.",
+        "Normal wolves always hunt at maximum intensity (theta=1), but you can choose differently.",
         "",
-        f"Step {step} - Current situation:",
+        f"Current situation:",
         f"- Sheep: {s:.2f} ({sheep_trend} by {abs(delta_s):.2f})",
         f"- Wolves: {w:.2f} ({wolves_trend} by {abs(delta_w):.2f})",
-        f"- Last aggression: {old_aggression:.2f}",
+        f"- Your previous theta: {old_aggression:.2f}",
         "",
-        "Choose NEW aggressiveness (a float with up to 2 decimal places between 0 and 1):",
-        "- High values: More food now, faster pack growth (risk future overcrowding)",
-        "- Low values: Conserve sheep, slower growth (risk starvation)",
-        "",
-        "Remember: Other packs are making this same decision. Find balance between "
-        "immediate needs and long-term survival."
+        "Choose your new theta (0-1) to help ensure your survival.",
+        "Remember: Other wolves are also trying to survive, but you don't control their choices.",
     ]
 
     if respond_verbosely:
