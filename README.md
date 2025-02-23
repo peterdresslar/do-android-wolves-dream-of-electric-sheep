@@ -15,4 +15,4 @@ Below is our rough roadmap:
 | 5     | Compare LLM-driven strategy vs. a machine-learning optimizer for `theta`     | [ ]    |
 
 
-We also have a multiplexing factor, which is to consider models that work on a continuous chat basis versus an individual basis (i.e., how much information do we supply to the wolves, and *when*?)
+We also have a multiplexing factor, which is to consider models that work on a continuous chat basis versus an individual basis (i.e., how much information do we supply to the wolves, and *when*?) To start, we simply bundle up instructions step by step.
