@@ -134,6 +134,7 @@ class Agents:
         self.wolves: list[Wolf] = []
         for i in range(n_wolves):
             self.wolves.append(Wolf(wolf_id=i, beta=beta, gamma=gamma, delta=delta))
+        self.opts = opts
 
     def get_all_thetas(self) -> list[list[float]]:
         return [wolf.thetas for wolf in self.wolves if wolf.alive]
@@ -172,8 +173,8 @@ class Agents:
         # Reset accumulators in the domain
         domain.reset_accumulators()
 
-        if self.opts["no_ai"]:
-            theta = params["theta"]
+        if self.opts.get("no_ai", False):
+            theta = params.get("theta", 0.5)  # Use theta_star from params
         else:
             theta = None
 
@@ -190,10 +191,10 @@ class Agents:
         for wolf in shuffled_wolves:
             if wolf.alive:
                 # First decide theta based on current state
-                if not self.opts["no_ai"]:
-                    wolf.decide_theta(s, living_wolves_count, s_max, step, False)
-                else:
+                if self.opts.get("no_ai", False):
                     wolf.decide_theta(s, living_wolves_count, s_max, step, False, theta)
+                else:
+                    wolf.decide_theta(s, living_wolves_count, s_max, step, False)
 
                 # Then update domain based on new theta
-                wolf.process_step_wolf(params, domain, step)
+                wolf.process_step(params, domain, step)
