@@ -11,4 +11,9 @@ class Domain:
         self.sheep_capacity = sheep_capacity
         self.starting_sheep = starting_sheep
         self.starting_wolves = starting_wolves
+        self.step_accumulated_ds = None
+        self.step_accumulated_dw = None
+        self.accumulated_dw_remainder = None
+        self.s_state = None
+
 
