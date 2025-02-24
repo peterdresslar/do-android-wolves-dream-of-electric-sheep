@@ -2,7 +2,7 @@
 
 import random
 from dataclasses import dataclass, field
-
+from typing import Any
 from .utils import get_wolf_response
 
 
@@ -37,9 +37,33 @@ class Wolf:
         s_max: float,
         step: int,
         respond_verbosely: bool = True,
+        theta: float | None = None,
     ) -> float:
+        """
+        Decide the theta for this wolf.
+        If AI is enabled, the theta is decided by the wolf.
+        If AI is disabled, the theta is passed in as a parameter.
+
+        Args:
+            s: float, current sheep population
+            w: float, current wolf population
+            s_max: float, maximum sheep capacity
+            step: int, current step
+            respond_verbosely: bool, whether to respond verbosely
+            theta: float | None, the theta to use if AI is disabled
+
+        Returns:
+            float, the theta for this wolf
+        """
         if not self.alive:
             return self.thetas[-1] if self.thetas else 1.0
+
+        # if a theta is provided we use that instead. we still need to append to the lists.
+        if theta is not None:
+            self.thetas.append(theta)
+            self.explanations.append(f"Using provided theta: {theta}")
+            self.vocalizations.append(f"Using provided theta: {theta}")
+            return theta
 
         wolf_resp = get_wolf_response(
             s=s,
@@ -56,16 +80,16 @@ class Wolf:
 
         return wolf_resp.theta
 
-    def process_step_wolf(self, params, state, step):
+    def process_step(self, params, domain, step):
         """
         Process a single step for this wolf, calculating its contribution to the
         population dynamics.
         """
         if not self.alive:
-            return state
+            return domain
 
         dt = params.get("dt", 0.02)
-        s = state.get("s_state", 0)
+        s = domain.s_state
 
         # Get the current theta (hunting intensity)
         current_theta = self.thetas[-1] if self.thetas else 1.0
@@ -85,15 +109,13 @@ class Wolf:
 
         # Scale by dt and add to accumulator
         added_dw = dw_dt * dt
-        state["step_accumulated_dw"] = state.get("step_accumulated_dw", 0) + added_dw
+        domain.step_accumulated_dw += added_dw
 
         # Calculate effect on sheep population (predation)
         ds_dt_one_w_only = -self.beta * current_theta * s
-        state["step_accumulated_ds"] = state.get("step_accumulated_ds", 0) + (
-            ds_dt_one_w_only * dt
-        )
+        domain.step_accumulated_ds += ds_dt_one_w_only * dt
 
-        return state
+        return domain
 
 
 class Agents:
@@ -103,6 +125,8 @@ class Agents:
         beta: float = 0.1,
         gamma: float = 1.5,
         delta: float = 0.75,
+        theta: float = 0.5,
+        opts: dict[str, Any] = field(default_factory=dict),
     ):
         self.beta = beta
         self.gamma = gamma
@@ -141,25 +165,35 @@ class Agents:
         for i in range(wolves_to_kill):
             living_wolves[-(i + 1)].handle_death(step)
 
-    def process_step(self, params, state, step) -> dict:
-        # Reset accumulators for this step
-        state["step_accumulated_dw"] = 0
-        state["step_accumulated_ds"] = 0
+    def process_step_sync(self, params, domain, step) -> None:
+        """
+        Process the step for all wolves, updating the domain directly.
+        """
+        # Reset accumulators in the domain
+        domain.reset_accumulators()
+
+        if self.opts["no_ai"]:
+            theta = params["theta"]
+        else:
+            theta = None
 
         # Get current state values needed for decisions
-        s = state.get("s_state", 0)
-        s_max = params.get("s_max", 100)
+        s = domain.s_state
+        s_max = domain.sheep_capacity
         living_wolves_count = sum(1 for wolf in self.wolves if wolf.alive)
 
-        # Process each wolf (decide theta and update state)
+        # Process each wolf (decide theta and update domain)
         # Shuffle the wolves to avoid any bias in the order of processing
-        random.shuffle(self.wolves)
-        for wolf in self.wolves:
+        shuffled_wolves = list(self.wolves)  # Create a copy to shuffle
+        random.shuffle(shuffled_wolves)
+
+        for wolf in shuffled_wolves:
             if wolf.alive:
                 # First decide theta based on current state
-                wolf.decide_theta(s, living_wolves_count, s_max, step)
+                if not self.opts["no_ai"]:
+                    wolf.decide_theta(s, living_wolves_count, s_max, step, False)
+                else:
+                    wolf.decide_theta(s, living_wolves_count, s_max, step, False, theta)
 
-                # Then update state based on new theta
-                state = wolf.process_step(params, state, step)
-
-        return state
+                # Then update domain based on new theta
+                wolf.process_step_wolf(params, domain, step)
