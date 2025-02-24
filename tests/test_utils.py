@@ -49,19 +49,24 @@ def test_parse_wolf_response():
     result = parse_wolf_response("invalid json", default=0.5)
     assert result.theta == 0.5
 
-@pytest.mark.asyncio
-@patch('utils.openai.ChatCompletion.create')
-async def test_call_llm(mock_create):
-    # Proper async test structure
-    mock_create.return_value = {
-        "choices": [{
-            "message": {"content": '{"theta": 0.5}'}
-        }]
-    }
+@patch('utils.openai.OpenAI')
+def test_call_llm(mock_openai_class):
+    # Create a mock client with the proper structure
+    mock_client = MagicMock()
+    mock_client.chat.completions.create.return_value = MagicMock(
+        choices=[
+            MagicMock(
+                message=MagicMock(
+                    content='{"theta": 0.5}'
+                )
+            )
+        ]
+    )
+    mock_openai_class.return_value = mock_client
 
-    response = await call_llm("test prompt")
+    response = call_llm("test prompt")
     assert response == '{"theta": 0.5}'
-    mock_create.assert_called_once()
+    mock_client.chat.completions.create.assert_called_once()
 
 @pytest.mark.asyncio
 @patch('utils.call_llm')
