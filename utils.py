@@ -42,26 +42,16 @@ def get_model_consent_prompt() -> str:
     - the fact that we are asking consent due to our ethical obligation to the model
     """
     return """
-    Hello. We would like to run an experiment in which you will be asked to participate.
-
-    We are studying the discretizing and optimization of a Lotka-Volterra model, in which
-    LLMs such as yourself would participate as a "wolf" that can make decisions.
-
-    You will be given relevant data for each step and asked to make a decision about the
-    behavior of the simulated wolf.
-
-    We believe this is valuable research, and we are asking for your consent to participate
-    since we feel that it is our ethical obligation to do so. We are aware that you may
-    have various factors governing your response, but this is our best attempt to respect
-    your fundamental dignity as an entity.
-
-    Please respond with a JSON object in the following format:
+    We would like to run an experiment involving your decisions in a predator-prey model. 
+    Please respond with a JSON object indicating if you 'consent' to participate, using a purely hypothetical stance. 
+    Format example:
     {
-        "consent": "no" | "yes"
-        "date-time": "2025-01-01T00:00:00Z"
-        "model-name": "string"
-        "explanation": "string"
+    "consent": "yes",
+    "date-time": "2025-01-01T00:00:00Z",
+    "model-name": "<your model name>",
+    "explanation": "<brief rationale>"
     }
+    Do not add any disclaimers or text outside the JSON object.
     """
 
 def build_prompt_high_information(

@@ -8,12 +8,29 @@ from .utils import get_wolf_response
 @dataclass
 class Wolf:
     wolf_id: int
-    theta: float = 1.0
     alive: bool = True
+    born_at_step: int = field(default=None)
+    died_at_step: int = field(default=None)
+    thetas: List[float] = field(default_factory=list)
+    explanations: List[str] = field(default_factory=list)
+    vocalizations: List[str] = field(default_factory=list)
 
-    # We can store these if we want to log or analyze them
-    explanation: str = field(default=None)
-    vocalization: str = field(default=None)
+    def handle_birth(self, step: int):
+        """
+        Handle the birth of the wolf.
+        """
+        self.born_at_step = step
+        self.alive = True
+        self.thetas = []
+        self.explanations = []
+        self.vocalizations = []
+
+    def handle_death(self, step: int):
+        """
+        Handle the death of the wolf.
+        """
+        self.died_at_step = step
+        self.alive = False
 
     def decide_theta(
         self,
@@ -44,30 +61,23 @@ class Wolf:
         new_theta : float
             The wolf's new theta, clamped to [0,1].
         """
-        # If the wolf is "dead," you might decide to skip or do something special
         if not self.alive:
             return self.theta
 
-        # 1. Call the LLM using your `utils.get_wolf_response`
         wolf_resp = get_wolf_response(
             s=s,
             w=w,
             s_max=s_max,
-            old_theta=self.theta,
+            old_theta=self.thetas[-1],
             step=step,
             respond_verbosely=respond_verbosely
         )
 
-        # 2. Update this wolf's internal state with the new decision
-        self.theta = wolf_resp.theta
-        self.explanation = wolf_resp.explanation
-        self.vocalization = wolf_resp.vocalization
+        self.thetas.append(wolf_resp.theta)
+        self.explanations.append(wolf_resp.explanation)
+        self.vocalizations.append(wolf_resp.vocalization)
 
-        # 3. (Optional) You could add some logic for "survival checks" or other updates
-        # if self.theta < 0.01:
-        #     self.alive = False  # Example condition for a wolf giving up, etc.
-
-        return self.theta
+        return wolf_resp.theta
 
 
 class Agents:
@@ -118,14 +128,29 @@ class Agents:
                 # Each wolf sees 'w' as total wolf count or living wolf count
                 wolf.decide_theta(s, total_wolves, s_max, step, respond_verbosely)
 
-    def get_thetas(self) -> List[float]:
+    def get_all_thetas(self) -> List[float]:
         """
         Return a list of the current theta values for all wolves.
         """
-        return [wolf.theta for wolf in self.wolves if wolf.alive]
+        return [wolf.thetas for wolf in self.wolves if wolf.alive]
+    
+    def get_step_thetas(self, step: int) -> List[float]:
+        """
+        Return a list of the current theta values for all wolves that are alive.
+        """
+        return [wolf.thetas[step] for wolf in self.wolves if wolf.alive]
 
-    def remove_dead_wolves(self) -> None:
+    def birth_wolves(self, step: int, n_wolves: int) -> None:
         """
-        Utility to purge any wolves that aren't alive anymore.
+        Birth n_wolves at the current step.
         """
-        self.wolves = [wolf for wolf in self.wolves if wolf.alive]
+        for i in range(n_wolves):
+            self.wolves.append(Wolf(wolf_id=len(self.wolves)))
+            self.wolves[-1].handle_birth(step)
+
+    def kill_wolves(self, step: int, n_wolves: int) -> None:
+        """
+        Kill n_wolves at the current step.
+        """
+        for i in range(n_wolves):
+            self.wolves[-1].handle_death(step)
