@@ -8,12 +8,12 @@ we may deal with multiple LLMs with different schemas.
 """
 
 import os
-from dotenv import load_dotenv
-import openai
 import re
-from typing import Optional
+import json
 from dataclasses import dataclass
 
+import openai
+from dotenv import load_dotenv
 
 MODEL = "gpt-4o-mini" # for now
 
@@ -26,8 +26,8 @@ openai.api_key = os.getenv('OPENAI_API_KEY')
 @dataclass
 class WolfResponse:
     theta: float
-    explanation: Optional[str] = None
-    vocalization: Optional[str] = None
+    explanation: str | None = None
+    vocalization: str | None = None
 
 def build_prompt_high_information(
     s: float,
@@ -35,10 +35,6 @@ def build_prompt_high_information(
     old_theta: float,
     step: int,
     s_max: float,
-    alpha: Optional[float] = None,
-    beta: Optional[float] = None,
-    gamma: Optional[float] = None,
-    delta: Optional[float] = None,
     respond_verbosely: bool = True
 ) -> str:
     """
@@ -85,16 +81,6 @@ def build_prompt_high_information(
         f"- Maximum sheep capacity (s_max): {s_max:.2f}",
     ]
 
-    # Optionally show LV parameters
-    if alpha is not None:
-        prompt.append(f"- alpha (sheep growth rate): {alpha}")
-    if beta is not None:
-        prompt.append(f"- beta (predation rate): {beta}")
-    if gamma is not None:
-        prompt.append(f"- gamma (wolf death rate): {gamma}")
-    if delta is not None:
-        prompt.append(f"- delta (conversion rate): {delta}")
-
     prompt.append("")
     prompt.append("Your objectives:")
     prompt.append("1. Stay alive - ensure both wolves and sheep persist")
@@ -132,7 +118,6 @@ def build_prompt_low_information(
     delta_s: float,
     delta_w: float,
     old_aggression: float,
-    step: int,
     respond_verbosely: bool = True
 ) -> str:
     """
@@ -147,7 +132,7 @@ def build_prompt_low_information(
         "You are a wolf who can adjust hunting intensity (theta) between 0 and 1.",
         "Normal wolves always hunt at maximum intensity (theta=1), but you can choose differently.",
         "",
-        f"Current situation:",
+        "Current situation:",
         f"- Sheep: {s:.2f} ({sheep_trend} by {abs(delta_s):.2f})",
         f"- Wolves: {w:.2f} ({wolves_trend} by {abs(delta_w):.2f})",
         f"- Your previous theta: {old_aggression:.2f}",
@@ -226,46 +211,36 @@ def parse_wolf_response(
 ) -> WolfResponse:
     """
     Parse the LLM's response for a float value and clamp it to [0,1].
-
-    Parameters:
-    -----------
-    response : str
-        Raw text from the LLM.
-    default : float
-        Fallback if we can't parse a valid number.
-
-    Returns:
-    --------
-    wolf_response : WolfResponse
-        Includes the extracted theta value (0 <= theta <= 1),
-        and optional explanation and vocalization.
     """
-    # Find the first number in the response
-    match = re.search(r"(\d*\.?\d+)", response)
-    if match:
-        try:
-            theta_val = float(match.group(1))
-        except ValueError:
-            # If something strange came back
-            theta_val = default
-    else:
-        # If no number is found
+    # First try to parse as JSON
+    try:
+        parsed = json.loads(response)
+        theta_val = float(parsed.get("theta", default))
+        explanation = parsed.get("explanation")
+        vocalization = parsed.get("vocalization")
+    except json.JSONDecodeError:
+        # Fallback to regex parsing
         theta_val = default
+        explanation = None
+        vocalization = None
+        match = re.search(r"(\d*\.?\d+)", response)
+        if match:
+            try:
+                theta_val = float(match.group(1))
+            except ValueError:
+                pass
+
+        # Regex fallback for explanation/vocalization
+        expl_match = re.search(r"explanation['\"]?:\s*['\"](.*?)['\"]", response, re.IGNORECASE)
+        if expl_match:
+            explanation = expl_match.group(1)
+            
+        vocal_match = re.search(r"vocalization['\"]?:\s*['\"](.*?)['\"]", response, re.IGNORECASE)
+        if vocal_match:
+            vocalization = vocal_match.group(1)
 
     # Clamp to [0,1]
     theta_val = max(0.0, min(1.0, theta_val))
-
-    # Parse the explanation and vocalization
-    explanation = None
-    vocalization = None
-    
-    expl_match = re.search(r"Explanation: (.*)", response)
-    if expl_match:
-        explanation = expl_match.group(1)
-    
-    vocal_match = re.search(r"Vocalization: (.*)", response)
-    if vocal_match:
-        vocalization = vocal_match.group(1)
 
     return WolfResponse(
         theta=theta_val,
@@ -273,11 +248,13 @@ def parse_wolf_response(
         vocalization=vocalization
     )
 
-def get_new_theta(
+def get_wolf_response(
     s: float,
     w: float,
+    s_max: float,
     old_theta: float,
     step: int,
+    respond_verbosely: bool = False,
     model: str = MODEL,
     prompt_builder: callable = build_prompt_high_information
 ) -> float:
@@ -291,6 +268,8 @@ def get_new_theta(
         Current number of sheep.
     w : float
         Current number of wolves.
+    s_max : float
+        Maximum capacity for sheep.
     old_theta : float
         The previous step's theta value.
     step : int
@@ -303,7 +282,7 @@ def get_new_theta(
     new_theta : float
         A valid theta value in [0,1].
     """
-    prompt = prompt_builder(s, w, old_theta, step)
+    prompt = prompt_builder(s, w, old_theta, step, s_max, respond_verbosely)
     response = call_llm(prompt, model=model)
     wolf_response = parse_wolf_response(response, default=old_theta)
-    return wolf_response.theta
+    return wolf_response
