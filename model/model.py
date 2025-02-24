@@ -6,8 +6,8 @@ from collections.abc import AsyncIterator
 from dataclasses import dataclass, field
 from typing import Any
 
-from agents import Agents
-from domain import Domain
+from model.agents import Agents
+from model.domain import Domain
 
 # Not converting sheep from the ODE for now
 MODEL_PARAMS = {
