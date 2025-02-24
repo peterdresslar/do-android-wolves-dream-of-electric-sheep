@@ -1,9 +1,10 @@
 # agents.py
 
-from dataclasses import dataclass, field
-from typing import List
 import random
+from dataclasses import dataclass, field
+
 from .utils import get_wolf_response
+
 
 @dataclass
 class Wolf:
@@ -11,9 +12,9 @@ class Wolf:
     alive: bool = True
     born_at_step: int = field(default=None)
     died_at_step: int = field(default=None)
-    thetas: List[float] = field(default_factory=list)
-    explanations: List[str] = field(default_factory=list)
-    vocalizations: List[str] = field(default_factory=list)
+    thetas: list[float] = field(default_factory=list)
+    explanations: list[str] = field(default_factory=list)
+    vocalizations: list[str] = field(default_factory=list)
 
     def handle_birth(self, step: int):
         """
@@ -38,7 +39,7 @@ class Wolf:
         w: float,
         s_max: float,
         step: int,
-        respond_verbosely: bool = True
+        respond_verbosely: bool = True,
     ) -> float:
         """
         Each wolf calls the LLM to decide its new theta.
@@ -70,7 +71,7 @@ class Wolf:
             s_max=s_max,
             old_theta=self.thetas[-1],
             step=step,
-            respond_verbosely=respond_verbosely
+            respond_verbosely=respond_verbosely,
         )
 
         self.thetas.append(wolf_resp.theta)
@@ -89,7 +90,7 @@ class Agents:
         """
         Initialize the pack with n_wolves, each having default theta=1.0.
         """
-        self.wolves: List[Wolf] = []
+        self.wolves: list[Wolf] = []
         for i in range(n_wolves):
             self.wolves.append(Wolf(wolf_id=i))
 
@@ -99,7 +100,7 @@ class Agents:
         w: float,
         s_max: float,
         step: int,
-        respond_verbosely: bool = True
+        respond_verbosely: bool = True,
     ) -> None:
         """
         Iterate over each wolf and have it decide its theta.
@@ -128,13 +129,13 @@ class Agents:
                 # Each wolf sees 'w' as total wolf count or living wolf count
                 wolf.decide_theta(s, total_wolves, s_max, step, respond_verbosely)
 
-    def get_all_thetas(self) -> List[float]:
+    def get_all_thetas(self) -> list[float]:
         """
         Return a list of the current theta values for all wolves.
         """
         return [wolf.thetas for wolf in self.wolves if wolf.alive]
-    
-    def get_step_thetas(self, step: int) -> List[float]:
+
+    def get_step_thetas(self, step: int) -> list[float]:
         """
         Return a list of the current theta values for all wolves that are alive.
         """

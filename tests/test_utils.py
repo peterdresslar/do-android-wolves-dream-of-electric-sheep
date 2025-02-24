@@ -1,15 +1,18 @@
-import pytest
-from unittest.mock import patch, MagicMock
-from utils import (
-    build_prompt_high_information, 
-    build_prompt_low_information, 
-    parse_wolf_response, 
-    call_llm, 
-    get_wolf_response,
-    call_llm_for_consent,
-    WolfResponse
-)
 import json
+from unittest.mock import MagicMock, patch
+
+import pytest
+
+from utils import (
+    WolfResponse,
+    build_prompt_high_information,
+    build_prompt_low_information,
+    call_llm,
+    call_llm_for_consent,
+    get_wolf_response,
+    parse_wolf_response,
+)
+
 
 def test_build_prompt_high_information():
     prompt = build_prompt_high_information(s=10.0, w=5.0, old_theta=0.5, step=1, s_max=20.0)
@@ -21,7 +24,7 @@ def test_build_prompt_high_information():
     assert "Maximum sheep capacity (s_max): 20.00" in prompt
 
 def test_build_prompt_low_information():
-    prompt = build_prompt_low_information(s=10.0, w=5.0, delta_s=1.0, delta_w=0.5, 
+    prompt = build_prompt_low_information(s=10.0, w=5.0, delta_s=1.0, delta_w=0.5,
                                         old_aggression=0.5)
     assert isinstance(prompt, str)
     assert "Sheep: 10.00" in prompt
@@ -36,16 +39,16 @@ def test_parse_wolf_response():
     assert result.theta == parsed["theta"]
     assert result.explanation == parsed["explanation"]
     assert result.vocalization == parsed["vocalization"]
-    
+
     # Test response clamping
     high_response = '{"theta": 1.5, "explanation": "too high"}'
     result = parse_wolf_response(high_response)
     assert result.theta == 1.0
-    
+
     low_response = '{"theta": -0.5, "explanation": "too low"}'
     result = parse_wolf_response(low_response)
     assert result.theta == 0.0
-    
+
     # Test invalid responses
     result = parse_wolf_response("invalid json", default=0.5)
     assert result.theta == 0.5
@@ -75,40 +78,40 @@ async def test_get_wolf_response(mock_call_llm):
     # Test verbose response
     mock_call_llm.return_value = '{"theta": 0.7, "explanation": "test", "vocalization": "howl"}'
     response = get_wolf_response(
-        s=10.0, 
-        w=5.0, 
+        s=10.0,
+        w=5.0,
         s_max=20.0,
-        old_theta=0.5, 
-        step=1, 
+        old_theta=0.5,
+        step=1,
         respond_verbosely=True
     )
     assert isinstance(response, WolfResponse)
     assert 0.0 <= response.theta <= 1.0
     assert response.explanation == "test"
     assert response.vocalization == "howl"
-    
+
     # Test non-verbose response
     mock_call_llm.return_value = '{"theta": 0.3}'
     response = get_wolf_response(
-        s=10.0, 
-        w=5.0, 
+        s=10.0,
+        w=5.0,
         s_max=20.0,
-        old_theta=0.5, 
-        step=1, 
+        old_theta=0.5,
+        step=1,
         respond_verbosely=False
     )
     assert isinstance(response, WolfResponse)
     assert 0.0 <= response.theta <= 1.0
     assert response.explanation is None
     assert response.vocalization is None
-    
+
     # Test with invalid LLM response
     mock_call_llm.return_value = "invalid response"
     response = get_wolf_response(
-        s=10.0, 
-        w=5.0, 
+        s=10.0,
+        w=5.0,
         s_max=20.0,
-        old_theta=0.5, 
+        old_theta=0.5,
         step=1
     )
     assert response.theta == 0.5  # Should return old_theta as default

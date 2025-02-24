@@ -1,7 +1,9 @@
-import domain
-import agents
 from dataclasses import dataclass
 from typing import Any
+
+import agents
+import domain
+
 
 @dataclass
 class Model:
