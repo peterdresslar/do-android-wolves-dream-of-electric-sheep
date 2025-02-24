@@ -6,6 +6,7 @@ from utils import (
     parse_wolf_response, 
     call_llm, 
     get_wolf_response,
+    call_llm_for_consent,
     WolfResponse
 )
 import json
@@ -111,3 +112,25 @@ async def test_get_wolf_response(mock_call_llm):
         step=1
     )
     assert response.theta == 0.5  # Should return old_theta as default
+
+@patch('utils.datetime')
+@patch('utils.call_llm')
+@patch('builtins.open')
+def test_call_llm_for_consent(mock_open, mock_call_llm, mock_datetime):
+    # Setup mocks
+    mock_datetime.now.return_value.isoformat.return_value = "2024-01-01T00:00:00"
+    mock_call_llm.return_value = '{"consent": "yes", "date-time": "2024-01-01T00:00:00Z", "model-name": "test-model", "explanation": "test"}'
+    mock_file = MagicMock()
+    mock_open.return_value.__enter__.return_value = mock_file
+
+    # Call the function
+    call_llm_for_consent(model="test-model")
+
+    # Assert the LLM was called with consent prompt
+    mock_call_llm.assert_called_once()
+    assert "consent" in mock_call_llm.call_args[0][0]  # Check if prompt contains "consent"
+
+    # Assert file was written with correct name and content
+    expected_filename = "docs/consent/consent-test-model-2024-01-01T00:00:00.json"
+    mock_open.assert_called_once_with(expected_filename, "w")
+    mock_file.write.assert_called_once_with(mock_call_llm.return_value)

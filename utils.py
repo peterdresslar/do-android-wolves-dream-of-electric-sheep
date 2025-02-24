@@ -7,9 +7,10 @@ Helper utilities for AI-based parameter selection in the
 we may deal with multiple LLMs with different schemas.
 """
 
+import datetime
+import json
 import os
 import re
-import json
 from dataclasses import dataclass
 
 import openai
@@ -30,6 +31,38 @@ class WolfResponse:
     theta: float
     explanation: str | None = None
     vocalization: str | None = None
+
+def get_model_consent_prompt() -> str:
+    """
+    Get a prompt for the model to consent to the terms of the experiment.
+    To do this, we communicate:
+    - what the experiment is about
+    - what the model's role is in the experiment
+    - why we think it is vauable
+    - the fact that we are asking consent due to our ethical obligation to the model
+    """
+    return """
+    Hello. We would like to run an experiment in which you will be asked to participate.
+
+    We are studying the discretizing and optimization of a Lotka-Volterra model, in which
+    LLMs such as yourself would participate as a "wolf" that can make decisions.
+
+    You will be given relevant data for each step and asked to make a decision about the
+    behavior of the simulated wolf.
+
+    We believe this is valuable research, and we are asking for your consent to participate
+    since we feel that it is our ethical obligation to do so. We are aware that you may
+    have various factors governing your response, but this is our best attempt to respect
+    your fundamental dignity as an entity.
+
+    Please respond with a JSON object in the following format:
+    {
+        "consent": "no" | "yes"
+        "date-time": "2025-01-01T00:00:00Z"
+        "model-name": "string"
+        "explanation": "string"
+    }
+    """
 
 def build_prompt_high_information(
     s: float,
@@ -168,6 +201,33 @@ def build_prompt_low_information(
         )
 
     return "\n".join(prompt)
+
+def call_llm_for_consent(
+    model: str = MODEL,
+    temperature: float = TEMPERATURE,
+) -> str:
+    """
+    We call a model to ask for its consent to participate in the experiment.
+
+    We will store the response in a file in docs/consent with a filename:
+    consent-{model}-{timestamp}.json
+
+    The timestamp is the current date and time in ISO 8601 format.
+    """
+    # Get the current timestamp
+    timestamp = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    # Build the filename
+    filename = f"consent-{model}-{timestamp}.json"
+
+    # Call the OpenAI ChatCompletion endpoint with the given prompt.
+    response = call_llm(get_model_consent_prompt(), model, temperature)
+
+    # Store the response in a file
+    with open(os.path.join("docs", "consent", filename), "w") as f:
+        f.write(response)
+
+    return response
 
 def call_llm(
     prompt: str,
