@@ -317,11 +317,11 @@ def get_wolf_response(
     """
     # 1. Make the prompt
     prompt = build_prompt_high_information(
-        s=s, 
-        w=w, 
-        old_theta=old_theta, 
-        step=step, 
-        s_max=s_max, 
+        s=s,
+        w=w,
+        old_theta=old_theta,
+        step=step,
+        s_max=s_max,
         respond_verbosely=respond_verbosely
     )
 
