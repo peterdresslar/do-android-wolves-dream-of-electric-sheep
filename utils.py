@@ -16,6 +16,8 @@ import openai
 from dotenv import load_dotenv
 
 MODEL = "gpt-4o-mini" # for now
+MAX_TOKENS = 4096
+TEMPERATURE = 0.0
 
 # Load keys from .env file. See .env.local.example
 load_dotenv('.env.local')
@@ -170,8 +172,8 @@ def build_prompt_low_information(
 def call_llm(
     prompt: str,
     model: str = MODEL,
-    temperature: float = 0.0,
-    max_tokens: int = 40
+    temperature: float = TEMPERATURE,
+    max_tokens: int = MAX_TOKENS
 ) -> str:
     """
     Call the OpenAI ChatCompletion endpoint with the given prompt.
@@ -194,16 +196,20 @@ def call_llm(
         The text content returned by the model.
     """
     # Ensure your environment has OPENAI_API_KEY set
-    response = openai.ChatCompletion.create(
-        model=model,
+    client = openai.OpenAI()
+
+    response = client.chat.completions.create(
         messages=[
-            {"role": "system", "content": "You decide 'theta' in [0,1] for the predator-prey model."},
-            {"role": "user", "content": prompt},
+            {
+                "role": "user",
+                "content": prompt
+            }
         ],
+        model=model,
         max_tokens=max_tokens,
         temperature=temperature,
     )
-    return response["choices"][0]["message"]["content"]
+    return response.choices[0].message.content
 
 def parse_wolf_response(
     response: str,
@@ -234,7 +240,6 @@ def parse_wolf_response(
         expl_match = re.search(r"explanation['\"]?:\s*['\"](.*?)['\"]", response, re.IGNORECASE)
         if expl_match:
             explanation = expl_match.group(1)
-            
         vocal_match = re.search(r"vocalization['\"]?:\s*['\"](.*?)['\"]", response, re.IGNORECASE)
         if vocal_match:
             vocalization = vocal_match.group(1)
@@ -254,35 +259,31 @@ def get_wolf_response(
     s_max: float,
     old_theta: float,
     step: int,
-    respond_verbosely: bool = False,
-    model: str = MODEL,
-    prompt_builder: callable = build_prompt_high_information
-) -> float:
+    respond_verbosely: bool = True
+) -> WolfResponse:
     """
-    High-level function to build the prompt, call the LLM,
-    parse the response, and return a new theta.
-
-    Parameters:
-    -----------
-    s : float
-        Current number of sheep.
-    w : float
-        Current number of wolves.
-    s_max : float
-        Maximum capacity for sheep.
-    old_theta : float
-        The previous step's theta value.
-    step : int
-        Simulation time step.
-    model : str
-        Which LLM model to call.
-
-    Returns:
-    --------
-    new_theta : float
-        A valid theta value in [0,1].
+    Build a prompt, call the LLM, parse the result into a WolfResponse,
+    and print it out for debugging or demonstration purposes.
     """
-    prompt = prompt_builder(s, w, old_theta, step, s_max, respond_verbosely)
-    response = call_llm(prompt, model=model)
-    wolf_response = parse_wolf_response(response, default=old_theta)
-    return wolf_response
+    # 1. Make the prompt
+    prompt = build_prompt_high_information(
+        s=s, 
+        w=w, 
+        old_theta=old_theta, 
+        step=step, 
+        s_max=s_max, 
+        respond_verbosely=respond_verbosely
+    )
+
+    # 2. Get a raw string response from the LLM
+    response_str = call_llm(prompt)
+
+    # 3. Parse that string into a WolfResponse
+    wolf_resp = parse_wolf_response(response_str, default=old_theta)
+
+    # Print it so you can see exactly what the LLM returned
+    # and how it mapped into WolfResponse
+    print("LLM raw response:", response_str)
+    print("Parsed WolfResponse:", wolf_resp)
+
+    return wolf_resp
