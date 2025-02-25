@@ -353,9 +353,9 @@ def get_wolf_response(
     wolf_resp = parse_wolf_response(response_str, default=old_theta)
 
     # Print it so you can see exactly what the LLM returned
-    print("Prompt:", prompt)
+    # print("Prompt:", prompt)
     # and how it mapped into WolfResponse
-    print("LLM raw response:", response_str)
+    # print("LLM raw response:", response_str)
     # print("Parsed WolfResponse:", wolf_resp) # this should ususally be well-formed
 
     return wolf_resp
