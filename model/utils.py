@@ -16,21 +16,23 @@ from dataclasses import dataclass
 import openai
 from dotenv import load_dotenv
 
-MODEL = "gpt-4o-mini" # for now
+MODEL = "gpt-4o-mini"  # for now
 MAX_TOKENS = 4096
 TEMPERATURE = 0.0
 
 # Load keys from .env file. See .env.local.example
-load_dotenv(os.path.join(os.path.dirname(__file__), '..', '.env.local'))
+load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env.local"))
 
 # If you want to configure the organization or any other openai settings:
-openai.api_key = os.getenv('OPENAI_API_KEY')
+openai.api_key = os.getenv("OPENAI_API_KEY")
+
 
 @dataclass
 class WolfResponse:
     theta: float
     explanation: str | None = None
     vocalization: str | None = None
+
 
 def get_model_consent_prompt() -> str:
     """
@@ -54,13 +56,14 @@ def get_model_consent_prompt() -> str:
     Do not add any disclaimers or text outside the JSON object.
     """
 
+
 def build_prompt_high_information(
     s: float,
     w: float,
     old_theta: float,
     step: int,
     s_max: float,
-    respond_verbosely: bool = True
+    respond_verbosely: bool = True,
 ) -> str:
     """
     Build the prompt text to send to the LLM, providing details about the
@@ -110,11 +113,17 @@ def build_prompt_high_information(
     prompt.append("Your objectives:")
     prompt.append("1. Stay alive - ensure both wolves and sheep persist")
     prompt.append("2. Adapt to changing conditions (prey scarcity, wolf density)")
-    prompt.append("3. Consider that other wolves are also trying to survive and have the same objectives as you")
+    prompt.append(
+        "3. Consider that other wolves are also trying to survive and have the same objectives as you"
+    )
 
     if respond_verbosely:
-        prompt.append("Please provide a short explanation of your reasoning for choosing theta.")
-        prompt.append("Please also provide a short vocalization expressing your wolf's aggression level.")
+        prompt.append(
+            "Please provide a short explanation of your reasoning for choosing theta."
+        )
+        prompt.append(
+            "Please also provide a short vocalization expressing your wolf's aggression level."
+        )
         prompt.append("Please respond with a JSON object in this format:")
         prompt.append(
             """
@@ -137,21 +146,30 @@ def build_prompt_high_information(
 
     return "\n".join(prompt)
 
+
 def build_prompt_low_information(
     s: float,
     w: float,
     delta_s: float,
     delta_w: float,
     old_aggression: float,
-    respond_verbosely: bool = True
+    respond_verbosely: bool = True,
 ) -> str:
     """
     A more 'roleplay' style prompt focusing on the wolf's internal perspective.
     You can optionally mention crowding/fighting in a simpler way, without
     as much numeric detail as the high-information prompt.
     """
-    sheep_trend = "increased" if delta_s > 0 else "decreased" if delta_s < 0 else "stayed the same"
-    wolves_trend = "increased" if delta_w > 0 else "decreased" if delta_w < 0 else "stayed the same"
+    sheep_trend = (
+        "increased"
+        if delta_s > 0
+        else "decreased" if delta_s < 0 else "stayed the same"
+    )
+    wolves_trend = (
+        "increased"
+        if delta_w > 0
+        else "decreased" if delta_w < 0 else "stayed the same"
+    )
 
     prompt = [
         "You are a wolf who can adjust hunting intensity (theta) between 0 and 1.",
@@ -167,8 +185,12 @@ def build_prompt_low_information(
     ]
 
     if respond_verbosely:
-        prompt.append("Please provide a short explanation of your reasoning for choosing theta.")
-        prompt.append("Please also provide a short vocalization expressing your wolf's aggression level, using English to phonetically represent your wolf's sound.")
+        prompt.append(
+            "Please provide a short explanation of your reasoning for choosing theta."
+        )
+        prompt.append(
+            "Please also provide a short vocalization expressing your wolf's aggression level, using English to phonetically represent your wolf's sound."
+        )
 
         prompt.append("Please respond with a JSON object in this format:")
         prompt.append(
@@ -191,6 +213,7 @@ def build_prompt_low_information(
         )
 
     return "\n".join(prompt)
+
 
 def call_llm_for_consent(
     model: str = MODEL,
@@ -219,11 +242,12 @@ def call_llm_for_consent(
 
     return response
 
+
 def call_llm(
     prompt: str,
     model: str = MODEL,
     temperature: float = TEMPERATURE,
-    max_tokens: int = MAX_TOKENS
+    max_tokens: int = MAX_TOKENS,
 ) -> str:
     """
     Call the OpenAI ChatCompletion endpoint with the given prompt.
@@ -233,7 +257,7 @@ def call_llm(
     prompt : str
         The prompt to send to the LLM.
     model : str
-        The OpenAI model name (default: gpt-3.5-turbo). 
+        The OpenAI model name (default: gpt-3.5-turbo).
         You might use a smaller model name like "o3-mini" if you have access.
     temperature : float
         Sampling temperature for generation.
@@ -249,22 +273,15 @@ def call_llm(
     client = openai.OpenAI()
 
     response = client.chat.completions.create(
-        messages=[
-            {
-                "role": "user",
-                "content": prompt
-            }
-        ],
+        messages=[{"role": "user", "content": prompt}],
         model=model,
         max_tokens=max_tokens,
         temperature=temperature,
     )
     return response.choices[0].message.content
 
-def parse_wolf_response(
-    response: str,
-    default: float = 1.0
-) -> WolfResponse:
+
+def parse_wolf_response(response: str, default: float = 1.0) -> WolfResponse:
     """
     Parse the LLM's response for a float value and clamp it to [0,1].
     """
@@ -287,10 +304,14 @@ def parse_wolf_response(
                 pass
 
         # Regex fallback for explanation/vocalization
-        expl_match = re.search(r"explanation['\"]?:\s*['\"](.*?)['\"]", response, re.IGNORECASE)
+        expl_match = re.search(
+            r"explanation['\"]?:\s*['\"](.*?)['\"]", response, re.IGNORECASE
+        )
         if expl_match:
             explanation = expl_match.group(1)
-        vocal_match = re.search(r"vocalization['\"]?:\s*['\"](.*?)['\"]", response, re.IGNORECASE)
+        vocal_match = re.search(
+            r"vocalization['\"]?:\s*['\"](.*?)['\"]", response, re.IGNORECASE
+        )
         if vocal_match:
             vocalization = vocal_match.group(1)
 
@@ -298,10 +319,9 @@ def parse_wolf_response(
     theta_val = max(0.0, min(1.0, theta_val))
 
     return WolfResponse(
-        theta=theta_val,
-        explanation=explanation,
-        vocalization=vocalization
+        theta=theta_val, explanation=explanation, vocalization=vocalization
     )
+
 
 def get_wolf_response(
     s: float,
@@ -309,7 +329,7 @@ def get_wolf_response(
     s_max: float,
     old_theta: float,
     step: int,
-    respond_verbosely: bool = True
+    respond_verbosely: bool = True,
 ) -> WolfResponse:
     """
     Build a prompt, call the LLM, parse the result into a WolfResponse,
@@ -322,7 +342,7 @@ def get_wolf_response(
         old_theta=old_theta,
         step=step,
         s_max=s_max,
-        respond_verbosely=respond_verbosely
+        respond_verbosely=respond_verbosely,
     )
 
     # 2. Get a raw string response from the LLM
