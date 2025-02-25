@@ -8,7 +8,7 @@ Below is our rough roadmap:
 
 | Level | Description                                                                 | Status |
 |-------|-----------------------------------------------------------------------------|--------|
-| 1     | Individual wolf agents, synchronous AI calls (everyone waits each step)     | [ ]    |
+| 1     | Individual wolf agents, synchronous AI calls (everyone waits each step)     | [x]    |
 | 2     | Individual wolf agents, asynchronous AI calls (continue sim while waiting)  | [ ]    |
 | 3     | Throttled AI calls (poll less frequently than every step)                   | [ ]    |
 | 4     | Real-time autonomous agents with continuous LLM interaction                 | [ ]    |
