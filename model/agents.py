@@ -137,6 +137,13 @@ class Agents:
             self.wolves.append(Wolf(wolf_id=i, beta=beta, gamma=gamma, delta=delta))
         self.opts = opts
 
+        # Initialize with a starting value for step 0
+        self.average_thetas: list[float] = []
+
+        # Calculate initial average theta (will be 0 since wolves have no thetas yet)
+        initial_avg = 0.0
+        self.average_thetas.append(initial_avg)
+
     def get_all_thetas(self) -> list[list[float]]:
         return [wolf.thetas for wolf in self.wolves if wolf.alive]
 
@@ -166,6 +173,17 @@ class Agents:
 
         for i in range(wolves_to_kill):
             living_wolves[-(i + 1)].handle_death(step)
+
+    def calculate_average_theta(self) -> float:
+        """Calculate the average theta of all living wolves."""
+        living_wolves = [wolf for wolf in self.wolves if wolf.alive]
+        if not living_wolves:
+            # Return the last average or a default if no history
+            return self.average_thetas[-1] if self.average_thetas else 0.0
+
+        return sum(
+            wolf.thetas[-1] if wolf.thetas else 0.0 for wolf in living_wolves
+        ) / len(living_wolves)
 
     def process_step_sync(self, params, domain, step) -> None:
         """
@@ -199,3 +217,7 @@ class Agents:
 
                 # Then update domain based on new theta
                 wolf.process_step(params, domain, step)
+
+        # Calculate and store the average theta after all wolves have decided
+        avg_theta = self.calculate_average_theta()
+        self.average_thetas.append(avg_theta)

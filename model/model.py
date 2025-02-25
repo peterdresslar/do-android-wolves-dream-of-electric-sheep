@@ -145,7 +145,33 @@ class ModelRun:
         # Store wolf and sheep counts for history
         self.sheep_history = [model.domain.s_state]
         self.wolf_history = [len([w for w in model.agents.wolves if w.alive])]
-        self.theta_history = []
+
+        # Initialize theta_history with the initial thetas of all wolves
+        # For no_ai mode, this will be the constant theta value
+        living_wolves = [w for w in model.agents.wolves if w.alive]
+
+        # If no wolves are alive, use an empty list
+        # Otherwise, collect the thetas of all living wolves
+        if not living_wolves:
+            initial_thetas = []
+        else:
+            # For newly created wolves, thetas will be empty
+            # We need to make sure they have a theta value before we can collect them
+
+            # If no_ai is true, use the theta from model params
+            if model.opts.get("no_ai", False):
+                theta = model.params.get("theta", 0.5)
+                # Make sure all wolves have this theta in their list
+                for wolf in living_wolves:
+                    if not wolf.thetas:
+                        wolf.thetas.append(theta)
+                initial_thetas = [wolf.thetas[-1] for wolf in living_wolves]
+            else:
+                # For AI mode, we'll initialize with default values
+                # This will be updated in the first step
+                initial_thetas = [1.0 for _ in living_wolves]
+
+        self.theta_history = [initial_thetas]
 
     async def step(self) -> dict[str, Any]:
         """
@@ -220,6 +246,7 @@ class ModelRun:
             "sheep_history": self.sheep_history,
             "wolf_history": self.wolf_history,
             "theta_history": self.theta_history,
+            "average_theta_history": self.model.agents.average_thetas,
             "final_sheep": self.model.domain.s_state,
             "final_wolves": len([w for w in self.model.agents.wolves if w.alive]),
             "history": self.history,
