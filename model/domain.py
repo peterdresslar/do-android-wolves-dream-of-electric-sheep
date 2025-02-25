@@ -66,7 +66,7 @@ class Domain:
         eps = params['eps']
         dt = params['dt']
 
-        dw_total += accumulated_dw_remainder 
+        dw_total += accumulated_dw_remainder
 
         if eps and eps > 0:
             dw_total += eps * dt
@@ -76,7 +76,7 @@ class Domain:
         new_s_or_max = min(new_s_or_zero, self.sheep_capacity)
         self.s_state = new_s_or_max
 
-        net_wolves_change = int(dw_total) 
+        net_wolves_change = int(dw_total)
         new_remainder = dw_total - net_wolves_change
 
         self.accumulated_dw_remainder = new_remainder
