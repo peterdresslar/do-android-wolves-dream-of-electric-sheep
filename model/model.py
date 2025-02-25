@@ -48,7 +48,7 @@ class Model:
     def __post_init__(self):
         self.t = int(self.steps * self.dt)
         self.opts["no_ai"] = False
-
+        self.opts["churn_rate"] = 0.05
         # If no_ai is set in opts and theta isn't already in params, add it
         if self.opts.get("no_ai", False) and "theta" not in self.params:
             self.params["theta"] = self.params.get("theta_star", 0.5)
@@ -98,7 +98,10 @@ def initialize_model(**kwargs) -> Model:
         theta = None  # Don't pass theta when AI is enabled
 
     # Create opts dictionary
-    opts = {"no_ai": defaults.get("no_ai", False)}
+    opts = {
+        "no_ai": defaults.get("no_ai", False),
+        "churn_rate": defaults.get("churn_rate", 0.05),
+    }
 
     # Create agents with cleaner parameter passing
     model_agents = Agents(

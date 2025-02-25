@@ -137,6 +137,10 @@ class Agents:
             self.wolves.append(Wolf(wolf_id=i, beta=beta, gamma=gamma, delta=delta))
         self.opts = opts
 
+        # Add churn rate parameter with default of 5%
+        # a la JM Applegate, 2018
+        self.churn_rate = opts.get("churn_rate", 0.05)
+
         # Initialize with a starting value for step 0
         self.average_thetas: list[float] = []
 
@@ -188,6 +192,7 @@ class Agents:
     def process_step_sync(self, params, domain, step) -> None:
         """
         Process the step for all wolves, updating the domain directly.
+        With synchronous churn: only a percentage of wolves update their theta each step.
         """
         # Reset accumulators in the domain
         domain.reset_accumulators()
@@ -200,7 +205,17 @@ class Agents:
         # Get current state values needed for decisions
         s = domain.s_state
         s_max = domain.sheep_capacity
-        living_wolves_count = sum(1 for wolf in self.wolves if wolf.alive)
+        living_wolves = [wolf for wolf in self.wolves if wolf.alive]
+        living_wolves_count = len(living_wolves)
+
+        # Determine which wolves will update their theta this step
+        # Randomly select wolves based on churn rate
+        wolves_to_update = []
+        if not self.opts.get("no_ai", False):  # Only apply churn if AI is enabled
+            churn_count = max(1, int(living_wolves_count * self.churn_rate))
+            wolves_to_update = random.sample(
+                living_wolves, min(churn_count, living_wolves_count)
+            )
 
         # Process each wolf (decide theta and update domain)
         # Shuffle the wolves to avoid any bias in the order of processing
@@ -211,9 +226,24 @@ class Agents:
             if wolf.alive:
                 # First decide theta based on current state
                 if self.opts.get("no_ai", False):
+                    # All wolves use the fixed theta in no_ai mode
                     wolf.decide_theta(s, living_wolves_count, s_max, step, False, theta)
-                else:
+                elif wolf in wolves_to_update:
+                    # Only selected wolves update their theta
                     wolf.decide_theta(s, living_wolves_count, s_max, step, False)
+                else:
+                    # Other wolves keep their previous theta
+                    if wolf.thetas:
+                        previous_theta = wolf.thetas[-1]
+                        wolf.thetas.append(previous_theta)
+                        wolf.explanations.append("Maintaining previous strategy")
+                        wolf.vocalizations.append(None)
+                    else:
+                        # If a wolf has no previous theta (e.g., newly born), give it a default
+                        default_theta = params.get("theta_star", 0.5)
+                        wolf.thetas.append(default_theta)
+                        wolf.explanations.append("Using default strategy as new wolf")
+                        wolf.vocalizations.append(None)
 
                 # Then update domain based on new theta
                 wolf.process_step(params, domain, step)
