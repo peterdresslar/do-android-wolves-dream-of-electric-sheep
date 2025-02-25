@@ -54,7 +54,7 @@ class Model:
         self.opts["no_ai"] = False
         self.opts["churn_rate"] = 0.05
         self.opts["save_results"] = True
-        self.opts["path"] = "/data/results"
+        self.opts["path"] = "../data/results"
         # If no_ai is set in opts and theta isn't already in params, add it
         if self.opts.get("no_ai", False) and "theta" not in self.params:
             self.params["theta"] = self.params.get("theta_star", 0.5)
@@ -108,7 +108,7 @@ def initialize_model(**kwargs) -> Model:
         "no_ai": defaults.get("no_ai", False),
         "churn_rate": defaults.get("churn_rate", 0.05),
         "save_results": defaults.get("save_results", True),
-        "path": defaults.get("path", "/data/results"),
+        "path": defaults.get("path", "../data/results"),
     }
 
     # Create agents with cleaner parameter passing
@@ -290,7 +290,7 @@ class ModelRun:
                 } for w in self.model.agents.wolves
             ]
             # Save results to file
-            save_simulation_results(final_results, self.model.opts.get('path', '/data/results'))
+            save_simulation_results(final_results, self.model.opts.get('path', '../data/results'))
             print(f"Simulation completed in {runtime} seconds.")
 
         return final_results

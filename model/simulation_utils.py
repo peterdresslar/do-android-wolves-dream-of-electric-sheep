@@ -11,7 +11,7 @@ import numpy as np
 import pandas as pd
 from scipy.integrate import odeint
 
-DEFAULT_RESULTS_PATH = "results"
+DEFAULT_RESULTS_PATH = "../data/results"
 
 #################################################################
 # BASIC STUFF
@@ -109,14 +109,13 @@ def save_simulation_results(results, results_path=None):
         results_path (str or None): Path to save results. If None, a default filename with timestamp is used.
     """
     # Get current working directory (which will be the notebook directory if running from a notebook)
-    current_dir = os.getcwd()
-
+    current_dir = os.path.dirname(os.path.abspath(__file__))  # Use module directory as base
     # Use the provided path or default
     results_path = results_path if results_path else DEFAULT_RESULTS_PATH
 
-    # If the path is not absolute, make it relative to the current working directory
+    # If the path is not absolute, make it relative to the module directory
     if not os.path.isabs(results_path):
-        path = os.path.join(current_dir, results_path)
+        path = os.path.abspath(os.path.join(current_dir, results_path))
     else:
         path = results_path
 
