@@ -15,7 +15,7 @@ MODEL_PARAMS = {
     "beta": 0.1,  # we need this at the model level only for the reference ODE
     "gamma": 1.5,  # we need this at the model level only for the reference ODE
     "delta": 0.75,  # we need this at the model level only for the reference ODE
-    "theta_star": 0.5,  # we might run without the AIs, in which case we could use this default
+    "theta_star": 0.25,  # we might run without the AIs, in which case we could use this default
     "s_start": 100,
     "w_start": 10,
     "dt": 0.02,
@@ -236,9 +236,20 @@ class ModelRun:
             yield snapshot
 
 
+def run_coroutine(**kwargs) -> asyncio.coroutine:
+    """
+    Return a coroutine that will run the model.
+    For use with await in async contexts.
+    """
+    model = initialize_model(**kwargs)
+    runner = model.create_run()
+    return runner.run()
+
+
 def run(**kwargs) -> dict[str, Any]:
     """
-    Convenience method to initialize and run a model synchronously.
+    Run the model synchronously and return the results.
+    This will fail in contexts that already have an event loop running.
     """
     model = initialize_model(**kwargs)
     runner = model.create_run()
