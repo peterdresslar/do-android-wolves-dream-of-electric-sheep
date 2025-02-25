@@ -230,7 +230,7 @@ class Agents:
                     wolf.decide_theta(s, living_wolves_count, s_max, step, False, theta)
                 elif wolf in wolves_to_update:
                     # Only selected wolves update their theta
-                    wolf.decide_theta(s, living_wolves_count, s_max, step, False)
+                    wolf.decide_theta(s, living_wolves_count, s_max, step, True)
                 else:
                     # Other wolves keep their previous theta
                     if wolf.thetas:
