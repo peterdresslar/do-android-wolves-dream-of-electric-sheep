@@ -80,8 +80,8 @@ class Wolf:
         self.thetas.append(wolf_resp.theta)
         self.explanations.append(wolf_resp.explanation)
         self.vocalizations.append(wolf_resp.vocalization)
-        # Store the prompt used; assuming get_wolf_response prints the prompt, here we use a placeholder
-        self.prompts.append("LLM prompt not captured")
+        # Capture the prompt from the response if available
+        self.prompts.append(wolf_resp.prompt if hasattr(wolf_resp, 'prompt') else "LLM prompt not captured")
 
         return wolf_resp.theta
 
@@ -138,7 +138,9 @@ class Agents:
         self.delta = delta
         self.wolves: list[Wolf] = []
         for i in range(n_wolves):
-            self.wolves.append(Wolf(wolf_id=i, beta=beta, gamma=gamma, delta=delta))
+            new_wolf = Wolf(wolf_id=i, beta=beta, gamma=gamma, delta=delta)
+            new_wolf.handle_birth(0)  # Capture birth for initial wolves at step 0
+            self.wolves.append(new_wolf)
         self.opts = opts
 
         # Add churn rate parameter with default of 5%
@@ -266,6 +268,7 @@ class Agents:
                 'born_at_step': wolf.born_at_step,
                 'died_at_step': wolf.died_at_step,
                 'explanations': wolf.explanations,
-                'vocalizations': wolf.vocalizations
+                'vocalizations': wolf.vocalizations,
+                'prompts': wolf.prompts
             } for wolf in self.wolves
         ]
