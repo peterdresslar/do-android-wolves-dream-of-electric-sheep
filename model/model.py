@@ -41,15 +41,17 @@ class Model:
     steps: int = 250
     dt: float = 0.02
     t: int = field(init=False)
-    params: dict[str, Any] = field(default_factory=dict, init=False)
+    params: dict[str, Any] = field(default_factory=dict)
     state: dict[str, Any] = field(default_factory=dict, init=False)
     opts: dict[str, Any] = field(default_factory=dict, init=False)
 
     def __post_init__(self):
         self.t = int(self.steps * self.dt)
-        self.params["steps"] = self.steps
-        self.params["dt"] = self.dt
         self.opts["no_ai"] = False
+
+        # If no_ai is set in opts and theta isn't already in params, add it
+        if self.opts.get("no_ai", False) and "theta" not in self.params:
+            self.params["theta"] = self.params.get("theta_star", 0.5)
 
     def create_run(self) -> ModelRun:
         """
@@ -117,6 +119,10 @@ def initialize_model(**kwargs) -> Model:
 
     # Set options on the model too
     model.opts.update(opts)
+
+    # If no_ai is True, explicitly store theta in model params
+    if opts["no_ai"]:
+        model.params["theta"] = theta
 
     # Add remaining parameters to model.params
     model.params.update(defaults)
