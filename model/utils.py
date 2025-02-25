@@ -100,6 +100,7 @@ def build_prompt_high_information(
         "Instead of hunting all the time, you can spend energy instead on competiting with other wolves for the same prey.",
         "A lower theta means you are less aggressive toward prey and more toward other wolves.",
         "At a theta of 0, you are not even trying to hunt, and only compete with other wolves.",
+        "Do not be too conservative about changing strategies as you only get so many chances to do so.",
         "",
         "Current system state:",
         f"- Time step: {step}",
@@ -352,8 +353,9 @@ def get_wolf_response(
     wolf_resp = parse_wolf_response(response_str, default=old_theta)
 
     # Print it so you can see exactly what the LLM returned
+    print("Prompt:", prompt)
     # and how it mapped into WolfResponse
     print("LLM raw response:", response_str)
-    print("Parsed WolfResponse:", wolf_resp)
+    # print("Parsed WolfResponse:", wolf_resp) # this should ususally be well-formed
 
     return wolf_resp
