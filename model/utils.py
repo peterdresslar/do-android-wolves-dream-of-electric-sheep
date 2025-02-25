@@ -21,7 +21,7 @@ MAX_TOKENS = 4096
 TEMPERATURE = 0.0
 
 # Load keys from .env file. See .env.local.example
-load_dotenv('.env.local')
+load_dotenv(os.path.join(os.path.dirname(__file__), '..', '.env.local'))
 
 # If you want to configure the organization or any other openai settings:
 openai.api_key = os.getenv('OPENAI_API_KEY')
