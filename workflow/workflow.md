@@ -14,7 +14,7 @@
 ### problems
 
 [x] Sim file saving to wrong path.
-[] Sim file details directory overwriting
+[x] Sim file details directory overwriting
 [] Sim file data
 [] Step count off by one
 [] Sim file should include reference ODE

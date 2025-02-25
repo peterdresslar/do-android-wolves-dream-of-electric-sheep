@@ -137,7 +137,11 @@ def save_simulation_results(results, results_path=None):
     steps = model_params.get("steps", "steps")
     s0 = model_params.get("s_start", "S0")
     w0 = model_params.get("w_start", "W0")
-    summary_filename = os.path.join(path, f"{model_name}_{steps}_{s0}-{w0}_{timestamp}.md")
+    summary_name = f"{model_name}_{steps}_{s0}-{w0}_{timestamp}"
+    summary_filename = os.path.join(path, f"{summary_name}.md")
+    details_dir = os.path.join(path, summary_name, "_detailed_results")
+    census_file = os.path.join(details_dir, "census.csv")
+    wolves_dir = os.path.join(details_dir, "wolves")
 
     # Compute final theta statistics from the last snapshot in history
     last_snapshot = results.get("history", [])[-1] if results.get("history") else {}
@@ -199,12 +203,10 @@ def save_simulation_results(results, results_path=None):
         f.write("\n".join(summary_lines))
 
     # Create detailed results directory inside the results path
-    details_dir = os.path.join(path, "detailed_results")
     os.makedirs(details_dir, exist_ok=True)
 
     # Save census file: census.csv
     import csv
-    census_file = os.path.join(details_dir, "census.csv")
     with open(census_file, "w", newline='') as csvfile:
         fieldnames = ['step', 'sheep', 'wolves', 'mean_theta']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
@@ -219,8 +221,9 @@ def save_simulation_results(results, results_path=None):
 
     # Save individual wolf details
     agents = results.get('agents', [])
+    os.makedirs(wolves_dir, exist_ok=True)
     for wolf in agents:
-        wolf_filename = os.path.join(details_dir, f"wolf_{wolf.get('wolf_id')}.json")
+        wolf_filename = os.path.join(wolves_dir, f"wolf_{wolf.get('wolf_id')}.json")
         wolf_data = {
             'wolf_id': wolf.get('wolf_id'),
             'born_at_step': wolf.get('born_at_step'),
