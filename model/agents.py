@@ -19,6 +19,7 @@ class Wolf:
     thetas: list[float] = field(default_factory=list)
     explanations: list[str] = field(default_factory=list)
     vocalizations: list[str] = field(default_factory=list)
+    prompts: list[str] = field(default_factory=list)  # New telemetry field to capture prompts
 
     def handle_birth(self, step: int):
         self.born_at_step = step
@@ -42,30 +43,31 @@ class Wolf:
     ) -> float:
         """
         Decide the theta for this wolf.
-        If AI is enabled, the theta is decided by the wolf.
-        If AI is disabled, the theta is passed in as a parameter.
+        If AI is enabled, the theta is decided by the wolf using an LLM response.
+        If AI is disabled, the theta is provided as an argument.
 
         Args:
-            s: float, current sheep population
-            w: float, current wolf population
-            s_max: float, maximum sheep capacity
-            step: int, current step
-            respond_verbosely: bool, whether to respond verbosely
-            theta: float | None, the theta to use if AI is disabled
+            s: current sheep population
+            w: current wolf population
+            s_max: maximum sheep capacity
+            step: current simulation step
+            respond_verbosely: include verbose response from LLM
+            theta: fixed theta value if provided
 
         Returns:
-            float, the theta for this wolf
+            The chosen theta value.
         """
         if not self.alive:
             return self.thetas[-1] if self.thetas else 1.0
 
-        # if a theta is provided we use that instead. we still need to append to the lists.
         if theta is not None:
             self.thetas.append(theta)
             self.explanations.append(f"Using provided theta: {theta}")
             self.vocalizations.append(f"Using provided theta: {theta}")
+            self.prompts.append("N/A")  # No prompt generated
             return theta
 
+        # Call LLM to decide theta
         wolf_resp = get_wolf_response(
             s=s,
             w=w,
@@ -78,6 +80,8 @@ class Wolf:
         self.thetas.append(wolf_resp.theta)
         self.explanations.append(wolf_resp.explanation)
         self.vocalizations.append(wolf_resp.vocalization)
+        # Store the prompt used; assuming get_wolf_response prints the prompt, here we use a placeholder
+        self.prompts.append("LLM prompt not captured")
 
         return wolf_resp.theta
 
@@ -126,7 +130,7 @@ class Agents:
         beta: float = 0.1,
         gamma: float = 1.5,
         delta: float = 0.75,
-        theta: float = 0.5,
+        theta: float = 0.5, # noqa: N806. Not used.
         opts: dict[str, Any] = field(default_factory=dict),
     ):
         self.beta = beta
@@ -251,3 +255,17 @@ class Agents:
         # Calculate and store the average theta after all wolves have decided
         avg_theta = self.calculate_average_theta()
         self.average_thetas.append(avg_theta)
+
+    def get_agents_summary(self) -> list[dict]:
+        """Return a summary of all wolf agents with key details."""
+        return [
+            {
+                'wolf_id': wolf.wolf_id,
+                'thetas': wolf.thetas,
+                'alive': wolf.alive,
+                'born_at_step': wolf.born_at_step,
+                'died_at_step': wolf.died_at_step,
+                'explanations': wolf.explanations,
+                'vocalizations': wolf.vocalizations
+            } for wolf in self.wolves
+        ]

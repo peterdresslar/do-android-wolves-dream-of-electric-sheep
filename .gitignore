@@ -31,3 +31,9 @@ archive.zip
 
 # macOS
 .DS_Store
+
+# notebook results
+notebook_results/*
+
+# data results
+/data/*

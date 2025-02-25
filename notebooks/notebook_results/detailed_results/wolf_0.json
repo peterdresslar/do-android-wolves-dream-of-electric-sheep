@@ -1,0 +1,32 @@
+{
+    "wolf_id": 0,
+    "born_at_step": null,
+    "died_at_step": null,
+    "thetas": [
+        0.1,
+        0.1,
+        0.1,
+        0.1,
+        0.1,
+        0.1,
+        0.1,
+        0.1,
+        0.1,
+        0.1,
+        0.1
+    ],
+    "explanations": null,
+    "vocalizations": null,
+    "prompts": [
+        "N/A",
+        "N/A",
+        "N/A",
+        "N/A",
+        "N/A",
+        "N/A",
+        "N/A",
+        "N/A",
+        "N/A",
+        "N/A"
+    ]
+}

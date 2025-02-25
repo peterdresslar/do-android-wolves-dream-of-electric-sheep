@@ -2,12 +2,14 @@
 from __future__ import annotations
 
 import asyncio
+import time
 from collections.abc import AsyncIterator
 from dataclasses import dataclass, field
 from typing import Any
 
 from model.agents import Agents
 from model.domain import Domain
+from model.simulation_utils import save_simulation_results
 
 # Not converting sheep from the ODE for now
 MODEL_PARAMS = {
@@ -36,6 +38,8 @@ class Model:
       - A state dictionary for simulation state.
     """
 
+    # TODO: correctly formalize the existence and operation of time for this local cosmos
+
     domain: Domain
     agents: Agents
     steps: int = 250
@@ -49,6 +53,8 @@ class Model:
         self.t = int(self.steps * self.dt)
         self.opts["no_ai"] = False
         self.opts["churn_rate"] = 0.05
+        self.opts["save_results"] = True
+        self.opts["path"] = "/data/results"
         # If no_ai is set in opts and theta isn't already in params, add it
         if self.opts.get("no_ai", False) and "theta" not in self.params:
             self.params["theta"] = self.params.get("theta_star", 0.5)
@@ -101,6 +107,8 @@ def initialize_model(**kwargs) -> Model:
     opts = {
         "no_ai": defaults.get("no_ai", False),
         "churn_rate": defaults.get("churn_rate", 0.05),
+        "save_results": defaults.get("save_results", True),
+        "path": defaults.get("path", "/data/results"),
     }
 
     # Create agents with cleaner parameter passing
@@ -196,7 +204,7 @@ class ModelRun:
             params
         )  # this is a slightly different approach than the reference notebook
 
-        # 3. Handle wolf population changes
+        # 3. Handle wolf population changes # TODO definitely should not be here
         if net_wolves_change > 0:
             agents.birth_wolves(self.current_step, net_wolves_change)
         elif net_wolves_change < 0:
@@ -240,8 +248,16 @@ class ModelRun:
         """
         Run the simulation to completion and return the final state.
         """
+        start_time = time.time()
+        print(f"Starting simulation at {start_time} with {self.model.steps} steps.")
+        print(f"Model params: {self.model.params}")
+        print(f"Model opts: {self.model.opts}")
+
         while self.current_step < self.model.steps:
             await self.step()
+
+        end_time = time.time()
+        runtime = end_time - start_time
 
         # Prepare final results
         final_results = {
@@ -253,7 +269,29 @@ class ModelRun:
             "final_sheep": self.model.domain.s_state,
             "final_wolves": len([w for w in self.model.agents.wolves if w.alive]),
             "history": self.history,
+            "runtime": runtime
         }
+
+        # Include detailed model and agent information if requested via opts
+        if self.model.opts.get('save_results', True):
+            final_results['model_params'] = self.model.params
+            final_results['domain'] = {
+                'sheep_capacity': self.model.domain.sheep_capacity,
+                's_state': self.model.domain.s_state
+            }
+            final_results['agents'] = [
+                {
+                    'wolf_id': w.wolf_id,
+                    'thetas': w.thetas,
+                    'alive': w.alive,
+                    'born_at_step': w.born_at_step,
+                    'died_at_step': w.died_at_step,
+                    'prompts': w.prompts  # new telemetry field
+                } for w in self.model.agents.wolves
+            ]
+            # Save results to file
+            save_simulation_results(final_results, self.model.opts.get('path', '/data/results'))
+            print(f"Simulation completed in {runtime} seconds.")
 
         return final_results
 
