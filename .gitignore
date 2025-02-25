@@ -33,6 +33,7 @@ archive.zip
 .DS_Store
 
 # notebook results
+notebooks/notebook_results/*
 notebook_results/*
 
 # data results
