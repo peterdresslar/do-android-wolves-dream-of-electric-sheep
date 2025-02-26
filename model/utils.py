@@ -30,6 +30,7 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 @dataclass
 class WolfResponse:
     theta: float
+    prompt: str | None = None
     explanation: str | None = None
     vocalization: str | None = None
 
@@ -282,7 +283,7 @@ def call_llm(
     return response.choices[0].message.content
 
 
-def parse_wolf_response(response: str, default: float = 1.0) -> WolfResponse:
+def parse_wolf_response(response: str, prompt: str, default: float = 1.0) -> WolfResponse:
     """
     Parse the LLM's response for a float value and clamp it to [0,1].
     """
@@ -292,6 +293,7 @@ def parse_wolf_response(response: str, default: float = 1.0) -> WolfResponse:
         theta_val = float(parsed.get("theta", default))
         explanation = parsed.get("explanation")
         vocalization = parsed.get("vocalization")
+        prompt = parsed.get("prompt")
     except json.JSONDecodeError:
         # Fallback to regex parsing
         theta_val = default
@@ -320,7 +322,7 @@ def parse_wolf_response(response: str, default: float = 1.0) -> WolfResponse:
     theta_val = max(0.0, min(1.0, theta_val))
 
     return WolfResponse(
-        theta=theta_val, explanation=explanation, vocalization=vocalization
+        theta=theta_val, prompt=prompt, explanation=explanation, vocalization=vocalization
     )
 
 
@@ -350,7 +352,7 @@ def get_wolf_response(
     response_str = call_llm(prompt)
 
     # 3. Parse that string into a WolfResponse
-    wolf_resp = parse_wolf_response(response_str, default=old_theta)
+    wolf_resp = parse_wolf_response(response_str, prompt, default=old_theta)
 
     # Print it so you can see exactly what the LLM returned
     # print("Prompt:", prompt)

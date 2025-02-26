@@ -261,6 +261,7 @@ class ModelRun:
 
         # Prepare final results
         final_results = {
+            "model_name": self.model.params.get('model_name', 'model'),
             "steps": self.current_step,
             "sheep_history": self.sheep_history,
             "wolf_history": self.wolf_history,
@@ -281,16 +282,19 @@ class ModelRun:
             }
             final_results['agents'] = [
                 {
-                    'wolf_id': w.wolf_id,
-                    'thetas': w.thetas,
+                    'id': w.wolf_id,
                     'alive': w.alive,
                     'born_at_step': w.born_at_step,
                     'died_at_step': w.died_at_step,
-                    'prompts': w.prompts  # new telemetry field
+                    'history_steps': w.decision_history['history_steps'],
+                    'new_thetas': w.decision_history['new_thetas'],
+                    'explanations': w.decision_history['explanations'],
+                    'vocalizations': w.decision_history['vocalizations'],
+                    'prompts': w.decision_history['prompts']
                 } for w in self.model.agents.wolves
             ]
             # Save results to file
-            save_simulation_results(final_results, self.model.opts.get('path', '../data/results'))
+            save_simulation_results(final_results, self.model.opts.get('path', '../data/results'))  # TODO: dangerous to pass path and dir here, change this
             print(f"Simulation completed in {runtime} seconds.")
 
         return final_results

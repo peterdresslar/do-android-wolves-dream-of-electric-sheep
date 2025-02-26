@@ -16,17 +16,28 @@ class Wolf:
     alive: bool = True
     born_at_step: int = field(default=None)
     died_at_step: int = field(default=None)
+    # All thetas for every step (always populated)
     thetas: list[float] = field(default_factory=list)
-    explanations: list[str] = field(default_factory=list)
-    vocalizations: list[str] = field(default_factory=list)
-    prompts: list[str] = field(default_factory=list)  # New telemetry field to capture prompts
+    # Decision history (only populated when a decision is made)
+    decision_history: dict = field(default_factory=lambda: {
+        'history_steps': [],       # step numbers when decisions happened
+        'new_thetas': [],  # theta values chosen at those steps
+        'explanations': [], # explanations for those decisions
+        'vocalizations': [], # vocalizations for those decisions
+        'prompts': []      # prompts used for those decisions
+    })
 
     def handle_birth(self, step: int):
         self.born_at_step = step
         self.alive = True
         self.thetas = []
-        self.explanations = []
-        self.vocalizations = []
+        self.decision_history = {
+            'history_steps': [],
+            'new_thetas': [],
+            'explanations': [],
+            'vocalizations': [],
+            'prompts': []
+        }
 
     def handle_death(self, step: int):
         self.died_at_step = step
@@ -40,6 +51,7 @@ class Wolf:
         step: int,
         respond_verbosely: bool = True,
         theta: float | None = None,
+        record_decision: bool = True,
     ) -> float:
         """
         Decide the theta for this wolf.
@@ -53,6 +65,7 @@ class Wolf:
             step: current simulation step
             respond_verbosely: include verbose response from LLM
             theta: fixed theta value if provided
+            record_decision: whether to record this as a decision in history
 
         Returns:
             The chosen theta value.
@@ -62,9 +75,12 @@ class Wolf:
 
         if theta is not None:
             self.thetas.append(theta)
-            self.explanations.append(f"Using provided theta: {theta}")
-            self.vocalizations.append(f"Using provided theta: {theta}")
-            self.prompts.append("N/A")  # No prompt generated
+            if record_decision:
+                self.decision_history['history_steps'].append(step)
+                self.decision_history['new_thetas'].append(theta)
+                self.decision_history['prompts'].append("N/A")  # No prompt generated
+                self.decision_history['explanations'].append(f"Using provided theta: {theta}")
+                self.decision_history['vocalizations'].append(f"Using provided theta: {theta}")
             return theta
 
         # Call LLM to decide theta
@@ -78,10 +94,12 @@ class Wolf:
         )
 
         self.thetas.append(wolf_resp.theta)
-        self.explanations.append(wolf_resp.explanation)
-        self.vocalizations.append(wolf_resp.vocalization)
-        # Capture the prompt from the response if available
-        self.prompts.append(wolf_resp.prompt if hasattr(wolf_resp, 'prompt') else "LLM prompt not captured")
+        if record_decision:
+            self.decision_history['history_steps'].append(step)
+            self.decision_history['new_thetas'].append(wolf_resp.theta)
+            self.decision_history['prompts'].append(wolf_resp.prompt)
+            self.decision_history['explanations'].append(wolf_resp.explanation)
+            self.decision_history['vocalizations'].append(wolf_resp.vocalization)
 
         return wolf_resp.theta
 
@@ -138,9 +156,7 @@ class Agents:
         self.delta = delta
         self.wolves: list[Wolf] = []
         for i in range(n_wolves):
-            new_wolf = Wolf(wolf_id=i, beta=beta, gamma=gamma, delta=delta)
-            new_wolf.handle_birth(0)  # Capture birth for initial wolves at step 0
-            self.wolves.append(new_wolf)
+            self.wolves.append(Wolf(wolf_id=i, beta=beta, gamma=gamma, delta=delta))
         self.opts = opts
 
         # Add churn rate parameter with default of 5%
@@ -233,23 +249,21 @@ class Agents:
                 # First decide theta based on current state
                 if self.opts.get("no_ai", False):
                     # All wolves use the fixed theta in no_ai mode
-                    wolf.decide_theta(s, living_wolves_count, s_max, step, False, theta)
+                    wolf.decide_theta(s, living_wolves_count, s_max, step, False, theta, record_decision=True)
                 elif wolf in wolves_to_update:
                     # Only selected wolves update their theta
-                    wolf.decide_theta(s, living_wolves_count, s_max, step, True)
+                    wolf.decide_theta(s, living_wolves_count, s_max, step, True, record_decision=True)
                 else:
                     # Other wolves keep their previous theta
                     if wolf.thetas:
                         previous_theta = wolf.thetas[-1]
-                        wolf.thetas.append(previous_theta)
-                        wolf.explanations.append("Maintaining previous strategy")
-                        wolf.vocalizations.append(None)
+                        # Add theta but don't record as a decision
+                        wolf.decide_theta(s, living_wolves_count, s_max, step, False, previous_theta, record_decision=False)
                     else:
                         # If a wolf has no previous theta (e.g., newly born), give it a default
                         default_theta = params.get("theta_star", 0.5)
-                        wolf.thetas.append(default_theta)
-                        wolf.explanations.append("Using default strategy as new wolf")
-                        wolf.vocalizations.append(None)
+                        # Add theta but don't record as a decision
+                        wolf.decide_theta(s, living_wolves_count, s_max, step, False, default_theta, record_decision=False)
 
                 # Then update domain based on new theta
                 wolf.process_step(params, domain, step)
@@ -267,8 +281,10 @@ class Agents:
                 'alive': wolf.alive,
                 'born_at_step': wolf.born_at_step,
                 'died_at_step': wolf.died_at_step,
-                'explanations': wolf.explanations,
-                'vocalizations': wolf.vocalizations,
-                'prompts': wolf.prompts
+                'history_steps': wolf.decision_history['history_steps'],
+                'new_thetas': wolf.decision_history['new_thetas'],
+                'explanations': wolf.decision_history['explanations'],
+                'vocalizations': wolf.decision_history['vocalizations'],
+                'prompts': wolf.decision_history['prompts']
             } for wolf in self.wolves
         ]

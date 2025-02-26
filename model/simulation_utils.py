@@ -97,11 +97,12 @@ def save_simulation_results(results, results_path=None):
         - wolf id
         - birth step
         - death step
-        - For every step:
-            - theta
+        - For every decision step:
+            - history_step
+            - new_theta
+            - prompt
             - explanation
             - vocalization
-            - prompt
 
     Args:
         results (dict): The simulation results dictionary, expected to include simulation history,
@@ -223,15 +224,19 @@ def save_simulation_results(results, results_path=None):
     agents = results.get('agents', [])
     os.makedirs(wolves_dir, exist_ok=True)
     for wolf in agents:
-        wolf_filename = os.path.join(wolves_dir, f"wolf_{wolf.get('wolf_id')}.json")
+        wolf_filename = os.path.join(wolves_dir, f"wolf_{wolf.get('id')}.json")
         wolf_data = {
-            'wolf_id': wolf.get('wolf_id'),
+            'wolf_id': wolf.get('id'),
             'born_at_step': wolf.get('born_at_step'),
             'died_at_step': wolf.get('died_at_step'),
+            'decision_history': {
+                'history_steps': wolf.get('history_steps', []),
+                'new_thetas': wolf.get('new_thetas', []),
+                'prompts': wolf.get('prompts', []),
+                'explanations': wolf.get('explanations', []),
+                'vocalizations': wolf.get('vocalizations', []),
+            },
             'thetas': wolf.get('thetas'),
-            'explanations': wolf.get('explanations'),
-            'vocalizations': wolf.get('vocalizations'),
-            'prompts': wolf.get('prompts', [])
         }
         with open(wolf_filename, 'w') as wf:
             json.dump(wolf_data, wf, indent=4)
