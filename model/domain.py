@@ -7,14 +7,16 @@ class Domain:
     Domain class to manage the state of the simulation.
     """
 
-    def __init__(self, sheep_capacity: int, starting_sheep: int, starting_wolves: int):
+    def __init__(self, sheep_capacity: int, starting_sheep: int):
         # Configuration parameters
         self.sheep_capacity = sheep_capacity
         self.starting_sheep = starting_sheep
-        self.starting_wolves = starting_wolves
 
         # State variables
-        self.s_state = starting_sheep
+        self.sheep_state = starting_sheep
+
+        # History tracking (missing)
+        self.sheep_history = [starting_sheep]
 
         # Accumulators for changes in each step
         self.step_accumulated_ds = 0
@@ -32,7 +34,7 @@ class Domain:
     def get_state_dict(self):
         """Return the current state as a dictionary for agents to use."""
         return {
-            "s_state": self.s_state,
+            "sheep_state": self.sheep_state,
             "step_accumulated_ds": self.step_accumulated_ds,
             "step_accumulated_dw": self.step_accumulated_dw,
             "accumulated_dw_remainder": self.accumulated_dw_remainder,
@@ -41,7 +43,7 @@ class Domain:
 
     def update_from_state_dict(self, state_dict):
         """Update domain state from a state dictionary."""
-        self.s_state = state_dict.get("s_state", self.s_state)
+        self.sheep_state = state_dict.get("sheep_state", self.sheep_state)
         self.step_accumulated_ds = state_dict.get(
             "step_accumulated_ds", self.step_accumulated_ds
         )
@@ -71,10 +73,11 @@ class Domain:
         if eps and eps > 0:
             dw_total += eps * dt
 
-        new_s = self.s_state + ds_total
+        new_s = self.sheep_state + ds_total
         new_s_or_zero = max(0, new_s)
         new_s_or_max = min(new_s_or_zero, self.sheep_capacity)
-        self.s_state = new_s_or_max
+        self.sheep_state = new_s_or_max
+        self.sheep_history.append(self.sheep_state)
 
         net_wolves_change = int(dw_total)
         new_remainder = dw_total - net_wolves_change
@@ -88,15 +91,16 @@ class Domain:
     def process_sheep_growth(self, params):
         """Process sheep growth according to the model parameters."""
         alpha = params["alpha"]
-        s = self.s_state
+        s = self.sheep_state
 
         ds_dt = alpha * s
 
         new_s = max(0, s + ds_dt * params["dt"])
-        self.s_state = new_s
+        self.sheep_state = new_s
 
         # Apply sheep capacity limit
-        self.s_state = min(self.s_state, self.sheep_capacity)
+        self.sheep_state = min(self.sheep_state, self.sheep_capacity)
+        self.sheep_history.append(self.sheep_state)
 
     def increment_step(self):
         """Increment the current step counter."""

@@ -63,7 +63,7 @@ def build_prompt_high_information(
     w: float,
     old_theta: float,
     step: int,
-    s_max: float,
+    sheep_max: float,
     respond_verbosely: bool = True,
 ) -> str:
     """
@@ -81,7 +81,7 @@ def build_prompt_high_information(
         The previous step's theta value.
     step : int
         The current time step in the simulation.
-    s_max : float
+    sheep_max : float
         The maximum capacity (or upper bound) for sheep.
     alpha, beta, gamma, delta : float, optional
         Model parameters if you'd like to pass them in.
@@ -108,7 +108,7 @@ def build_prompt_high_information(
         f"- Sheep (s): {s:.2f}",
         f"- Wolves (w): {w:.2f}",
         f"- Previous theta: {old_theta:.3f}",
-        f"- Maximum sheep capacity (s_max): {s_max:.2f}",
+        f"- Maximum sheep capacity (sheep_max): {sheep_max:.2f}",
     ]
 
     prompt.append("")
@@ -329,7 +329,7 @@ def parse_wolf_response(response: str, prompt: str, default: float = 1.0) -> Wol
 def get_wolf_response(
     s: float,
     w: float,
-    s_max: float,
+    sheep_max: float,
     old_theta: float,
     step: int,
     respond_verbosely: bool = True,
@@ -344,7 +344,7 @@ def get_wolf_response(
         w=w,
         old_theta=old_theta,
         step=step,
-        s_max=s_max,
+        sheep_max=sheep_max,
         respond_verbosely=respond_verbosely,
     )
 

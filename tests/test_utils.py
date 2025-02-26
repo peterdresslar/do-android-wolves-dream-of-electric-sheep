@@ -15,13 +15,13 @@ from model.utils import (
 
 
 def test_build_prompt_high_information():
-    prompt = build_prompt_high_information(s=10.0, w=5.0, old_theta=0.5, step=1, s_max=20.0)
+    prompt = build_prompt_high_information(s=10.0, w=5.0, old_theta=0.5, step=1, sheep_max=20.0)
     assert isinstance(prompt, str)
     assert "Sheep (s): 10.00" in prompt
     assert "Wolves (w): 5.00" in prompt
     assert "Previous theta: 0.500" in prompt
     assert "Time step: 1" in prompt
-    assert "Maximum sheep capacity (s_max): 20.00" in prompt
+    assert "Maximum sheep capacity (sheep_max): 20.00" in prompt
 
 def test_build_prompt_low_information():
     prompt = build_prompt_low_information(s=10.0, w=5.0, delta_s=1.0, delta_w=0.5,
@@ -80,7 +80,7 @@ async def test_get_wolf_response(mock_call_llm):
     response = get_wolf_response(
         s=10.0,
         w=5.0,
-        s_max=20.0,
+        sheep_max=20.0,
         old_theta=0.5,
         step=1,
         respond_verbosely=True
@@ -95,7 +95,7 @@ async def test_get_wolf_response(mock_call_llm):
     response = get_wolf_response(
         s=10.0,
         w=5.0,
-        s_max=20.0,
+        sheep_max=20.0,
         old_theta=0.5,
         step=1,
         respond_verbosely=False
@@ -110,7 +110,7 @@ async def test_get_wolf_response(mock_call_llm):
     response = get_wolf_response(
         s=10.0,
         w=5.0,
-        s_max=20.0,
+        sheep_max=20.0,
         old_theta=0.5,
         step=1
     )

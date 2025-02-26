@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import asyncio
 import time
-from collections.abc import AsyncIterator
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -21,7 +20,7 @@ MODEL_PARAMS = {
     "s_start": 100,
     "w_start": 10,
     "dt": 0.02,
-    "s_max": 110,  # an upper bound on sheep, for clarity
+    "sheep_max": 110,  # an upper bound on sheep, for clarity
     "eps": 0.0001,  # will give a dead sheep bounce if nonzero! set to zero if you want "real" last-wolf scenario.
     "steps": 250,
 }
@@ -77,8 +76,8 @@ def initialize_model(**kwargs) -> Model:
     defaults = MODEL_PARAMS.copy()
     defaults.update(kwargs)
 
-    # Extract domain parameters
-    sheep_capacity = defaults.get("s_max", 110)
+    # Extract domain and agent parameters
+    sheep_capacity = defaults.get("sheep_max", 110)
     starting_sheep = defaults.get("s_start", 100)
     starting_wolves = defaults.get("w_start", 10)
 
@@ -88,7 +87,6 @@ def initialize_model(**kwargs) -> Model:
         Domain(
             sheep_capacity=sheep_capacity,
             starting_sheep=starting_sheep,
-            starting_wolves=starting_wolves,
         ),
     )
 
@@ -112,13 +110,14 @@ def initialize_model(**kwargs) -> Model:
     }
 
     # Create agents with cleaner parameter passing
-    model_agents = Agents(
-        n_wolves=model_domain.starting_wolves,
+    model_agents = Agents.create_agents(
+        n_wolves=starting_wolves,
         beta=beta,
         gamma=gamma,
         delta=delta,
         theta=theta,
         opts=opts,
+        initial_step=0  # Start at step 0
     )
 
     # Extract model parameters
@@ -151,40 +150,9 @@ class ModelRun:
     def __init__(self, model: Model):
         self.model = model
         self.current_step = 0
-        self.history: list[dict[str, Any]] = []
 
-        # Store wolf and sheep counts for history
-        self.sheep_history = [model.domain.s_state]
-        self.wolf_history = [len([w for w in model.agents.wolves if w.alive])]
 
-        # Initialize theta_history with the initial thetas of all wolves
-        # For no_ai mode, this will be the constant theta value
-        living_wolves = [w for w in model.agents.wolves if w.alive]
-
-        # If no wolves are alive, use an empty list
-        # Otherwise, collect the thetas of all living wolves
-        if not living_wolves:
-            initial_thetas = []
-        else:
-            # For newly created wolves, thetas will be empty
-            # We need to make sure they have a theta value before we can collect them
-
-            # If no_ai is true, use the theta from model params
-            if model.opts.get("no_ai", False):
-                theta = model.params.get("theta", 0.5)
-                # Make sure all wolves have this theta in their list
-                for wolf in living_wolves:
-                    if not wolf.thetas:
-                        wolf.thetas.append(theta)
-                initial_thetas = [wolf.thetas[-1] for wolf in living_wolves]
-            else:
-                # For AI mode, we'll initialize with default values
-                # This will be updated in the first step
-                initial_thetas = [1.0 for _ in living_wolves]
-
-        self.theta_history = [initial_thetas]
-
-    async def step(self) -> dict[str, Any]:
+    def step(self) -> dict[str, Any]:
         """
         Execute one simulation step, updating the domain's state by interacting with agents.
         """
@@ -199,124 +167,112 @@ class ModelRun:
         # 2. Process wolves
         agents.process_step_sync(params, domain, self.current_step)
 
-        # 2. Process wolf effects on the domain (apply accumulated changes)
-        net_wolves_change = domain.accumulate_and_fit(
-            params
-        )  # this is a slightly different approach than the reference notebook
+        # 3. Process wolf effects on the domain (apply accumulated changes)
+        # Note that in the next two steps
+        # we are effectively managing partial time across domain and agents
+        net_wolves_change = domain.accumulate_and_fit(params)
 
-        # 3. Handle wolf population changes # TODO definitely should not be here
-        if net_wolves_change > 0:
-            agents.birth_wolves(self.current_step, net_wolves_change)
-        elif net_wolves_change < 0:
-            agents.kill_wolves(self.current_step, abs(net_wolves_change))
+        # 4. Handle wolf population changes (moved to Agents class)
+        agents.handle_population_changes(net_wolves_change, self.current_step)
 
-        # 4. Process sheep growth
-        # Note that in the reference notebook, this is process_s_euler_forward()
+        # 5. Process sheep growth
         domain.process_sheep_growth(params)
 
-        # 5. Increment step counter
+        # 6. Increment step counter
         domain.increment_step()
-
-        # Capture a snapshot of state at this step
-        living_wolves = [w for w in agents.wolves if w.alive]
-        current_thetas = [w.thetas[-1] if w.thetas else 1.0 for w in living_wolves]
-
         snapshot = {
             "step": self.current_step,
-            "sheep": domain.s_state,
-            "wolves": len(living_wolves),
-            "thetas": current_thetas,
-            "mean_theta": (
-                sum(current_thetas) / len(current_thetas) if current_thetas else 0
-            ),
+            "sheep": domain.sheep_state,
+            "wolves": agents.living_wolves_count,
+            "thetas": agents.get_current_thetas(),
+            "mean_theta": agents.get_mean_theta(),
         }
-
-        # Store history
-        self.history.append(snapshot)
-        self.sheep_history.append(domain.s_state)
-        self.wolf_history.append(len(living_wolves))
-        self.theta_history.append(current_thetas)
 
         self.current_step += 1
 
-        # Allow other tasks to run (simulate asynchronous delay)
-        await asyncio.sleep(0)
-
         return snapshot
 
-    async def run(self) -> dict[str, Any]:
+    def run(self) -> dict[str, Any]:
         """
-        Run the simulation to completion and return the final state.
+        Run the simulation to completion and return a simplified results object.
+
+        This method focuses on running the simulation and returning essential data
+        needed by notebook functions or other callers.
         """
         start_time = time.time()
+        params = self.model.params
+        opts = self.model.opts
+        agents = self.model.agents
+        domain = self.model.domain
+
         print(f"Starting simulation at {start_time} with {self.model.steps} steps.")
-        print(f"Model params: {self.model.params}")
-        print(f"Model opts: {self.model.opts}")
+        print(f"Model params: {params}")
+        print(f"Model opts: {opts}")
+        print(f"Domain starting sheep: {domain.sheep_state}")
+        print(f"Agents starting wolves: {len([w for w in agents.wolves if w.alive])}")
+
+        print(f"Agents: {agents.wolves[0].to_dict()}")
 
         while self.current_step < self.model.steps:
-            await self.step()
+            self.step()
 
         end_time = time.time()
         runtime = end_time - start_time
 
-        # Prepare final results
-        final_results = {
-            "model_name": self.model.params.get('model_name', 'model'),
+        # Prepare a simplified results object for return
+        results = {
             "steps": self.current_step,
-            "sheep_history": self.sheep_history,
-            "wolf_history": self.wolf_history,
-            "theta_history": self.theta_history,
-            "average_theta_history": self.model.agents.average_thetas,
-            "final_sheep": self.model.domain.s_state,
-            "final_wolves": len([w for w in self.model.agents.wolves if w.alive]),
-            "history": self.history,
-            "runtime": runtime
+            "sheep_history": domain.sheep_history,
+            "wolf_history": agents.get_living_wolf_count_history(),
+            "average_theta_history": agents.average_thetas,
+            "final_sheep": domain.sheep_state,
+            "final_wolves": agents.living_wolves_count,
+            "runtime": runtime,
         }
 
-        # Include detailed model and agent information if requested via opts
-        if self.model.opts.get('save_results', True):
-            final_results['model_params'] = self.model.params
-            final_results['domain'] = {
-                'sheep_capacity': self.model.domain.sheep_capacity,
-                's_state': self.model.domain.s_state
-            }
-            final_results['agents'] = [
-                {
-                    'id': w.wolf_id,
-                    'alive': w.alive,
-                    'born_at_step': w.born_at_step,
-                    'died_at_step': w.died_at_step,
-                    'history_steps': w.decision_history['history_steps'],
-                    'new_thetas': w.decision_history['new_thetas'],
-                    'explanations': w.decision_history['explanations'],
-                    'vocalizations': w.decision_history['vocalizations'],
-                    'prompts': w.decision_history['prompts']
-                } for w in self.model.agents.wolves
-            ]
-            # Save results to file
-            save_simulation_results(final_results, self.model.opts.get('path', '../data/results'))  # TODO: dangerous to pass path and dir here, change this
+        # If saving is enabled, prepare and save detailed results
+        if self.model.opts.get("save_results", True):
+            self._save_simulation_results(runtime)
             print(f"Simulation completed in {runtime} seconds.")
 
-        return final_results
+        return results
 
-    async def __aiter__(self) -> AsyncIterator[dict[str, Any]]:
+    def _prepare_detailed_results(self, runtime: float) -> dict[str, Any]:
         """
-        Asynchronously iterate over simulation steps yielding intermediate state.
+        Prepare a detailed results object suitable for saving to files.
+
+        This separates the data preparation from the simulation running logic.
         """
-        while self.current_step < self.model.steps:
-            snapshot = await self.step()
-            yield snapshot
 
+        detailed_results = {
+            "runtime": runtime,
+            "model_name": self.model.params.get("model_name", "model"),
+            "steps": self.current_step,
+            "sheep_history": self.model.domain.sheep_history,
+            "wolf_history": self.model.agents.get_living_wolf_count_history(),
+            "average_theta_history": self.model.agents.average_thetas,
+            "final_sheep": self.model.domain.sheep_state,
+            "final_wolves": self.model.agents.living_wolves_count,
+            "model_params": self.model.params,
+            "model_opts": self.model.opts,
+            "domain": {
+                "sheep_capacity": self.model.domain.sheep_capacity,
+                "sheep_state": self.model.domain.sheep_state,
+            },
+            "agents": self.model.agents.get_agents_summary() # list of dict per wolf
+        }
 
-def run_coroutine(**kwargs) -> asyncio.coroutine:
-    """
-    Return a coroutine that will run the model.
-    For use with await in async contexts.
-    """
-    model = initialize_model(**kwargs)
-    runner = model.create_run()
-    return runner.run()
+        return detailed_results
 
+    def _save_simulation_results(self, runtime: float) -> None:
+        """
+        Prepare detailed results and save them using the simulation_utils function.
+        """
+        detailed_results = self._prepare_detailed_results(runtime)
+        results_path = self.model.opts.get("path", "../data/results")
+
+        # Save results to file
+        save_simulation_results(detailed_results, results_path)
 
 def run(**kwargs) -> dict[str, Any]:
     """
@@ -325,4 +281,4 @@ def run(**kwargs) -> dict[str, Any]:
     """
     model = initialize_model(**kwargs)
     runner = model.create_run()
-    return asyncio.run(runner.run())
+    return runner.run()
