@@ -45,9 +45,9 @@ def get_model_consent_prompt() -> str:
     - the fact that we are asking consent due to our ethical obligation to the model
     """
     return """
-    We would like to run an experiment involving your decisions in a predator-prey model. 
-    Please respond with a JSON object indicating if you 'consent' to participate, using a purely hypothetical stance. 
-    Format example:
+    We would like to run an experiment involving your decisions in a predator-prey model.
+    Please respond with a JSON object indicating if you 'consent' to participate, using a purely hypothetical stance.
+    Format example.
     {
     "consent": "yes",
     "date-time": "2025-01-01T00:00:00Z",
