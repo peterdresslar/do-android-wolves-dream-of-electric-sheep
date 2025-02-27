@@ -13,6 +13,7 @@ from scipy.integrate import odeint
 
 DEFAULT_RESULTS_PATH = "../data/results"
 
+
 #################################################################
 # BASIC STUFF
 #################################################################
@@ -26,6 +27,7 @@ def round4(x) -> float:
     1.2346
     """
     return round(x, 4)
+
 
 def format4(x) -> str:
     """
@@ -41,46 +43,51 @@ def format4(x) -> str:
     """
     return f"{x:.4f}"
 
+
 #################################################################
 # Reference ODE Functions
 #################################################################
-def dx_dt(x, t, alpha, beta, gamma, delta):
+def dx_dt(x, t, alpha, beta, gamma, delta):  # noqa: ARG001 I want the t there for the moment
     s, w = x
     ds_dt = alpha * s - beta * s * w
     dw_dt = -gamma * w + delta * beta * s * w
     return [ds_dt, dw_dt]
 
+
 def get_reference_ODE(model_params, model_time):
-    alpha = model_params['alpha']
-    beta = model_params['beta']
-    gamma = model_params['gamma']
-    delta = model_params['delta']
+    alpha = model_params["alpha"]
+    beta = model_params["beta"]
+    gamma = model_params["gamma"]
+    delta = model_params["delta"]
 
-    t_end = model_time['time']
-    times = np.linspace(0, t_end, model_time['tmax'])
-    x0 = [model_params['s_start'], model_params['w_start']]
+    t_end = model_time["time"]
+    times = np.linspace(0, t_end, model_time["tmax"])
+    x0 = [model_params["s_start"], model_params["w_start"]]
 
-    integration = odeint(dx_dt, x0, times, args=(alpha, beta, gamma, delta)) # via cursor, verify this
-    ode_df = pd.DataFrame({
-        't': times,
-        's': round4(integration[:,0]),
-        'w': round4(integration[:,1])
-    })
+    integration = odeint(
+        dx_dt, x0, times, args=(alpha, beta, gamma, delta)
+    )  # via cursor, verify this
+    ode_df = pd.DataFrame(
+        {"t": times, "s": round4(integration[:, 0]), "w": round4(integration[:, 1])}
+    )
     return ode_df
+
 
 #################################################################
 # Simulation Telemetry
 #################################################################
 def save_simulation_results(results, results_path=None):
     """Save simulation parameters (starting conditions) and results information to a summary file and a directory with detailed results.
-    
+
     Args:
         results (dict): The simulation results dictionary, expected to include simulation history,
                         final counts, and optionally model and agents details.
         results_path (str or None): Path to save results. If None, a default filename with timestamp is used.
     """
     # Get current working directory (which will be the notebook directory if running from a notebook)
-    current_dir = os.path.dirname(os.path.abspath(__file__))  # Use module directory as base
+    current_dir = os.path.dirname(
+        os.path.abspath(__file__)
+    )  # Use module directory as base
     # Use the provided path or default
     results_path = results_path if results_path else DEFAULT_RESULTS_PATH
 
@@ -110,7 +117,9 @@ def save_simulation_results(results, results_path=None):
     starting_wolves = model_params.get("w_start", "W0")
 
     # Create a unique run directory name
-    run_dir_name = f"{model_name}_{steps}_{starting_sheep}-{starting_wolves}_{timestamp}"
+    run_dir_name = (
+        f"{model_name}_{steps}_{starting_sheep}-{starting_wolves}_{timestamp}"
+    )
     run_dir = os.path.join(path, run_dir_name)
 
     # Create the run directory
@@ -140,9 +149,11 @@ def save_simulation_results(results, results_path=None):
                 "step": step,
                 "sheep": sheep_history[step] if step < len(sheep_history) else None,
                 "wolves": wolf_history[step] if step < len(wolf_history) else None,
-                "mean_theta": theta_history[step] if step < len(theta_history) else None,
+                "mean_theta": (
+                    theta_history[step] if step < len(theta_history) else None
+                ),
                 # We don't have individual thetas for each step, so this will be empty
-                "thetas": []
+                "thetas": [],
             }
             history.append(snapshot)
 
@@ -177,7 +188,9 @@ def save_simulation_results(results, results_path=None):
             final_mean_theta = theta_history[-1]
             final_max_theta = final_min_theta = final_median_theta = final_mean_theta
         else:
-            final_mean_theta = final_max_theta = final_min_theta = final_median_theta = None
+            final_mean_theta = final_max_theta = final_min_theta = (
+                final_median_theta
+            ) = None
 
     # Sample ten intermediate states evenly from history
     num_states = len(history)
@@ -210,9 +223,9 @@ def save_simulation_results(results, results_path=None):
     ]
 
     for state in sample_states:
-        sheep_val = state.get('sheep')
-        wolves_val = state.get('wolves')
-        theta_val = state.get('mean_theta')
+        sheep_val = state.get("sheep")
+        wolves_val = state.get("wolves")
+        theta_val = state.get("mean_theta")
 
         # Format values if they exist
         sheep_str = format4(sheep_val) if sheep_val is not None else "N/A"
@@ -238,46 +251,61 @@ def save_simulation_results(results, results_path=None):
 
     # Save census file: census.csv
     import csv
-    with open(census_file, "w", newline='') as csvfile:
-        fieldnames = ['step', 'sheep', 'wolves', 'mean_theta']
+
+    with open(census_file, "w", newline="") as csvfile:
+        fieldnames = ["step", "sheep", "wolves", "mean_theta"]
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
         for snapshot in history:
-            writer.writerow({
-                'step': snapshot.get('step'),
-                'sheep': round4(snapshot.get('sheep')) if snapshot.get('sheep') is not None else None,
-                'wolves': round4(snapshot.get('wolves')) if snapshot.get('wolves') is not None else None,
-                'mean_theta': round4(snapshot.get('mean_theta')) if snapshot.get('mean_theta') is not None else None
-            })
+            writer.writerow(
+                {
+                    "step": snapshot.get("step"),
+                    "sheep": (
+                        round4(snapshot.get("sheep"))
+                        if snapshot.get("sheep") is not None
+                        else None
+                    ),
+                    "wolves": (
+                        round4(snapshot.get("wolves"))
+                        if snapshot.get("wolves") is not None
+                        else None
+                    ),
+                    "mean_theta": (
+                        round4(snapshot.get("mean_theta"))
+                        if snapshot.get("mean_theta") is not None
+                        else None
+                    ),
+                }
+            )
 
     # Save individual wolf details
-    agents = results.get('agents', [])
+    agents = results.get("agents", [])
     os.makedirs(wolves_dir, exist_ok=True)
     for wolf in agents:
         # Use wolf_id if id is not available
-        wolf_id = wolf.get('wolf_id', wolf.get('id', 'unknown'))
+        wolf_id = wolf.get("wolf_id", wolf.get("id", "unknown"))
         wolf_filename = os.path.join(wolves_dir, f"wolf_{wolf_id}.json")
 
         # Create wolf data structure - use the flattened structure directly
         wolf_data = {
-            'wolf_id': wolf_id,
-            'beta': wolf.get('beta'),
-            'gamma': wolf.get('gamma'),
-            'delta': wolf.get('delta'),
-            'alive': wolf.get('alive'),
-            'born_at_step': wolf.get('born_at_step'),
-            'died_at_step': wolf.get('died_at_step'),
-            'thetas': wolf.get('thetas', []),
-            'decision_history': {
-                'history_steps': wolf.get('history_steps', []),
-                'new_thetas': wolf.get('new_thetas', []),
-                'prompts': wolf.get('prompts', []),
-                'explanations': wolf.get('explanations', []),
-                'vocalizations': wolf.get('vocalizations', []),
-            }
+            "wolf_id": wolf_id,
+            "beta": wolf.get("beta"),
+            "gamma": wolf.get("gamma"),
+            "delta": wolf.get("delta"),
+            "alive": wolf.get("alive"),
+            "born_at_step": wolf.get("born_at_step"),
+            "died_at_step": wolf.get("died_at_step"),
+            "thetas": wolf.get("thetas", []),
+            "decision_history": {
+                "history_steps": wolf.get("history_steps", []),
+                "new_thetas": wolf.get("new_thetas", []),
+                "prompts": wolf.get("prompts", []),
+                "explanations": wolf.get("explanations", []),
+                "vocalizations": wolf.get("vocalizations", []),
+            },
         }
 
-        with open(wolf_filename, 'w') as wf:
+        with open(wolf_filename, "w") as wf:
             json.dump(wolf_data, wf, indent=4)
 
     print(f"Simulation results saved to {run_dir}")

@@ -283,7 +283,9 @@ def call_llm(
     return response.choices[0].message.content
 
 
-def parse_wolf_response(response: str, prompt: str, default: float = 1.0) -> WolfResponse:
+def parse_wolf_response(
+    response: str, prompt: str, default: float = 1.0
+) -> WolfResponse:
     """
     Parse the LLM's response for a float value and clamp it to [0,1].
     """
@@ -322,7 +324,10 @@ def parse_wolf_response(response: str, prompt: str, default: float = 1.0) -> Wol
     theta_val = max(0.0, min(1.0, theta_val))
 
     return WolfResponse(
-        theta=theta_val, prompt=prompt, explanation=explanation, vocalization=vocalization
+        theta=theta_val,
+        prompt=prompt,
+        explanation=explanation,
+        vocalization=vocalization,
     )
 
 

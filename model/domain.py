@@ -65,8 +65,8 @@ class Domain:
         dw_total = self.step_accumulated_dw
         accumulated_dw_remainder = self.accumulated_dw_remainder
 
-        eps = params['eps']
-        dt = params['dt']
+        eps = params["eps"]
+        dt = params["dt"]
 
         dw_total += accumulated_dw_remainder
 

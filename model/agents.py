@@ -19,13 +19,15 @@ class Wolf:
     # All thetas for every step (always populated)
     thetas: list[float] = field(default_factory=list)
     # Decision history (only populated when a decision is made)
-    decision_history: dict = field(default_factory=lambda: {
-        'history_steps': [],       # step numbers when decisions happened
-        'new_thetas': [],  # theta values chosen at those steps
-        'explanations': [], # explanations for those decisions
-        'vocalizations': [], # vocalizations for those decisions
-        'prompts': []      # prompts used for those decisions
-    })
+    decision_history: dict = field(
+        default_factory=lambda: {
+            "history_steps": [],  # step numbers when decisions happened
+            "new_thetas": [],  # theta values chosen at those steps
+            "explanations": [],  # explanations for those decisions
+            "vocalizations": [],  # vocalizations for those decisions
+            "prompts": [],  # prompts used for those decisions
+        }
+    )
 
     def to_dict(self) -> dict:
         """
@@ -40,12 +42,11 @@ class Wolf:
             "born_at_step": self.born_at_step,
             "died_at_step": self.died_at_step,
             "thetas": self.thetas,
-            "history_steps": self.decision_history['history_steps'],
-            "new_thetas": self.decision_history['new_thetas'],
-            "prompts": self.decision_history['prompts'],
-            "explanations": self.decision_history['explanations'],
-            "vocalizations": self.decision_history['vocalizations']
-
+            "history_steps": self.decision_history["history_steps"],
+            "new_thetas": self.decision_history["new_thetas"],
+            "prompts": self.decision_history["prompts"],
+            "explanations": self.decision_history["explanations"],
+            "vocalizations": self.decision_history["vocalizations"],
         }
 
     def alive_at_step(self, step: int) -> bool:
@@ -53,19 +54,22 @@ class Wolf:
         Check if the wolf was alive at a given step.
         """
         # Born before or on step AND (still alive OR died after this step)
-        return (self.born_at_step is not None and self.born_at_step <= step and
-                (self.died_at_step is None or self.died_at_step > step))
+        return (
+            self.born_at_step is not None
+            and self.born_at_step <= step
+            and (self.died_at_step is None or self.died_at_step > step)
+        )
 
     def handle_birth(self, step: int, theta: float | None):
         self.born_at_step = step
         self.alive = True
         self.thetas = []
         self.decision_history = {
-            'history_steps': [],
-            'new_thetas': [],
-            'explanations': [],
-            'vocalizations': [],
-            'prompts': []
+            "history_steps": [],
+            "new_thetas": [],
+            "explanations": [],
+            "vocalizations": [],
+            "prompts": [],
         }
         if theta is not None:
             self.thetas.append(theta)
@@ -76,19 +80,32 @@ class Wolf:
         self.alive = False
         self.died_at_step = step
 
-    def copy_theta(self, wolf: 'Wolf') -> None:
-        self.thetas.append(wolf.thetas[-1])
+    def copy_theta(self) -> None:
+        """Copy the most recent theta value to the next step"""
+        if self.thetas:
+            self.thetas.append(self.thetas[-1])
+        else:
+            # If no previous theta exists, use a default value
+            self.thetas.append(0.0)
 
-    def set_theta(self, step: int, theta: float): # no ai
-        self.thetas.append(theta)
+    def set_theta(self, step: int, theta: float):  # no ai
+        """Set a fixed theta value for this wolf (used in no_ai mode)"""
         if theta is not None:
             self.thetas.append(theta)
-            self.decision_history['history_steps'].append(step)
-            self.decision_history['new_thetas'].append(theta)
-            self.decision_history['prompts'].append("N/A")  # No prompt generated
-            self.decision_history['explanations'].append(f"Using provided theta: {theta}")
-            self.decision_history['vocalizations'].append(f"Using provided theta: {theta}")
+            self.decision_history["history_steps"].append(step)
+            self.decision_history["new_thetas"].append(theta)
+            self.decision_history["prompts"].append("N/A")  # No prompt generated
+            self.decision_history["explanations"].append(
+                f"Using provided theta: {theta}"
+            )
+            self.decision_history["vocalizations"].append(
+                f"Using provided theta: {theta}"
+            )
             return theta
+        else:
+            # If no theta is provided, use the previous value or a default
+            self.copy_theta()
+            return self.thetas[-1]
 
     def decide_theta(
         self,
@@ -128,11 +145,11 @@ class Wolf:
         )
 
         self.thetas.append(wolf_resp.theta)
-        self.decision_history['history_steps'].append(step)
-        self.decision_history['new_thetas'].append(wolf_resp.theta)
-        self.decision_history['prompts'].append(wolf_resp.prompt)
-        self.decision_history['explanations'].append(wolf_resp.explanation)
-        self.decision_history['vocalizations'].append(wolf_resp.vocalization)
+        self.decision_history["history_steps"].append(step)
+        self.decision_history["new_thetas"].append(wolf_resp.theta)
+        self.decision_history["prompts"].append(wolf_resp.prompt)
+        self.decision_history["explanations"].append(wolf_resp.explanation)
+        self.decision_history["vocalizations"].append(wolf_resp.vocalization)
 
         return wolf_resp.theta
 
@@ -140,7 +157,7 @@ class Wolf:
         """
         Process a single step for this wolf, calculating its contribution to the
         population dynamics.
-        
+
         Returns:
             A dictionary with the wolf's contributions to population changes
         """
@@ -205,11 +222,11 @@ class Agents:
         delta: float = 0.75,
         theta: float = None,
         opts: dict[str, Any] = None,
-        initial_step: int = 0
-    ) -> 'Agents':
+        initial_step: int = 0,
+    ) -> "Agents":
         """
         Factory method to create and properly initialize an Agents instance.
-        
+
         Args:
             n_wolves: Number of wolves to create
             beta: Predation rate
@@ -218,28 +235,19 @@ class Agents:
             theta: Fixed theta value (only used if no_ai is True)
             opts: Options dictionary
             initial_step: The initial step number for wolf birth
-            
+
         Returns:
             An initialized Agents instance with properly born wolves
         """
         if opts is None:
             opts = {}
-            
+
         # Create the Agents instance with minimal initialization
-        agents = Agents(
-            beta=beta,
-            gamma=gamma,
-            delta=delta,
-            opts=opts
-        )
-        
+        agents = Agents(beta=beta, gamma=gamma, delta=delta, opts=opts)
+
         # Add wolves with proper birth handling
         agents.birth_wolves(initial_step, n_wolves, theta)
-        
-        # Calculate and store the initial average theta
-        avg_theta = agents.update_average_theta()
-        agents.average_thetas = [avg_theta]
-        
+
         return agents
 
     @property
@@ -249,7 +257,7 @@ class Agents:
     @property
     def living_wolves_count(self) -> int:
         return sum(1 for wolf in self.wolves if wolf.alive)
-    
+
     def get_living_wolves(self) -> list[Wolf]:
         return [wolf for wolf in self.wolves if wolf.alive]
 
@@ -258,14 +266,7 @@ class Agents:
 
     def get_step_thetas(self, step: int) -> list[float]:
         # Added check to ensure step is within range for each wolf
-        return [
-            wolf.thetas[step]
-            for wolf in self.wolves
-            if wolf.alive_at_step(step)
-        ]
-
-    def get_living_wolves(self) -> list[Wolf]:
-        return [wolf for wolf in self.wolves if wolf.alive]
+        return [wolf.thetas[step] for wolf in self.wolves if wolf.alive_at_step(step)]
 
     def get_current_thetas(self) -> list[float]:
         """
@@ -294,12 +295,14 @@ class Agents:
         Get the number of living wolves at a given step.
         """
         # alive and born before or on step
-        return sum(1 for wolf in self.wolves if wolf.alive and wolf.born_at_step <= step)
+        return sum(
+            1 for wolf in self.wolves if wolf.alive and wolf.born_at_step <= step
+        )
 
     def get_living_wolf_count_history(self, max_step=None) -> list[int]:
         """
         Get the history of living wolf counts.
-        
+
         Args:
             max_step: Optional maximum step to include (defaults to current step)
         """
@@ -321,7 +324,9 @@ class Agents:
         Get the living wolves at a given step.
         """
         # for alive and born before or on step, return wolf_id
-        return [wolf for wolf in self.wolves if wolf.alive and wolf.born_at_step <= step]
+        return [
+            wolf for wolf in self.wolves if wolf.alive and wolf.born_at_step <= step
+        ]
 
     def get_living_wolves_history(self) -> list[list[Wolf]]:
         """
@@ -332,7 +337,10 @@ class Agents:
 
     def get_average_theta_history(self) -> list[float]:
         """
-        Get the history of thetas.
+        Get the history of average theta values.
+
+        Returns:
+            A list of average theta values, one per step
         """
         return self.average_thetas
 
@@ -342,7 +350,7 @@ class Agents:
         """
         decision_makers = []
         for wolf in self.wolves:
-            if step in wolf.decision_history['history_steps']:
+            if step in wolf.decision_history["history_steps"]:
                 decision_makers.append(wolf.wolf_id)
         return decision_makers
 
@@ -350,7 +358,9 @@ class Agents:
         """
         Get the history of decision makers.
         """
-        return [self.get_decision_makers_at_step(step) for step in range(len(self.wolves))]
+        return [
+            self.get_decision_makers_at_step(step) for step in range(len(self.wolves))
+        ]
 
     def get_wolf_history_data(self) -> dict:
         """
@@ -365,7 +375,7 @@ class Agents:
     def get_current_state(self) -> dict:
         """
         Get the current state of all wolves for snapshot creation.
-        
+
         Returns:
             A dictionary containing:
             - wolves_count: Number of living wolves
@@ -375,7 +385,7 @@ class Agents:
         return {
             "wolves_count": self.get_living_wolves_count(),
             "current_thetas": self.get_current_thetas(),
-            "mean_theta": self.get_mean_theta()
+            "mean_theta": self.get_mean_theta(),
         }
 
     def get_agents_summary(self) -> list[dict]:
@@ -409,26 +419,40 @@ class Agents:
 
         # Sort wolves by ID (oldest first)
         wolves_by_oldest = sorted(
-            [wolf for wolf in self.wolves if wolf.alive], 
-            key=lambda x: x.wolf_id
+            [wolf for wolf in self.wolves if wolf.alive], key=lambda x: x.wolf_id
         )
-        
+
         # Kill the oldest wolves first
         for wolf in wolves_by_oldest[:num_wolves]:
             wolf.handle_death(step)
 
-    def update_average_theta(self) -> float:
-        """Calculate the average theta of all living wolves."""
-        
+    def update_average_theta(self, append=True) -> float:
+        """
+        Calculate the average theta of all living wolves.
+
+        Args:
+            append: Whether to append the result to average_thetas (True) or
+                   just return it without modifying the history (False)
+
+        Returns:
+            The calculated average theta
+        """
+
         if self.living_wolves_count == 0:
             # Return the last average or a default if no history
-            self.average_thetas.append(0.0)
-            return 0.0
+            new_avg = 0.0
+        else:
+            new_avg = (
+                sum(
+                    wolf.thetas[-1]
+                    for wolf in self.get_living_wolves()  # most recent thetas in wolf histories
+                )
+                / self.living_wolves_count
+            )
 
-        new_avg = sum(
-            wolf.thetas[-1] for wolf in self.get_living_wolves() # most recent thetas in wolf histories
-        ) / self.living_wolves_count
-        self.average_thetas.append(new_avg)
+        if append:
+            self.average_thetas.append(new_avg)
+
         return new_avg
 
     def handle_population_changes(self, net_wolves_change: int, step: int) -> None:
@@ -438,7 +462,7 @@ class Agents:
         *after* the individual wolf steps, which instead focus on agency.
 
         Handle wolf population changes based on the net change value.
-        
+
         Args:
             net_wolves_change: Integer representing the net change in wolf population
             step: Current simulation step
@@ -448,7 +472,6 @@ class Agents:
         elif net_wolves_change < 0:
             self.kill_wolves(step, abs(net_wolves_change))
 
-
     def process_step_sync(self, params, domain, step) -> None:
         """
         Process the step for all wolves, updating the domain directly.
@@ -457,33 +480,29 @@ class Agents:
         # Reset accumulators in the domain
         domain.reset_accumulators()
 
-        if self.opts.get("no_ai", False):
-            theta = params.get("theta", 0.5)  # Use theta_star from params
-        else:
-            theta = None
-
         # Get current state values needed for decisions
         sheep_state = domain.sheep_state
         sheep_max = domain.sheep_capacity
-        living_wolves = [wolf for wolf in self.wolves if wolf.alive]
+        living_wolves = self.get_living_wolves()
 
         # Determine which wolves will update their theta this step
         # Randomly select wolves based on churn rate
 
         if self.opts.get("no_ai", True):
-            for wolf in self.get_living_wolves():
+            for wolf in living_wolves:
                 wolf.set_theta(step, params.get("theta", 0.5))
         else:
-            shuffled_wolves = random.shuffle(self.get_living_wolves()) # all alive wolves
             churn_count = max(1, int(self.living_wolves_count * self.churn_rate))
-            wolf_ids_to_update = random.sample(
-                shuffled_wolves, min(churn_count, self.living_wolves_count)
+            wolves_to_update = random.sample(
+                living_wolves, min(churn_count, self.living_wolves_count)
             )
 
-            for wolf in shuffled_wolves:
-                if wolf.wolf_id in wolf_ids_to_update:
+            for wolf in living_wolves:
+                if wolf in wolves_to_update:
                     # First decide theta based on current state
-                    wolf.decide_theta(sheep_state, self.living_wolves_count, sheep_max, step, False)
+                    wolf.decide_theta(
+                        sheep_state, self.living_wolves_count, sheep_max, step, False
+                    )
                 else:
                     wolf.copy_theta()
 
@@ -493,5 +512,8 @@ class Agents:
                 domain.step_accumulated_ds += domain_changes["ds"]
 
         # Calculate and store the average theta after all wolves have decided
-        print(f"Updating average theta for step {step}. Was: {self.average_thetas[-1]}")
-        self.update_average_theta()
+        if self.average_thetas:
+            print(
+                f"Updating average theta for step {step}. Was: {self.average_thetas[-1]}"
+            )
+        self.update_average_theta(append=True)

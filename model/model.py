@@ -1,14 +1,13 @@
 # model.py
 from __future__ import annotations
 
-import asyncio
 import time
 from dataclasses import dataclass, field
 from typing import Any
 
 from model.agents import Agents
 from model.domain import Domain
-from model.simulation_utils import save_simulation_results, round4, format4
+from model.simulation_utils import save_simulation_results
 
 # Not converting sheep from the ODE for now
 MODEL_PARAMS = {
@@ -117,7 +116,7 @@ def initialize_model(**kwargs) -> Model:
         delta=delta,
         theta=theta,
         opts=opts,
-        initial_step = 0  # Start at step 0
+        initial_step=0,  # Start at step 0
     )
 
     # Extract model parameters
@@ -150,7 +149,6 @@ class ModelRun:
     def __init__(self, model: Model):
         self.model = model
         self.current_step = 0
-
 
     def step(self) -> dict[str, Any]:
         """
@@ -259,7 +257,7 @@ class ModelRun:
                 "sheep_capacity": self.model.domain.sheep_capacity,
                 "sheep_state": self.model.domain.sheep_state,
             },
-            "agents": self.model.agents.get_agents_summary() # list of dict per wolf
+            "agents": self.model.agents.get_agents_summary(),  # list of dict per wolf
         }
 
         return detailed_results
@@ -273,6 +271,7 @@ class ModelRun:
 
         # Save results to file
         save_simulation_results(detailed_results, results_path)
+
 
 def run(**kwargs) -> dict[str, Any]:
     """
