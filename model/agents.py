@@ -56,7 +56,7 @@ class Wolf:
         return (self.born_at_step is not None and self.born_at_step <= step and
                 (self.died_at_step is None or self.died_at_step > step))
 
-    def handle_birth(self, step: int):
+    def handle_birth(self, step: int, theta: float | None):
         self.born_at_step = step
         self.alive = True
         self.thetas = []
@@ -67,10 +67,28 @@ class Wolf:
             'vocalizations': [],
             'prompts': []
         }
+        if theta is not None:
+            self.thetas.append(theta)
+        else:
+            self.thetas.append(0)
 
     def handle_death(self, step: int):
         self.alive = False
         self.died_at_step = step
+
+    def copy_theta(self, wolf: 'Wolf') -> None:
+        self.thetas.append(wolf.thetas[-1])
+
+    def set_theta(self, step: int, theta: float): # no ai
+        self.thetas.append(theta)
+        if theta is not None:
+            self.thetas.append(theta)
+            self.decision_history['history_steps'].append(step)
+            self.decision_history['new_thetas'].append(theta)
+            self.decision_history['prompts'].append("N/A")  # No prompt generated
+            self.decision_history['explanations'].append(f"Using provided theta: {theta}")
+            self.decision_history['vocalizations'].append(f"Using provided theta: {theta}")
+            return theta
 
     def decide_theta(
         self,
@@ -79,7 +97,6 @@ class Wolf:
         sheep_max: float,
         step: int,
         respond_verbosely: bool = True,
-        theta: float | None = None,
     ) -> float:
         """
         Decide the theta for this wolf.
@@ -99,18 +116,6 @@ class Wolf:
         """
         if not self.alive:
             return self.thetas[-1] if self.thetas else 1.0
-
-
-        # No AI mode only
-        if theta is not None:
-            self.thetas.append(theta)
-            self.decision_history['history_steps'].append(step)
-            self.decision_history['new_thetas'].append(theta)
-            self.decision_history['prompts'].append("N/A")  # No prompt generated
-            self.decision_history['explanations'].append(f"Using provided theta: {theta}")
-            self.decision_history['vocalizations'].append(f"Using provided theta: {theta}")
-            return theta
-
 
         # Call LLM to decide theta
         wolf_resp = get_wolf_response(
@@ -229,23 +234,10 @@ class Agents:
         )
         
         # Add wolves with proper birth handling
-        agents.birth_wolves(initial_step, n_wolves)
-        
-        # Initialize thetas for all wolves if no_ai mode is enabled
-        if opts.get("no_ai", False) and theta is not None:
-            for wolf in agents.wolves:
-                # Initialize with the provided theta
-                wolf.decide_theta(
-                    s=opts.get("s_start", 100),  # Default sheep population
-                    w=n_wolves,
-                    sheep_max=opts.get("sheep_max", 110),  # Default sheep capacity
-                    step=initial_step,
-                    respond_verbosely=False,
-                    theta=theta
-                )
+        agents.birth_wolves(initial_step, n_wolves, theta)
         
         # Calculate and store the initial average theta
-        avg_theta = agents.calculate_average_theta()
+        avg_theta = agents.update_average_theta()
         agents.average_thetas = [avg_theta]
         
         return agents
@@ -257,6 +249,9 @@ class Agents:
     @property
     def living_wolves_count(self) -> int:
         return sum(1 for wolf in self.wolves if wolf.alive)
+    
+    def get_living_wolves(self) -> list[Wolf]:
+        return [wolf for wolf in self.wolves if wolf.alive]
 
     def get_all_thetas(self) -> list[list[float]]:
         return [wolf.thetas for wolf in self.wolves if wolf.alive]
@@ -393,7 +388,7 @@ class Agents:
         return [wolf.to_dict() for wolf in self.wolves]
 
     # Note that heterogenous wolves would need additional logic
-    def birth_wolves(self, step: int, n_wolves: int) -> None:
+    def birth_wolves(self, step: int, n_wolves: int, theta: float = None) -> None:
         # Use the parameters stored at the Agents level
         for _ in range(n_wolves):
             new_wolf = Wolf(
@@ -402,7 +397,7 @@ class Agents:
                 gamma=self.gamma,
                 delta=self.delta,
             )
-            new_wolf.handle_birth(step)
+            new_wolf.handle_birth(step, theta)
             self.wolves.append(new_wolf)
 
     def kill_wolves(self, step: int, n_wolves: int) -> None:
@@ -422,17 +417,19 @@ class Agents:
         for wolf in wolves_by_oldest[:num_wolves]:
             wolf.handle_death(step)
 
-    def calculate_average_theta(self) -> float:
+    def update_average_theta(self) -> float:
         """Calculate the average theta of all living wolves."""
-        living_wolves = [wolf for wolf in self.wolves if wolf.alive]
-        if not living_wolves:
+        
+        if self.living_wolves_count == 0:
             # Return the last average or a default if no history
-            return self.average_thetas[-1] if self.average_thetas else 0.0
+            self.average_thetas.append(0.0)
+            return 0.0
 
-        return sum(
-            wolf.thetas[-1] if wolf.thetas else 0.0 for wolf in living_wolves
-        ) / len(living_wolves)
-
+        new_avg = sum(
+            wolf.thetas[-1] for wolf in self.get_living_wolves() # most recent thetas in wolf histories
+        ) / self.living_wolves_count
+        self.average_thetas.append(new_avg)
+        return new_avg
 
     def handle_population_changes(self, net_wolves_change: int, step: int) -> None:
         """
@@ -472,44 +469,29 @@ class Agents:
 
         # Determine which wolves will update their theta this step
         # Randomly select wolves based on churn rate
-        wolves_to_update = []
-        if not self.opts.get("no_ai", False):  # Only apply churn if AI is enabled
+
+        if self.opts.get("no_ai", True):
+            for wolf in self.get_living_wolves():
+                wolf.set_theta(step, params.get("theta", 0.5))
+        else:
+            shuffled_wolves = random.shuffle(self.get_living_wolves()) # all alive wolves
             churn_count = max(1, int(self.living_wolves_count * self.churn_rate))
-            wolves_to_update = random.sample(
-                living_wolves, min(churn_count, self.living_wolves_count)
+            wolf_ids_to_update = random.sample(
+                shuffled_wolves, min(churn_count, self.living_wolves_count)
             )
 
-        # Process each wolf (decide theta and update domain)
-        # Shuffle the wolves to avoid any bias in the order of processing
-        shuffled_wolves = list(self.wolves)  # Create a copy to shuffle
-        random.shuffle(shuffled_wolves)
-
-        for wolf in shuffled_wolves:
-            if wolf.alive:
-                # First decide theta based on current state
-                if self.opts.get("no_ai", False):
-                    # All wolves use the fixed theta in no_ai mode
-                    wolf.decide_theta(sheep_state, self.living_wolves_count, sheep_max, step, False, theta)
-                elif wolf in wolves_to_update:
-                    # Only selected wolves update their theta
-                    wolf.decide_theta(sheep_state, self.living_wolves_count, sheep_max, step, True)
+            for wolf in shuffled_wolves:
+                if wolf.wolf_id in wolf_ids_to_update:
+                    # First decide theta based on current state
+                    wolf.decide_theta(sheep_state, self.living_wolves_count, sheep_max, step, False)
                 else:
-                    # Other wolves keep their previous theta
-                    if wolf.thetas:
-                        previous_theta = wolf.thetas[-1]
-                        # Add theta but don't record as a decision
-                        wolf.decide_theta(sheep_state, self.living_wolves_count, sheep_max, step, False, previous_theta)
-                    else:
-                        # If a wolf has no previous theta (e.g., newly born), give it a default
-                        default_theta = params.get("theta_star", 0.5)
-                        # Add theta but don't record as a decision
-                        wolf.decide_theta(sheep_state, self.living_wolves_count, sheep_max, step, False, default_theta)
+                    wolf.copy_theta()
 
                 # Then update domain based on new theta
-                changes = wolf.process_step(params, step)
-                domain.step_accumulated_dw += changes["dw"]
-                domain.step_accumulated_ds += changes["ds"]
+                domain_changes = wolf.process_step(params, step)
+                domain.step_accumulated_dw += domain_changes["dw"]
+                domain.step_accumulated_ds += domain_changes["ds"]
 
         # Calculate and store the average theta after all wolves have decided
-        avg_theta = self.calculate_average_theta()
-        self.average_thetas.append(avg_theta)
+        print(f"Updating average theta for step {step}. Was: {self.average_thetas[-1]}")
+        self.update_average_theta()

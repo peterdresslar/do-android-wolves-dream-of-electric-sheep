@@ -8,7 +8,7 @@ from typing import Any
 
 from model.agents import Agents
 from model.domain import Domain
-from model.simulation_utils import save_simulation_results
+from model.simulation_utils import save_simulation_results, round4, format4
 
 # Not converting sheep from the ODE for now
 MODEL_PARAMS = {
@@ -117,7 +117,7 @@ def initialize_model(**kwargs) -> Model:
         delta=delta,
         theta=theta,
         opts=opts,
-        initial_step=0  # Start at step 0
+        initial_step = 0  # Start at step 0
     )
 
     # Extract model parameters
@@ -224,7 +224,7 @@ class ModelRun:
             "steps": self.current_step,
             "sheep_history": domain.sheep_history,
             "wolf_history": agents.get_living_wolf_count_history(),
-            "average_theta_history": agents.average_thetas,
+            "average_theta_history": agents.get_average_theta_history(),
             "final_sheep": domain.sheep_state,
             "final_wolves": agents.living_wolves_count,
             "runtime": runtime,
