@@ -193,11 +193,15 @@ def save_simulation_results(results, results_path=None):
             ) = None
 
     # Sample ten intermediate states evenly from history
+    # If fewer than 10 states, just sample and report all
     num_states = len(history)
     sample_states = []
     if num_states > 0:
-        step = max(1, num_states // 10)
-        sample_states = history[::step][:10]
+        if num_states < 10:
+            sample_states = history
+        else:
+            step = max(1, num_states // 10)
+            sample_states = history[::step][:10]
 
     # Use runtime from results if available
     real_time_elapsed = f"{results.get('runtime', 'not measured')} seconds"
