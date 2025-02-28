@@ -48,8 +48,8 @@ def format4(x) -> str:
 # Reference ODE Functions
 #################################################################
 def dx_dt(
-    x, t, alpha, beta, gamma, delta
-):  # noqa: ARG001 I want the t there for the moment
+    x, t, alpha, beta, gamma, delta  # noqa
+):
     s, w = x
     ds_dt = alpha * s - beta * s * w
     dw_dt = -gamma * w + delta * beta * s * w

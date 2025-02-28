@@ -18,7 +18,7 @@ from dotenv import load_dotenv
 
 MODEL = "gpt-4o-mini"  # for now
 MAX_TOKENS = 4096
-TEMPERATURE = 0.0
+TEMPERATURE = 0.7
 
 # Load keys from .env file. See .env.local.example
 load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env.local"))
@@ -151,30 +151,6 @@ def build_prompt_high_information(
     Build the prompt text to send to the LLM, providing details about the
     predator-prey model (Lotka-Volterra) plus new concepts like 'crowding'
     or 'fighting' among wolves.
-
-    Parameters:
-    -----------
-    s : float
-        Current number of sheep (S).
-    w : float
-        Current number of wolves (W).
-    old_theta : float
-        The previous step's theta value.
-    step : int
-        The current time step in the simulation.
-    sheep_max : float
-        The maximum capacity (or upper bound) for sheep.
-    alpha, beta, gamma, delta : float, optional
-        Model parameters if you'd like to pass them in.
-        By default None, in case you don't want to show them to the LLM.
-    respond_verbosely : bool
-        If True, the LLM will provide an explanation and vocalization.
-
-    Returns:
-    --------
-    prompt : str
-        A text prompt that describes the system state and requests
-        a new theta to balance classic LV behavior and new constraints.
     """
     prompt = [
         "You are a wolf who can adjust hunting intensity (theta) between 0 and 1.",
@@ -183,6 +159,7 @@ def build_prompt_high_information(
         "A lower theta means you are less aggressive toward prey and more toward other wolves.",
         "At a theta of 0, you are not even trying to hunt, and only compete with other wolves.",
         "Do not be too conservative about changing strategies as you only get so many chances to do so.",
+        "The most successful wolves make bold adjustments based on changing conditions.",
         "",
         "Current system state:",
         f"- Time step: {step}",
@@ -190,15 +167,16 @@ def build_prompt_high_information(
         f"- Wolves (w): {w:.2f}",
         f"- Previous theta: {old_theta:.3f}",
         f"- Maximum sheep capacity (sheep_max): {sheep_max:.2f}",
+        f"- Sheep-to-wolf ratio: {s/w:.2f} sheep per wolf",
+        f"- Sheep population is at {s/sheep_max*100:.1f}% of maximum capacity",
     ]
 
     prompt.append("")
     prompt.append("Your objectives:")
     prompt.append("1. Stay alive - ensure both wolves and sheep persist")
     prompt.append("2. Adapt to changing conditions (prey scarcity, wolf density)")
-    prompt.append(
-        "3. Consider that other wolves are also trying to survive and have the same objectives as you"
-    )
+    prompt.append("3. Consider that other wolves are also trying to survive and have the same objectives as you")
+    prompt.append("4. Be willing to make significant changes to your strategy when conditions change")
 
     if respond_verbosely:
         prompt.append(
@@ -211,7 +189,7 @@ def build_prompt_high_information(
         prompt.append(
             """
             {
-                "theta": 0.5,
+                "theta": 0.7,
                 "explanation": "I chose this theta because...",
                 "vocalization": "Growwllllllll..."
             }
@@ -222,7 +200,7 @@ def build_prompt_high_information(
         prompt.append(
             """
             {
-                "theta": 0.5
+                "theta": 0.7
             }
             """
         )
