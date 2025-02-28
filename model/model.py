@@ -209,7 +209,7 @@ class ModelRun:
         agents = self.model.agents
         domain = self.model.domain
 
-        print(f"Starting simulation at {start_time} with {self.model.steps} steps.")
+        print(f"Starting simulation at {datetime.datetime.fromtimestamp(start_time)} with {self.model.steps} steps.")
         print(f"Model params: {params}")
         print(f"Model opts: {opts}")
         print(f"Domain starting sheep: {domain.sheep_state}")
