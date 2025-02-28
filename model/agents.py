@@ -167,7 +167,7 @@ class Wolf:
 
         return wolf_resp.theta
 
-    def process_step(self, params, step):
+    def process_step(self, params, domain, step):
         """
         Process a single step for this wolf, calculating its contribution to the
         population dynamics.
@@ -179,7 +179,7 @@ class Wolf:
             return {"dw": 0, "ds": 0}
 
         dt = params.get("dt", 0.02)
-        s = params.get("sheep_state", 0)  # Get sheep state from params
+        s = domain.sheep_state  # Get sheep state from domain
 
         # Get the current theta (hunting intensity)
         current_theta = self.thetas[-1] if self.thetas else self.starting_theta
@@ -516,7 +516,7 @@ class Agents:
                     wolf.copy_theta()
 
                 # Then update domain based on new theta
-                domain_changes = wolf.process_step(params, step)
+                domain_changes = wolf.process_step(params, domain, step)
                 domain.step_accumulated_dw += domain_changes["dw"]
                 domain.step_accumulated_ds += domain_changes["ds"]
 
