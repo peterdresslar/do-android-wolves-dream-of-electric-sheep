@@ -74,7 +74,6 @@ class Domain:
         new_s_or_zero = max(0, new_s)
         new_s_or_max = min(new_s_or_zero, self.sheep_capacity)
         self.sheep_state = new_s_or_max
-        self.sheep_history.append(self.sheep_state)
 
         net_wolves_change = int(dw_total)
         new_remainder = dw_total - net_wolves_change

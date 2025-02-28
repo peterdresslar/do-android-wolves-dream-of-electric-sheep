@@ -16,6 +16,7 @@ class Wolf:
     alive: bool = True
     born_at_step: int = field(default=None)
     died_at_step: int = field(default=None)
+    starting_theta: float = 0.5  # Default starting theta
     # All thetas for every step (always populated)
     thetas: list[float] = field(default_factory=list)
     # Decision history (only populated when a decision is made)
@@ -59,6 +60,18 @@ class Wolf:
             and self.born_at_step <= step
             and (self.died_at_step is None or self.died_at_step > step)
         )
+    
+    def handle_starting_theta(self, theta: float | None):
+        """
+        Handle the starting theta for a wolf. This is important
+        as wolves could be born (depending on where we go from here)
+        at various intertemporal points. Additionally, we may want to deal with 
+        randomized starting thetas (and in fact we will to start with).
+        """
+        if theta is not None:
+            self.starting_theta = theta
+        else:
+            self.starting_theta = round(random.uniform(0, 1), 2)
 
     def handle_birth(self, step: int, theta: float | None):
         self.born_at_step = step
@@ -71,10 +84,11 @@ class Wolf:
             "vocalizations": [],
             "prompts": [],
         }
-        if theta is not None:
-            self.thetas.append(theta)
-        else:
-            self.thetas.append(0)
+        
+        # Set the starting theta
+        self.handle_starting_theta(theta)
+        
+ 
 
     def handle_death(self, step: int):
         self.alive = False
@@ -85,8 +99,8 @@ class Wolf:
         if self.thetas:
             self.thetas.append(self.thetas[-1])
         else:
-            # If no previous theta exists, use a default value
-            self.thetas.append(0.0)
+            # If no previous theta exists, use the starting theta
+            self.thetas.append(self.starting_theta)
 
     def set_theta(self, step: int, theta: float):  # no ai
         """Set a fixed theta value for this wolf (used in no_ai mode)"""
@@ -103,7 +117,7 @@ class Wolf:
             )
             return theta
         else:
-            # If no theta is provided, use the previous value or a default
+            # If no theta is provided, use the previous value or the starting theta
             self.copy_theta()
             return self.thetas[-1]
 
@@ -132,14 +146,14 @@ class Wolf:
             The chosen theta value.
         """
         if not self.alive:
-            return self.thetas[-1] if self.thetas else 1.0
+            return self.thetas[-1] if self.thetas else self.starting_theta
 
         # Call LLM to decide theta
         wolf_resp = get_wolf_response(
             s=s,
             w=w,
             sheep_max=sheep_max,
-            old_theta=self.thetas[-1] if self.thetas else 1.0,
+            old_theta=self.thetas[-1] if self.thetas else self.starting_theta,
             step=step,
             respond_verbosely=respond_verbosely,
         )
@@ -168,7 +182,7 @@ class Wolf:
         s = params.get("sheep_state", 0)  # Get sheep state from params
 
         # Get the current theta (hunting intensity)
-        current_theta = self.thetas[-1] if self.thetas else 1.0
+        current_theta = self.thetas[-1] if self.thetas else self.starting_theta
 
         # Calculate wolf's contribution to population change
         # Wolf death rate
@@ -225,29 +239,29 @@ class Agents:
         initial_step: int = 0,
     ) -> "Agents":
         """
-        Factory method to create and properly initialize an Agents instance.
-
-        Args:
-            n_wolves: Number of wolves to create
-            beta: Predation rate
-            gamma: Death rate
-            delta: Conversion efficiency
-            theta: Fixed theta value (only used if no_ai is True)
-            opts: Options dictionary
-            initial_step: The initial step number for wolf birth
-
-        Returns:
-            An initialized Agents instance with properly born wolves
+        Create a new Agents instance with n_wolves.
         """
         if opts is None:
             opts = {}
-
-        # Create the Agents instance with minimal initialization
+        
         agents = Agents(beta=beta, gamma=gamma, delta=delta, opts=opts)
-
-        # Add wolves with proper birth handling
-        agents.birth_wolves(initial_step, n_wolves, theta)
-
+        
+        # Initialize with proper theta values
+        default_theta = theta if theta is not None else 0.5  # Use 0.5 as default
+        
+        for i in range(n_wolves):
+            wolf = Wolf(
+                wolf_id=i,
+                beta=beta,
+                gamma=gamma,
+                delta=delta,
+            )
+            wolf.handle_birth(initial_step, default_theta)
+            agents.wolves.append(wolf)
+        
+        # Initialize average theta history with the initial theta
+        agents.average_thetas = [default_theta]
+        
         return agents
 
     @property
