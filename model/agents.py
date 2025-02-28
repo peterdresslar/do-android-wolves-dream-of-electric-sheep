@@ -507,7 +507,7 @@ class Agents:
                 if wolf in wolves_to_update:
                     # First decide theta based on current state
                     wolf.decide_theta(
-                        sheep_state, self.living_wolves_count, sheep_max, step, False
+                        sheep_state, self.living_wolves_count, sheep_max, step, True
                     )
                 else:
                     wolf.copy_theta()
