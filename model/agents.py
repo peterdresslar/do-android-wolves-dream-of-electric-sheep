@@ -108,9 +108,51 @@ class Wolf:
             # If no previous theta exists, use the starting theta
             self.thetas.append(self.starting_theta)
 
-    def set_theta(self, step: int, theta: float):  # no ai
-        """Set a fixed theta value for this wolf (used in no_ai mode)"""
-        if theta is not None:
+    def set_theta(self, step: int, theta: float = None, domain=None, params=None):  # no ai
+        """
+        Set theta value for this wolf (used in no_ai mode).
+        If theta is None and domain is provided, calculate theta using the function 
+        from the methods notebook that responds to prey scarcity.
+        
+        Args:
+            step: Current simulation step
+            theta: Fixed theta value if provided
+            domain: Domain object containing sheep state and capacity
+            params: Parameters dictionary for theta function configuration
+        
+        Returns:
+            The set theta value
+        """
+        # If domain and params are provided but no specific theta, calculate using the function
+        if theta is None and domain is not None and params is not None:
+            print(f"Step {step}: Calculating theta using the function")
+            
+            # Calculate theta using the function: θ(s) = 1/(1 + k*s0/(s + ε))
+            k = params.get("k", 1.0)  # Sensitivity parameter
+            s0 = params.get("sheep_max", domain.sheep_capacity)  # Reference sheep population
+            epsilon = params.get("eps", 0.0001)  # Small constant to avoid division by zero
+            sheep_state = domain.sheep_state
+            
+            print(f"  Parameters: k={k}, s0={s0}, epsilon={epsilon}, sheep_state={sheep_state}")
+            
+            # Calculate theta using the function from the methods notebook
+            calculated_theta = 1.0 / (1.0 + k * s0 / (sheep_state + epsilon))
+            
+            print(f"  Calculated theta: {calculated_theta:.4f}")
+            
+            self.thetas.append(calculated_theta)
+            self.decision_history["history_steps"].append(step)
+            self.decision_history["new_thetas"].append(calculated_theta)
+            self.decision_history["prompts"].append("N/A")  # No prompt generated
+            self.decision_history["explanations"].append(
+                f"Calculated theta: {calculated_theta:.4f} based on sheep population: {sheep_state:.2f}"
+            )
+            self.decision_history["vocalizations"].append(
+                f"Calculated theta: {calculated_theta:.4f} based on sheep population: {sheep_state:.2f}"
+            )
+            return calculated_theta
+        # If a specific theta is provided, use it directly
+        elif theta is not None:
             self.thetas.append(theta)
             self.decision_history["history_steps"].append(step)
             self.decision_history["new_thetas"].append(theta)
@@ -123,55 +165,10 @@ class Wolf:
             )
             return theta
         else:
-            # If no theta is provided, use the previous value or the starting theta
+            # If no theta is provided and no domain, use the previous value or the starting theta
             self.copy_theta()
             return self.thetas[-1]
 
-    def decide_theta(
-        self,
-        s: float,
-        w: float,
-        sheep_max: float,
-        step: int,
-        respond_verbosely: bool = True,
-    ) -> float:
-        """
-        Decide the theta for this wolf.
-        If AI is enabled, the theta is decided by the wolf using an LLM response.
-        If AI is disabled, the theta is provided as an argument.
-
-        Args:
-            s: current sheep population
-            w: current wolf population
-            sheep_max: maximum sheep capacity
-            step: current simulation step
-            respond_verbosely: include verbose response from LLM
-            theta: fixed theta value if provided
-
-        Returns:
-            The chosen theta value.
-        """
-        if not self.alive:
-            return self.thetas[-1] if self.thetas else self.starting_theta
-
-        # Call LLM to decide theta
-        wolf_resp = get_wolf_response(
-            s=s,
-            w=w,
-            sheep_max=sheep_max,
-            old_theta=self.thetas[-1] if self.thetas else self.starting_theta,
-            step=step,
-            respond_verbosely=respond_verbosely,
-        )
-
-        self.thetas.append(wolf_resp.theta)
-        self.decision_history["history_steps"].append(step)
-        self.decision_history["new_thetas"].append(wolf_resp.theta)
-        self.decision_history["prompts"].append(wolf_resp.prompt)
-        self.decision_history["explanations"].append(wolf_resp.explanation)
-        self.decision_history["vocalizations"].append(wolf_resp.vocalization)
-
-        return wolf_resp.theta
 
     async def decide_theta_async(
         self,
@@ -541,9 +538,17 @@ class Agents:
         living_wolves = self.get_living_wolves()
 
         if self.opts.get("no_ai", True):
-            # No AI mode - just set thetas directly
+            # No AI mode - use set_theta with domain and params to calculate theta
+            # Make sure we're passing the sheep_max parameter
+            if "sheep_max" not in params:
+                params = params.copy()  # Create a copy to avoid modifying the original
+                params["sheep_max"] = sheep_max
+            
+            print(f"Step {step}: Processing with sheep_state={sheep_state}, sheep_max={sheep_max}")
+            
             for wolf in living_wolves:
-                wolf.set_theta(step, params.get("theta", 0.5))
+                # Don't pass theta parameter at all to force using the function
+                wolf.set_theta(step, None, domain, params)
                 domain_changes = wolf.process_step(params, domain, step)
                 domain.step_accumulated_dw += domain_changes["dw"]
                 domain.step_accumulated_ds += domain_changes["ds"]
