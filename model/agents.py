@@ -76,7 +76,7 @@ class Wolf:
         else:
             self.starting_theta = round(random.uniform(0, 1), 2)
 
-    def handle_birth(self, step: int, theta: float | None):
+    def handle_birth(self, step: int, theta: float | None = None):
         self.born_at_step = step
         self.alive = True
         self.thetas = []
@@ -89,7 +89,10 @@ class Wolf:
         }
 
         # Set the starting theta
-        self.handle_starting_theta(theta)
+        if theta is not None:
+            self.handle_starting_theta(theta)
+        else:
+            self.handle_starting_theta(None)
 
         self.thetas.append(self.starting_theta)
 
@@ -294,7 +297,7 @@ class Agents:
                 gamma=gamma,
                 delta=delta,
             )
-            wolf.handle_birth(initial_step, default_theta)
+            wolf.handle_birth(initial_step)
             agents.wolves.append(wolf)
 
         # Initialize average theta history with the initial theta
