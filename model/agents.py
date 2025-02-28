@@ -60,12 +60,12 @@ class Wolf:
             and self.born_at_step <= step
             and (self.died_at_step is None or self.died_at_step > step)
         )
-    
+
     def handle_starting_theta(self, theta: float | None):
         """
         Handle the starting theta for a wolf. This is important
         as wolves could be born (depending on where we go from here)
-        at various intertemporal points. Additionally, we may want to deal with 
+        at various intertemporal points. Additionally, we may want to deal with
         randomized starting thetas (and in fact we will to start with).
         """
         if theta is not None:
@@ -84,13 +84,11 @@ class Wolf:
             "vocalizations": [],
             "prompts": [],
         }
-        
+
         # Set the starting theta
         self.handle_starting_theta(theta)
 
         self.thetas.append(self.starting_theta)
-        
- 
 
     def handle_death(self, step: int):
         self.alive = False
@@ -245,12 +243,12 @@ class Agents:
         """
         if opts is None:
             opts = {}
-        
+
         agents = Agents(beta=beta, gamma=gamma, delta=delta, opts=opts)
-        
+
         # Initialize with proper theta values
         default_theta = theta if theta is not None else 0.5  # Use 0.5 as default
-        
+
         for i in range(n_wolves):
             wolf = Wolf(
                 wolf_id=i,
@@ -260,10 +258,10 @@ class Agents:
             )
             wolf.handle_birth(initial_step, default_theta)
             agents.wolves.append(wolf)
-        
+
         # Initialize average theta history with the initial theta
         agents.average_thetas = [default_theta]
-        
+
         return agents
 
     @property
@@ -294,7 +292,9 @@ class Agents:
         """
         Get the mean current theta of all living wolves.
         """
-        if not len(self.get_current_thetas()) == 0: # if no wolves are alive, return 0.0
+        if (
+            not len(self.get_current_thetas()) == 0
+        ):  # if no wolves are alive, return 0.0
             return sum(self.get_current_thetas()) / len(self.get_current_thetas())
         else:
             return 0.0
@@ -322,12 +322,14 @@ class Agents:
         """
         # Determine the maximum step from theta history length
         # This ensures we cover all simulation steps, not just birth/death events
-        max_step = max(len(wolf.thetas) for wolf in self.wolves) - 1 if self.wolves else 0
-        
+        max_step = (
+            max(len(wolf.thetas) for wolf in self.wolves) - 1 if self.wolves else 0
+        )
+
         # Ensure we have at least as many steps as average_thetas
-        if hasattr(self, 'average_thetas') and self.average_thetas:
+        if hasattr(self, "average_thetas") and self.average_thetas:
             max_step = max(max_step, len(self.average_thetas) - 1)
-        
+
         return [self.get_living_wolves_count_step(step) for step in range(max_step + 1)]
 
     def get_living_wolves_step(self, step: int) -> list[Wolf]:

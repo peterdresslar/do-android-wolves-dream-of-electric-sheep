@@ -38,6 +38,7 @@ class WolfResponse:
 @dataclass
 class Usage:
     """Track token usage and cost for LLM calls"""
+
     prompt_tokens: int = 0
     completion_tokens: int = 0
     total_tokens: int = 0
@@ -66,10 +67,12 @@ class Usage:
 # Add this after the Usage class definition
 current_usage = None
 
+
 def set_current_usage(usage: Usage):
     """Set the current usage object for tracking LLM calls"""
     global current_usage
     current_usage = usage
+
 
 def get_current_usage() -> Usage:
     """Get the current usage object"""
@@ -328,7 +331,7 @@ def call_llm(
     model: str = MODEL,
     temperature: float = TEMPERATURE,
     max_tokens: int = MAX_TOKENS,
-    usage: Usage = None
+    usage: Usage = None,
 ) -> str:
     """
     Call the OpenAI ChatCompletion endpoint with the given prompt.
@@ -336,7 +339,7 @@ def call_llm(
     # Use the global usage object if none is provided
     global current_usage
     usage_to_update = usage if usage is not None else current_usage
-    
+
     # Ensure your environment has OPENAI_API_KEY set
     client = openai.OpenAI()
 
@@ -346,15 +349,13 @@ def call_llm(
         max_tokens=max_tokens,
         temperature=temperature,
     )
-    
+
     # Update usage if available
     if usage_to_update is not None:
         usage_to_update.add(
-            response.usage.prompt_tokens,
-            response.usage.completion_tokens,
-            model
+            response.usage.prompt_tokens, response.usage.completion_tokens, model
         )
-    
+
     return response.choices[0].message.content
 
 

@@ -8,8 +8,7 @@ from typing import Any
 from model.agents import Agents
 from model.domain import Domain
 from model.simulation_utils import save_simulation_results
-
-from model.utils import Usage, set_current_usage, get_current_usage
+from model.utils import Usage, set_current_usage
 
 # Not converting sheep from the ODE for now
 MODEL_PARAMS = {
@@ -150,6 +149,7 @@ class ModelRun:
     Since we are working with AIs, we track usage for each ModelRun instance.
 
     """
+
     def __init__(self, model: Model):
         self.model = model
         self.current_step = 0
@@ -215,7 +215,7 @@ class ModelRun:
         print(f"Domain starting sheep: {domain.sheep_state}")
         print(f"Agents starting wolves: {len([w for w in agents.wolves if w.alive])}")
 
-        i = 0 # dont increment on first step, allowing start at zero
+        i = 0  # dont increment on first step, allowing start at zero
         for _ in range(self.model.steps):
             self.current_step += i
             snapshot = self.step()
