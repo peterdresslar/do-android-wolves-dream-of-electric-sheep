@@ -18,7 +18,7 @@ from dotenv import load_dotenv
 
 MODEL = "gpt-4o-mini"  # for now
 MAX_TOKENS = 4096
-TEMPERATURE = 0.7
+TEMPERATURE = 0.2
 
 # Load keys from .env file. See .env.local.example
 load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env.local"))
@@ -185,22 +185,22 @@ def build_prompt_high_information(
         prompt.append(
             "Please also provide a short vocalization expressing your wolf's aggression level."
         )
-        prompt.append("Please respond with a JSON object in this format:")
+        prompt.append("Please respond with a JSON object in this format, where [your new theta] is a float between 0 and 1 with your new theta (up to 2 decimal places):")
         prompt.append(
             """
             {
-                "theta": 0.7,
+                "theta": [your new theta],
                 "explanation": "I chose this theta because...",
                 "vocalization": "Growwllllllll..."
             }
             """
         )
     else:
-        prompt.append("Please respond with a JSON object in this format:")
+        prompt.append("Please respond with a JSON object in this format, where [your new theta] is a float between 0 and 1 with your new theta (up to 2 decimal places):")
         prompt.append(
             """
             {
-                "theta": 0.7
+                "theta": [your new theta]
             }
             """
         )
