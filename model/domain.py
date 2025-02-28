@@ -23,25 +23,22 @@ class Domain:
         self.step_accumulated_dw = 0
         self.accumulated_dw_remainder = 0
 
-        # Step counter
-        self.current_step = 0
-
     def reset_accumulators(self):
         """Reset accumulators at the beginning of each step."""
         self.step_accumulated_ds = 0
         self.step_accumulated_dw = 0
 
-    def get_state_dict(self):
+    def get_state_dict(self, step: int):
         """Return the current state as a dictionary for agents to use."""
         return {
             "sheep_state": self.sheep_state,
             "step_accumulated_ds": self.step_accumulated_ds,
             "step_accumulated_dw": self.step_accumulated_dw,
             "accumulated_dw_remainder": self.accumulated_dw_remainder,
-            "current_step": self.current_step,
+            "step": step,
         }
 
-    def update_from_state_dict(self, state_dict):
+    def update_from_state_dict(self, state_dict: dict, step: int):
         """Update domain state from a state dictionary."""
         self.sheep_state = state_dict.get("sheep_state", self.sheep_state)
         self.step_accumulated_ds = state_dict.get(
@@ -53,7 +50,7 @@ class Domain:
         self.accumulated_dw_remainder = state_dict.get(
             "accumulated_dw_remainder", self.accumulated_dw_remainder
         )
-        self.current_step = state_dict.get("current_step", self.current_step)
+        self.step = state_dict.get("step", step)
 
     # In the reference notebook, this is ODE_accumulate_and_fit()
     # This function is here because our sheep our being operated on, and they belong as a population
@@ -101,7 +98,3 @@ class Domain:
         # Apply sheep capacity limit
         self.sheep_state = min(self.sheep_state, self.sheep_capacity)
         self.sheep_history.append(self.sheep_state)
-
-    def increment_step(self):
-        """Increment the current step counter."""
-        self.current_step += 1

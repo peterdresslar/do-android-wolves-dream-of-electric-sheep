@@ -149,6 +149,7 @@ class ModelRun:
     def __init__(self, model: Model):
         self.model = model
         self.current_step = 0
+        self.snapshots = []
 
     def step(self) -> dict[str, Any]:
         """
@@ -176,8 +177,6 @@ class ModelRun:
         # 5. Process sheep growth
         domain.process_sheep_growth(params)
 
-        # 6. Increment step counter
-        domain.increment_step()
         snapshot = {
             "step": self.current_step,
             "sheep": domain.sheep_state,
@@ -185,8 +184,6 @@ class ModelRun:
             "thetas": agents.get_current_thetas(),
             "mean_theta": agents.get_mean_theta(),
         }
-
-        self.current_step += 1
 
         return snapshot
 
@@ -209,10 +206,12 @@ class ModelRun:
         print(f"Domain starting sheep: {domain.sheep_state}")
         print(f"Agents starting wolves: {len([w for w in agents.wolves if w.alive])}")
 
-        print(f"Agents: {agents.wolves[0].to_dict()}")
-
-        while self.current_step < self.model.steps:
-            self.step()
+        i = 0 # dont increment on first step, allowing start at zero
+        for _ in range(self.model.steps):
+            self.current_step += i
+            snapshot = self.step()
+            self.snapshots.append(snapshot)
+            i = 1  # i learned this approach in BASIC
 
         end_time = time.time()
         runtime = end_time - start_time
