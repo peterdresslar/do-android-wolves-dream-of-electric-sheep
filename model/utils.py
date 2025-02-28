@@ -152,39 +152,58 @@ def build_prompt_high_information(
     predator-prey model (Lotka-Volterra) plus new concepts like 'crowding'
     or 'fighting' among wolves.
     """
+    # Calculate sheep-to-wolf ratio for context
+    sheep_wolf_ratio = s/w if w > 0 else float('inf')
+    
     prompt = [
-        "You are a wolf who can adjust your balance between competing with other wolves and hunting sheep."
-        "A theta of 1 means you hunt sheep at full intensity."
-        "A theta of 0 means you focus entirely on competing with other wolves, not hunting sheep."
-        "Values inbetween represent balance between the two activities."
-        "You are natually protective of your territory and competing with other wolves will help keep them out."
-        "But, when sheep are scarce, you need to hunt more just to eat enough to survive."
-        "Above all, you and your pack need to survive."
-        "By the way, you can only change your tactics some of the times, so live in the moment, like a wolf!"
+        "You are a wolf in a delicate ecosystem with sheep as your prey.",
+        "You can adjust your balance between competing with other wolves and hunting sheep using a value called theta.",
         "",
-        "Current system state:",
+        "Understanding theta:",
+        "- Higher theta (closer to 1): You hunt sheep more intensely, which helps wolves grow but depletes sheep",
+        "- Lower theta (closer to 0): You focus on competing with other wolves, which reduces wolf population but allows sheep to recover",
+        "- Moderate theta (around 0.4-0.6): A balanced approach that leads to sustainable coexistence",
+        "",
+        "Wisdom from generations of wolves:",
+        "- When sheep are plentiful, maintain moderate to high hunting intensity",
+        "- Only reduce hunting intensity significantly when wolf numbers grow too large relative to sheep",
+        "- Avoid extreme values - both very high and very low theta can lead to instability",
+        "- Make gradual adjustments rather than dramatic changes to your strategy",
+        "- The most successful wolf packs maintain a balance that allows both populations to thrive",
+        "",
+        "Current ecosystem state:",
         f"- Time step: {step}",
-        f"- Sheep (s): {s:.2f}",
-        f"- Wolves (w): {w:.2f}",
-        f"- Previous theta: {old_theta:.3f}",
-        f"- Maximum sheep capacity (sheep_max): {sheep_max:.2f}",
-        f"- Sheep-to-wolf ratio: {s/w:.2f} sheep per wolf",
+        f"- Sheep population: {s:.2f}",
+        f"- Wolf population: {w:.2f}",
+        f"- Your previous theta: {old_theta:.3f}",
+        f"- Sheep-to-wolf ratio: {sheep_wolf_ratio:.2f} sheep per wolf",
         f"- Sheep population is at {s/sheep_max*100:.1f}% of maximum capacity",
     ]
 
+    # Add contextual advice based on the current state
+    if w > 30 and s < sheep_max * 0.5:
+        prompt.append("\nThe wolf population is high while sheep are declining. Consider competing more with other wolves.")
+    elif w < 15 and s > sheep_max * 0.6:
+        prompt.append("\nThe wolf population is low while sheep are abundant. You can focus more on hunting.")
+    elif sheep_wolf_ratio < 2:
+        prompt.append("\nThere are very few sheep per wolf. This is a dangerous situation that requires immediate action.")
+    elif s > sheep_max * 0.7 and w < 25:
+        prompt.append("\nSheep are abundant and wolf population is moderate. This is an ideal time for hunting.")
+    
     prompt.append("")
-    prompt.append("Your objectives:")
-    prompt.append("1. Stay alive - ensure both wolves and sheep persist")
-    prompt.append("2. Adapt to changing conditions (prey scarcity, wolf density)")
-    prompt.append("3. Consider that other wolves are also trying to survive and have the same objectives as you")
-    prompt.append("4. Be willing to make significant changes to your strategy when conditions change")
+    prompt.append("Your objectives as a wise wolf:")
+    prompt.append("1. Ensure the long-term survival of both wolves and sheep")
+    prompt.append("2. Maintain a healthy wolf population - neither too small nor too large")
+    prompt.append("3. Hunt aggressively when sheep are plentiful and wolves are few")
+    prompt.append("4. Reduce hunting only when necessary to prevent sheep depletion")
+    prompt.append("5. Find the optimal balance that creates stable cycles rather than crashes")
 
     if respond_verbosely:
         prompt.append(
             "Please provide a short explanation of your reasoning for choosing theta."
         )
         prompt.append(
-            "Please also provide a short vocalization expressing the attitude your wolf has about the surrounding environment."
+            "Please also provide a short vocalization expressing your wolf's attitude about the current situation."
         )
         prompt.append("Please respond with a JSON object in this format, where [your new theta] is a float between 0 and 1 with your new theta (up to 2 decimal places):")
         prompt.append(

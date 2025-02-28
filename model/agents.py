@@ -553,11 +553,20 @@ class Agents:
                 domain.step_accumulated_dw += domain_changes["dw"]
                 domain.step_accumulated_ds += domain_changes["ds"]
         else:
-            # Determine which wolves will update their theta this step
-            churn_count = max(1, int(self.living_wolves_count * self.churn_rate))
-            wolves_to_update = random.sample(
-                living_wolves, min(churn_count, self.living_wolves_count)
+            # Simple adaptive churn with a minimum number of wolves updating
+            initial_wolf_count = params.get("initial_wolves", 10)  # Get initial wolf count from params
+            min_wolves_to_update = max(1, initial_wolf_count // 2)  # At least half the initial wolves
+            
+            # Calculate churn count with a minimum floor
+            churn_count = max(
+                min_wolves_to_update,  # Minimum number of wolves to update
+                int(self.living_wolves_count * self.churn_rate)  # Standard churn calculation
             )
+            
+            # Ensure we don't try to update more wolves than exist
+            churn_count = min(churn_count, self.living_wolves_count)
+            
+            wolves_to_update = random.sample(living_wolves, churn_count)
             
             # For wolves not updating, just copy their previous theta
             for wolf in living_wolves:
