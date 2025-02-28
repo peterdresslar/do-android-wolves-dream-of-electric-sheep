@@ -9,6 +9,8 @@ from model.agents import Agents
 from model.domain import Domain
 from model.simulation_utils import save_simulation_results
 
+from model.utils import Usage, set_current_usage, get_current_usage
+
 # Not converting sheep from the ODE for now
 MODEL_PARAMS = {
     "alpha": 1,
@@ -144,12 +146,15 @@ class ModelRun:
     Represents a simulation run of the Model.
     This class handles the simulation loop, yielding intermediate states and
     final results.
-    """
 
+    Since we are working with AIs, we track usage for each ModelRun instance.
+
+    """
     def __init__(self, model: Model):
         self.model = model
         self.current_step = 0
         self.snapshots = []
+        self.usage = Usage()
 
     def step(self) -> dict[str, Any]:
         """
@@ -194,11 +199,14 @@ class ModelRun:
         This method focuses on running the simulation and returning essential data
         needed by notebook functions or other callers.
         """
+
+        set_current_usage(self.usage)
         start_time = time.time()
         params = self.model.params
         opts = self.model.opts
         agents = self.model.agents
         domain = self.model.domain
+        
 
         print(f"Starting simulation at {start_time} with {self.model.steps} steps.")
         print(f"Model params: {params}")
@@ -225,12 +233,15 @@ class ModelRun:
             "final_sheep": domain.sheep_state,
             "final_wolves": agents.living_wolves_count,
             "runtime": runtime,
+            "usage": self.usage.to_dict(),  # Add usage information
         }
 
         # If saving is enabled, prepare and save detailed results
         if self.model.opts.get("save_results", True):
             self._save_simulation_results(runtime)
             print(f"Simulation completed in {runtime} seconds.")
+
+        print(f"Usage: {self.usage.to_dict()}")
 
         return results
 
@@ -257,6 +268,7 @@ class ModelRun:
                 "sheep_state": self.model.domain.sheep_state,
             },
             "agents": self.model.agents.get_agents_summary(),  # list of dict per wolf
+            "usage": self.usage.to_dict(),  # Add usage information
         }
 
         return detailed_results

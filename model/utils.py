@@ -35,6 +35,84 @@ class WolfResponse:
     vocalization: str | None = None
 
 
+@dataclass
+class Usage:
+    """Track token usage and cost for LLM calls"""
+    prompt_tokens: int = 0
+    completion_tokens: int = 0
+    total_tokens: int = 0
+    cost: float = 0.0
+    calls: int = 0
+
+    def add(self, prompt_tokens: int, completion_tokens: int, model: str) -> None:
+        """Add token usage from a single LLM call"""
+        self.prompt_tokens += prompt_tokens
+        self.completion_tokens += completion_tokens
+        self.total_tokens += prompt_tokens + completion_tokens
+        self.cost += calculate_cost(prompt_tokens, completion_tokens, model)
+        self.calls += 1
+
+    def to_dict(self) -> dict:
+        """Convert to dictionary for serialization"""
+        return {
+            "prompt_tokens": self.prompt_tokens,
+            "completion_tokens": self.completion_tokens,
+            "total_tokens": self.total_tokens,
+            "cost": self.cost,
+            "calls": self.calls,
+        }
+
+
+# Add this after the Usage class definition
+current_usage = None
+
+def set_current_usage(usage: Usage):
+    """Set the current usage object for tracking LLM calls"""
+    global current_usage
+    current_usage = usage
+
+def get_current_usage() -> Usage:
+    """Get the current usage object"""
+    global current_usage
+    return current_usage
+
+
+def calculate_cost(prompt_tokens: int, completion_tokens: int, model: str) -> float:
+    """
+    Calculate the cost of an API call based on token usage and model.
+
+    Parameters:
+    -----------
+    prompt_tokens : int
+        Number of tokens in the prompt.
+    completion_tokens : int
+        Number of tokens in the completion.
+    model : str
+        The model used for the API call.
+
+    Returns:
+    --------
+    float:
+        Estimated cost in USD.
+    """
+    # Pricing per 1000 tokens as of May 2024 (update as needed)
+    pricing = {
+        "gpt-4o-mini": {"prompt": 0.00015, "completion": 0.00060},
+        "gpt-4o": {"prompt": 0.00050, "completion": 0.00150},
+        "gpt-4": {"prompt": 0.00300, "completion": 0.00600},
+        "gpt-3.5-turbo": {"prompt": 0.00010, "completion": 0.00020},
+        # Add other models as needed
+    }
+
+    # Default to gpt-3.5-turbo pricing if model not found
+    model_pricing = pricing.get(model, pricing["gpt-3.5-turbo"])
+
+    prompt_cost = (prompt_tokens / 1000) * model_pricing["prompt"]
+    completion_cost = (completion_tokens / 1000) * model_pricing["completion"]
+
+    return prompt_cost + completion_cost
+
+
 def get_model_consent_prompt() -> str:
     """
     Get a prompt for the model to consent to the terms of the experiment.
@@ -250,27 +328,15 @@ def call_llm(
     model: str = MODEL,
     temperature: float = TEMPERATURE,
     max_tokens: int = MAX_TOKENS,
+    usage: Usage = None
 ) -> str:
     """
     Call the OpenAI ChatCompletion endpoint with the given prompt.
-
-    Parameters:
-    -----------
-    prompt : str
-        The prompt to send to the LLM.
-    model : str
-        The OpenAI model name (default: gpt-3.5-turbo).
-        You might use a smaller model name like "o3-mini" if you have access.
-    temperature : float
-        Sampling temperature for generation.
-    max_tokens : int
-        Maximum tokens to generate in the response.
-
-    Returns:
-    --------
-    response_content : str
-        The text content returned by the model.
     """
+    # Use the global usage object if none is provided
+    global current_usage
+    usage_to_update = usage if usage is not None else current_usage
+    
     # Ensure your environment has OPENAI_API_KEY set
     client = openai.OpenAI()
 
@@ -280,6 +346,15 @@ def call_llm(
         max_tokens=max_tokens,
         temperature=temperature,
     )
+    
+    # Update usage if available
+    if usage_to_update is not None:
+        usage_to_update.add(
+            response.usage.prompt_tokens,
+            response.usage.completion_tokens,
+            model
+        )
+    
     return response.choices[0].message.content
 
 
