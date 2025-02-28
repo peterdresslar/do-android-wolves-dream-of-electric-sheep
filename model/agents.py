@@ -292,7 +292,10 @@ class Agents:
         """
         Get the mean current theta of all living wolves.
         """
-        return sum(self.get_current_thetas()) / len(self.get_current_thetas())
+        if not len(self.get_current_thetas()) == 0: # if no wolves are alive, return 0.0
+            return sum(self.get_current_thetas()) / len(self.get_current_thetas())
+        else:
+            return 0.0
 
     # History methods for convenience, working with data from
     # our attached collection of wolves.

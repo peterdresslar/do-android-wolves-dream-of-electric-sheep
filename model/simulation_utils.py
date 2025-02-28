@@ -207,11 +207,17 @@ def save_simulation_results(results, results_path=None):
     real_time_elapsed = f"{results.get('runtime', 'not measured')} seconds"
     tokens_cost = "not computed"
 
+    usage = results.get("usage", {})  # sent with to_dict()
+
     summary_lines = [
         "# Simulation Summary",
         "",
         "**Starting Conditions:**",
         f"{results.get('model_params', {})}",
+        "",
+        "**Runtime and Usage:**",
+        f"Runtime: {real_time_elapsed}",
+        f"Usage: {usage}",
         "",
         "**Final Counts:**",
         f"Sheep: {results.get('final_sheep', 'N/A')}",

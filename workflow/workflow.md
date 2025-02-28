@@ -1,9 +1,9 @@
 * Current TODOs
 
 [x] Save simulation data to file, including LLM interactions
-[x] In utils, compute and record simulation cost in tokens and dollars!
-[] Richer opts including agent toggles, save file commands, and file locations
+[x] In utils, compute and record simulation cost in tokens and dollars!\
 [] Option for async operation plus option for thread count
+[] Richer opts including agent toggles, save file commands, and file locations
 [] More models
 [] Gather data for initial publication
 [] Get money to pay for MORE CLAUDE
@@ -17,7 +17,7 @@
 [x] Sim file details directory overwriting
 [x] Sim file data
 [x] Step count off by one
-[ ] Fix charts
+[x] Fix charts
 [] Sim file should include reference ODE
 [] Oversetting opts in model.py? (Too many setters?)
 [] Escape hatch if LLM not responding
