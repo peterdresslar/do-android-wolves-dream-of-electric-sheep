@@ -15,8 +15,8 @@
 
 [x] Sim file saving to wrong path.
 [x] Sim file details directory overwriting
-[] Sim file data
-[] Step count off by one
+[x] Sim file data
+[x] Step count off by one
 [] Sim file should include reference ODE
 [] Oversetting opts in model.py? (Too many setters?)
 [] Escape hatch if LLM not responding

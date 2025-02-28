@@ -308,29 +308,21 @@ class Agents:
         """
         Get the number of living wolves at a given step.
         """
-        # alive and born before or on step
-        return sum(
-            1 for wolf in self.wolves if wolf.alive and wolf.born_at_step <= step
-        )
+        # Use the alive_at_step method to check if each wolf was alive at this step
+        return sum(1 for wolf in self.wolves if wolf.alive_at_step(step))
 
-    def get_living_wolf_count_history(self, max_step=None) -> list[int]:
+    def get_living_wolf_count_history(self) -> list[int]:
         """
-        Get the history of living wolf counts.
-
-        Args:
-            max_step: Optional maximum step to include (defaults to current step)
+        Get the history of living wolf counts for all steps in the simulation.
         """
-        if max_step is None:
-            # Use the maximum step any wolf has data for
-            all_steps = []
-            for wolf in self.wolves:
-                if wolf.born_at_step is not None:
-                    all_steps.append(wolf.born_at_step)
-                if wolf.died_at_step is not None:
-                    all_steps.append(wolf.died_at_step)
-
-            max_step = max(all_steps) if all_steps else 0
-
+        # Determine the maximum step from theta history length
+        # This ensures we cover all simulation steps, not just birth/death events
+        max_step = max(len(wolf.thetas) for wolf in self.wolves) - 1 if self.wolves else 0
+        
+        # Ensure we have at least as many steps as average_thetas
+        if hasattr(self, 'average_thetas') and self.average_thetas:
+            max_step = max(max_step, len(self.average_thetas) - 1)
+        
         return [self.get_living_wolves_count_step(step) for step in range(max_step + 1)]
 
     def get_living_wolves_step(self, step: int) -> list[Wolf]:
