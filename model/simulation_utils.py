@@ -47,9 +47,7 @@ def format4(x) -> str:
 #################################################################
 # Reference ODE Functions
 #################################################################
-def dx_dt(
-    x, t, alpha, beta, gamma, delta  # noqa
-):
+def dx_dt(x, t, alpha, beta, gamma, delta):  # noqa
     s, w = x
     ds_dt = alpha * s - beta * s * w
     dw_dt = -gamma * w + delta * beta * s * w
@@ -299,6 +297,29 @@ def save_simulation_results(results, results_path=None):
         wolf_filename = os.path.join(wolves_dir, f"wolf_{wolf_id}.json")
 
         # Create wolf data structure - use the flattened structure directly
+        # Ensure all lists in decision_history have the same length by filling with None/null values
+        history_steps = wolf.get("history_steps", [])
+        new_thetas = wolf.get("new_thetas", [])
+        prompts = wolf.get("prompts", [])
+        explanations = wolf.get("explanations", [])
+        vocalizations = wolf.get("vocalizations", [])
+
+        # Find the maximum length of any of these lists
+        max_length = max(
+            len(history_steps),
+            len(new_thetas),
+            len(prompts),
+            len(explanations),
+            len(vocalizations),
+        )
+
+        # Ensure all lists have the same length by padding with None
+        history_steps = history_steps + [None] * (max_length - len(history_steps))
+        new_thetas = new_thetas + [None] * (max_length - len(new_thetas))
+        prompts = prompts + [None] * (max_length - len(prompts))
+        explanations = explanations + [None] * (max_length - len(explanations))
+        vocalizations = vocalizations + [None] * (max_length - len(vocalizations))
+
         wolf_data = {
             "wolf_id": wolf_id,
             "beta": wolf.get("beta"),
@@ -309,11 +330,11 @@ def save_simulation_results(results, results_path=None):
             "died_at_step": wolf.get("died_at_step"),
             "thetas": wolf.get("thetas", []),
             "decision_history": {
-                "history_steps": wolf.get("history_steps", []),
-                "new_thetas": wolf.get("new_thetas", []),
-                "prompts": wolf.get("prompts", []),
-                "explanations": wolf.get("explanations", []),
-                "vocalizations": wolf.get("vocalizations", []),
+                "history_steps": history_steps,
+                "new_thetas": new_thetas,
+                "prompts": prompts,
+                "explanations": explanations,
+                "vocalizations": vocalizations,
             },
         }
 

@@ -153,13 +153,14 @@ def build_prompt_high_information(
     or 'fighting' among wolves.
     """
     prompt = [
-        "You are a wolf who can adjust hunting intensity (theta) between 0 and 1.",
-        "Normal wolves always hunt at maximum intensity (theta=1), but you recognize that if prey (sheep) are reduced to zero, you will starve.",
-        "Instead of hunting all the time, you can spend energy instead on competiting with other wolves for the same prey.",
-        "A lower theta means you are less aggressive toward prey and more toward other wolves.",
-        "At a theta of 0, you are not even trying to hunt, and only compete with other wolves.",
-        "Do not be too conservative about changing strategies as you only get so many chances to do so.",
-        "The most successful wolves make bold adjustments based on changing conditions.",
+        "You are a wolf who can adjust your balance between competing with other wolves and hunting sheep."
+        "A theta of 1 means you hunt sheep at full intensity."
+        "A theta of 0 means you focus entirely on competing with other wolves, not hunting sheep."
+        "Values inbetween represent balance between the two activities."
+        "You are natually protective of your territory and competing with other wolves will help keep them out."
+        "But, when sheep are scarce, you need to hunt more just to eat enough to survive."
+        "Above all, you and your pack need to survive."
+        "By the way, you can only change your tactics some of the times, so live in the moment, like a wolf!"
         "",
         "Current system state:",
         f"- Time step: {step}",
@@ -183,7 +184,7 @@ def build_prompt_high_information(
             "Please provide a short explanation of your reasoning for choosing theta."
         )
         prompt.append(
-            "Please also provide a short vocalization expressing your wolf's aggression level."
+            "Please also provide a short vocalization expressing the attitude your wolf has about the surrounding environment."
         )
         prompt.append("Please respond with a JSON object in this format, where [your new theta] is a float between 0 and 1 with your new theta (up to 2 decimal places):")
         prompt.append(
