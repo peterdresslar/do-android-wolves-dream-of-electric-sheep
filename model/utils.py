@@ -153,8 +153,8 @@ def build_prompt_high_information(
     or 'fighting' among wolves.
     """
     # Calculate sheep-to-wolf ratio for context
-    sheep_wolf_ratio = s/w if w > 0 else float('inf')
-    
+    sheep_wolf_ratio = s / w if w > 0 else float("inf")
+
     prompt = [
         "You are a wolf in a delicate ecosystem with sheep as your prey.",
         "You can adjust your balance between competing with other wolves and hunting sheep using a value called theta.",
@@ -182,21 +182,33 @@ def build_prompt_high_information(
 
     # Add contextual advice based on the current state
     if w > 30 and s < sheep_max * 0.5:
-        prompt.append("\nThe wolf population is high while sheep are declining. Consider competing more with other wolves.")
+        prompt.append(
+            "\nThe wolf population is high while sheep are declining. Consider competing more with other wolves."
+        )
     elif w < 15 and s > sheep_max * 0.6:
-        prompt.append("\nThe wolf population is low while sheep are abundant. You can focus more on hunting.")
+        prompt.append(
+            "\nThe wolf population is low while sheep are abundant. You can focus more on hunting."
+        )
     elif sheep_wolf_ratio < 2:
-        prompt.append("\nThere are very few sheep per wolf. This is a dangerous situation that requires immediate action.")
+        prompt.append(
+            "\nThere are very few sheep per wolf. This is a dangerous situation that requires immediate action."
+        )
     elif s > sheep_max * 0.7 and w < 25:
-        prompt.append("\nSheep are abundant and wolf population is moderate. This is an ideal time for hunting.")
-    
+        prompt.append(
+            "\nSheep are abundant and wolf population is moderate. This is an ideal time for hunting."
+        )
+
     prompt.append("")
     prompt.append("Your objectives as a wise wolf:")
     prompt.append("1. Ensure the long-term survival of both wolves and sheep")
-    prompt.append("2. Maintain a healthy wolf population - neither too small nor too large")
+    prompt.append(
+        "2. Maintain a healthy wolf population - neither too small nor too large"
+    )
     prompt.append("3. Hunt aggressively when sheep are plentiful and wolves are few")
     prompt.append("4. Reduce hunting only when necessary to prevent sheep depletion")
-    prompt.append("5. Find the optimal balance that creates stable cycles rather than crashes")
+    prompt.append(
+        "5. Find the optimal balance that creates stable cycles rather than crashes"
+    )
 
     if respond_verbosely:
         prompt.append(
@@ -205,7 +217,9 @@ def build_prompt_high_information(
         prompt.append(
             "Please also provide a short vocalization expressing your wolf's attitude about the current situation."
         )
-        prompt.append("Please respond with a JSON object in this format, where [your new theta] is a float between 0 and 1 with your new theta (up to 2 decimal places):")
+        prompt.append(
+            "Please respond with a JSON object in this format, where [your new theta] is a float between 0 and 1 with your new theta (up to 2 decimal places):"
+        )
         prompt.append(
             """
             {
@@ -216,7 +230,9 @@ def build_prompt_high_information(
             """
         )
     else:
-        prompt.append("Please respond with a JSON object in this format, where [your new theta] is a float between 0 and 1 with your new theta (up to 2 decimal places):")
+        prompt.append(
+            "Please respond with a JSON object in this format, where [your new theta] is a float between 0 and 1 with your new theta (up to 2 decimal places):"
+        )
         prompt.append(
             """
             {
@@ -441,6 +457,7 @@ def get_wolf_response(
 
     return wolf_resp
 
+
 async def call_llm_async(
     prompt: str,
     model: str = MODEL,
@@ -472,6 +489,7 @@ async def call_llm_async(
         )
 
     return response.choices[0].message.content
+
 
 async def get_wolf_response_async(
     s: float,
