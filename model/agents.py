@@ -108,38 +108,46 @@ class Wolf:
             # If no previous theta exists, use the starting theta
             self.thetas.append(self.starting_theta)
 
-    def set_theta(self, step: int, theta: float = None, domain=None, params=None):  # no ai
+    def set_theta(
+        self, step: int, theta: float = None, domain=None, params=None
+    ):  # no ai
         """
         Set theta value for this wolf (used in no_ai mode).
-        If theta is None and domain is provided, calculate theta using the function 
+        If theta is None and domain is provided, calculate theta using the function
         from the methods notebook that responds to prey scarcity.
-        
+
         Args:
             step: Current simulation step
             theta: Fixed theta value if provided
             domain: Domain object containing sheep state and capacity
             params: Parameters dictionary for theta function configuration
-        
+
         Returns:
             The set theta value
         """
         # If domain and params are provided but no specific theta, calculate using the function
         if theta is None and domain is not None and params is not None:
             print(f"Step {step}: Calculating theta using the function")
-            
+
             # Calculate theta using the function: θ(s) = 1/(1 + k*s0/(s + ε))
             k = params.get("k", 1.0)  # Sensitivity parameter
-            s0 = params.get("sheep_max", domain.sheep_capacity)  # Reference sheep population
-            epsilon = params.get("eps", 0.0001)  # Small constant to avoid division by zero
+            s0 = params.get(
+                "sheep_max", domain.sheep_capacity
+            )  # Reference sheep population
+            epsilon = params.get(
+                "eps", 0.0001
+            )  # Small constant to avoid division by zero
             sheep_state = domain.sheep_state
-            
-            print(f"  Parameters: k={k}, s0={s0}, epsilon={epsilon}, sheep_state={sheep_state}")
-            
+
+            print(
+                f"  Parameters: k={k}, s0={s0}, epsilon={epsilon}, sheep_state={sheep_state}"
+            )
+
             # Calculate theta using the function from the methods notebook
             calculated_theta = 1.0 / (1.0 + k * s0 / (sheep_state + epsilon))
-            
+
             print(f"  Calculated theta: {calculated_theta:.4f}")
-            
+
             self.thetas.append(calculated_theta)
             self.decision_history["history_steps"].append(step)
             self.decision_history["new_thetas"].append(calculated_theta)
@@ -169,7 +177,6 @@ class Wolf:
             self.copy_theta()
             return self.thetas[-1]
 
-
     async def decide_theta_async(
         self,
         s: float,
@@ -187,6 +194,7 @@ class Wolf:
 
         # Call LLM to decide theta asynchronously
         from .utils import get_wolf_response_async
+
         wolf_resp = await get_wolf_response_async(
             s=s,
             w=w,
@@ -543,9 +551,11 @@ class Agents:
             if "sheep_max" not in params:
                 params = params.copy()  # Create a copy to avoid modifying the original
                 params["sheep_max"] = sheep_max
-            
-            print(f"Step {step}: Processing with sheep_state={sheep_state}, sheep_max={sheep_max}")
-            
+
+            print(
+                f"Step {step}: Processing with sheep_state={sheep_state}, sheep_max={sheep_max}"
+            )
+
             for wolf in living_wolves:
                 # Don't pass theta parameter at all to force using the function
                 wolf.set_theta(step, None, domain, params)
@@ -554,48 +564,50 @@ class Agents:
                 domain.step_accumulated_ds += domain_changes["ds"]
         else:
             # Simple adaptive churn with a minimum number of wolves updating
-            initial_wolf_count = params.get("initial_wolves", 10)  # Get initial wolf count from params
-            min_wolves_to_update = max(1, initial_wolf_count // 2)  # At least half the initial wolves
-            
+            initial_wolf_count = params.get(
+                "initial_wolves", 10
+            )  # Get initial wolf count from params
+            min_wolves_to_update = max(
+                1, initial_wolf_count // 2
+            )  # At least half the initial wolves
+
             # Calculate churn count with a minimum floor
             churn_count = max(
                 min_wolves_to_update,  # Minimum number of wolves to update
-                int(self.living_wolves_count * self.churn_rate)  # Standard churn calculation
+                int(
+                    self.living_wolves_count * self.churn_rate
+                ),  # Standard churn calculation
             )
-            
+
             # Ensure we don't try to update more wolves than exist
             churn_count = min(churn_count, self.living_wolves_count)
-            
+
             wolves_to_update = random.sample(living_wolves, churn_count)
-            
+
             # For wolves not updating, just copy their previous theta
             for wolf in living_wolves:
                 if wolf not in wolves_to_update:
                     wolf.copy_theta()
-            
+
             # Process wolves in batches to respect thread limit
             max_threads = params.get("threads", THREADS_DEFAULT)
-            
+
             # Process wolves in batches
             for i in range(0, len(wolves_to_update), max_threads):
-                batch = wolves_to_update[i:i+max_threads]
-                
+                batch = wolves_to_update[i : i + max_threads]
+
                 # Create tasks for each wolf in the batch
                 tasks = []
                 for wolf in batch:
                     tasks.append(
                         wolf.decide_theta_async(
-                            sheep_state, 
-                            self.living_wolves_count, 
-                            sheep_max, 
-                            step, 
-                            True
+                            sheep_state, self.living_wolves_count, sheep_max, step, True
                         )
                     )
-                
+
                 # Wait for all tasks in this batch to complete
                 await asyncio.gather(*tasks)
-            
+
             # After all decisions are made, process the step for each wolf
             for wolf in living_wolves:
                 domain_changes = wolf.process_step(params, domain, step)
@@ -618,6 +630,7 @@ class Agents:
                 # We're in a notebook or other environment with a running loop
                 # Use nest_asyncio to allow nested event loops
                 import nest_asyncio
+
                 nest_asyncio.apply()
                 loop.run_until_complete(self.process_step_async(params, domain, step))
             else:
