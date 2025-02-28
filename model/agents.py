@@ -87,6 +87,8 @@ class Wolf:
         
         # Set the starting theta
         self.handle_starting_theta(theta)
+
+        self.thetas.append(self.starting_theta)
         
  
 
@@ -286,7 +288,7 @@ class Agents:
         """
         Get the current thetas of all living wolves.
         """
-        return [wolf.thetas[-1] for wolf in self.wolves if wolf.alive]
+        return [wolf.thetas[-1] for wolf in self.get_living_wolves()]
 
     def get_mean_theta(self) -> float:
         """
