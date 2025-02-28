@@ -442,3 +442,65 @@ def get_wolf_response(
     # print("Parsed WolfResponse:", wolf_resp) # this should ususally be well-formed
 
     return wolf_resp
+
+async def call_llm_async(
+    prompt: str,
+    model: str = MODEL,
+    temperature: float = TEMPERATURE,
+    max_tokens: int = MAX_TOKENS,
+    usage: Usage = None,
+) -> str:
+    """
+    Async version of call_llm that calls the OpenAI ChatCompletion endpoint.
+    """
+    # Use the global usage object if none is provided
+    global current_usage
+    usage_to_update = usage if usage is not None else current_usage
+
+    # Ensure your environment has OPENAI_API_KEY set
+    client = openai.AsyncOpenAI()
+
+    response = await client.chat.completions.create(
+        messages=[{"role": "user", "content": prompt}],
+        model=model,
+        max_tokens=max_tokens,
+        temperature=temperature,
+    )
+
+    # Update usage if available
+    if usage_to_update is not None:
+        usage_to_update.add(
+            response.usage.prompt_tokens, response.usage.completion_tokens, model
+        )
+
+    return response.choices[0].message.content
+
+async def get_wolf_response_async(
+    s: float,
+    w: float,
+    sheep_max: float,
+    old_theta: float,
+    step: int,
+    respond_verbosely: bool = True,
+) -> WolfResponse:
+    """
+    Async version of get_wolf_response.
+    Build a prompt, call the LLM, parse the result into a WolfResponse.
+    """
+    # 1. Make the prompt
+    prompt = build_prompt_high_information(
+        s=s,
+        w=w,
+        old_theta=old_theta,
+        step=step,
+        sheep_max=sheep_max,
+        respond_verbosely=respond_verbosely,
+    )
+
+    # 2. Get a raw string response from the LLM
+    response_str = await call_llm_async(prompt)
+
+    # 3. Parse that string into a WolfResponse
+    wolf_resp = parse_wolf_response(response_str, prompt, default=old_theta)
+
+    return wolf_resp

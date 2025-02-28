@@ -1,10 +1,13 @@
 # agents.py
 
+import asyncio
 import random
 from dataclasses import dataclass, field
 from typing import Any
 
 from .utils import get_wolf_response
+
+THREADS_DEFAULT = 10
 
 
 @dataclass
@@ -150,6 +153,41 @@ class Wolf:
 
         # Call LLM to decide theta
         wolf_resp = get_wolf_response(
+            s=s,
+            w=w,
+            sheep_max=sheep_max,
+            old_theta=self.thetas[-1] if self.thetas else self.starting_theta,
+            step=step,
+            respond_verbosely=respond_verbosely,
+        )
+
+        self.thetas.append(wolf_resp.theta)
+        self.decision_history["history_steps"].append(step)
+        self.decision_history["new_thetas"].append(wolf_resp.theta)
+        self.decision_history["prompts"].append(wolf_resp.prompt)
+        self.decision_history["explanations"].append(wolf_resp.explanation)
+        self.decision_history["vocalizations"].append(wolf_resp.vocalization)
+
+        return wolf_resp.theta
+
+    async def decide_theta_async(
+        self,
+        s: float,
+        w: float,
+        sheep_max: float,
+        step: int,
+        respond_verbosely: bool = True,
+    ) -> float:
+        """
+        Async version of decide_theta.
+        Decide the theta for this wolf using an async LLM call.
+        """
+        if not self.alive:
+            return self.thetas[-1] if self.thetas else self.starting_theta
+
+        # Call LLM to decide theta asynchronously
+        from .utils import get_wolf_response_async
+        wolf_resp = await get_wolf_response_async(
             s=s,
             w=w,
             sheep_max=sheep_max,
@@ -485,10 +523,11 @@ class Agents:
         elif net_wolves_change < 0:
             self.kill_wolves(step, abs(net_wolves_change))
 
-    def process_step_sync(self, params, domain, step) -> None:
+    async def process_step_async(self, params, domain, step) -> None:
         """
         Process the step for all wolves, updating the domain directly.
-        With synchronous churn: only a percentage of wolves update their theta each step.
+        With asynchronous churn: only a percentage of wolves update their theta each step,
+        but these updates are processed in parallel batches.
         """
         # Reset accumulators in the domain
         domain.reset_accumulators()
@@ -498,35 +537,76 @@ class Agents:
         sheep_max = domain.sheep_capacity
         living_wolves = self.get_living_wolves()
 
-        # Determine which wolves will update their theta this step
-        # Randomly select wolves based on churn rate
-
         if self.opts.get("no_ai", True):
+            # No AI mode - just set thetas directly
             for wolf in living_wolves:
                 wolf.set_theta(step, params.get("theta", 0.5))
+                domain_changes = wolf.process_step(params, domain, step)
+                domain.step_accumulated_dw += domain_changes["dw"]
+                domain.step_accumulated_ds += domain_changes["ds"]
         else:
+            # Determine which wolves will update their theta this step
             churn_count = max(1, int(self.living_wolves_count * self.churn_rate))
             wolves_to_update = random.sample(
                 living_wolves, min(churn_count, self.living_wolves_count)
             )
-
+            
+            # For wolves not updating, just copy their previous theta
             for wolf in living_wolves:
-                if wolf in wolves_to_update:
-                    # First decide theta based on current state
-                    wolf.decide_theta(
-                        sheep_state, self.living_wolves_count, sheep_max, step, True
-                    )
-                else:
+                if wolf not in wolves_to_update:
                     wolf.copy_theta()
-
-                # Then update domain based on new theta
+            
+            # Process wolves in batches to respect thread limit
+            max_threads = params.get("threads", THREADS_DEFAULT)
+            
+            # Process wolves in batches
+            for i in range(0, len(wolves_to_update), max_threads):
+                batch = wolves_to_update[i:i+max_threads]
+                
+                # Create tasks for each wolf in the batch
+                tasks = []
+                for wolf in batch:
+                    tasks.append(
+                        wolf.decide_theta_async(
+                            sheep_state, 
+                            self.living_wolves_count, 
+                            sheep_max, 
+                            step, 
+                            True
+                        )
+                    )
+                
+                # Wait for all tasks in this batch to complete
+                await asyncio.gather(*tasks)
+            
+            # After all decisions are made, process the step for each wolf
+            for wolf in living_wolves:
                 domain_changes = wolf.process_step(params, domain, step)
                 domain.step_accumulated_dw += domain_changes["dw"]
                 domain.step_accumulated_ds += domain_changes["ds"]
 
         # Calculate and store the average theta after all wolves have decided
-        if self.average_thetas:
-            print(
-                f"Updating average theta for step {step}. Was: {self.average_thetas[-1]}"
-            )
         self.update_average_theta(append=True)
+
+    def process_step_sync(self, params, domain, step) -> None:
+        """
+        Synchronous wrapper around process_step_async.
+        Process the step for all wolves, updating the domain directly.
+        Works in both regular Python environments and Jupyter notebooks.
+        """
+        try:
+            # Check if we're in an existing event loop
+            loop = asyncio.get_event_loop()
+            if loop.is_running():
+                # We're in a notebook or other environment with a running loop
+                # Use nest_asyncio to allow nested event loops
+                import nest_asyncio
+                nest_asyncio.apply()
+                loop.run_until_complete(self.process_step_async(params, domain, step))
+            else:
+                # Normal case - no running event loop
+                loop.run_until_complete(self.process_step_async(params, domain, step))
+        except RuntimeError:
+            # If we can't get a running event loop, create a new one
+            # This is the safest approach for most environments
+            asyncio.run(self.process_step_async(params, domain, step))

@@ -176,7 +176,7 @@ class ModelRun:
         # we are effectively managing partial time across domain and agents
         net_wolves_change = domain.accumulate_and_fit(params)
 
-        print(f"net_wolves_change: {net_wolves_change}")
+        print(f"Step {self.current_step}: net_wolves_change: {net_wolves_change}")
 
         # 4. Handle wolf population changes (moved to Agents class)
         agents.handle_population_changes(net_wolves_change, self.current_step)
