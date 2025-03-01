@@ -610,14 +610,7 @@ class Agents:
             prompt_type = self.opts.get("prompt_type", "high")
 
             # Get the model_name from params or model_names
-            model = None
-            if (
-                "model_names" in params
-                and isinstance(params["model_names"], list)
-                and params["model_names"]
-            ):
-                model = params["model_names"][0]
-
+            model = self.opts.get("model_name")
             # Process wolves in batches
             for i in range(0, len(wolves_to_update), max_threads):
                 batch = wolves_to_update[i : i + max_threads]
