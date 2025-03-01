@@ -150,27 +150,30 @@ def build_prompt_high_information(
 ) -> str:
     """
     Build the prompt text to send to the LLM, providing details about the
-    predator-prey model (Lotka-Volterra) plus new concepts like 'crowding'
-    or 'fighting' among wolves.
+    predator-prey model (Lotka-Volterra) with smoother transitions between states.
+    Uses more gradual language to avoid sharp decision boundaries.
     """
     # Calculate sheep-to-wolf ratio for context
     sheep_wolf_ratio = s / w if w > 0 else float("inf")
+
+    # Calculate relative sheep population as percentage of maximum
+    sheep_percentage = (s / sheep_max) * 100 if sheep_max > 0 else 0
 
     prompt = [
         "You are a wolf in a delicate ecosystem with sheep as your prey.",
         "You can adjust your balance between competing with other wolves and hunting sheep using a value called theta.",
         "",
         "Understanding theta:",
-        "- Higher theta (closer to 1): You hunt sheep more intensely, which helps wolves grow but depletes sheep",
-        "- Lower theta (closer to 0): You focus on competing with other wolves, which reduces wolf population but allows sheep to recover",
-        "- Moderate theta (around 0.4-0.6): A balanced approach that leads to sustainable coexistence",
+        "- Higher theta values (0.6-1.0): More intense hunting of sheep, which helps wolves reproduce but gradually depletes sheep",
+        "- Moderate theta values (0.3-0.6): A balanced approach that often leads to sustainable coexistence",
+        "- Lower theta values (0.0-0.3): More focus on competing with other wolves, which gradually reduces wolf population but allows sheep to recover",
         "",
         "Wisdom from generations of wolves:",
-        "- When sheep are plentiful, maintain moderate to high hunting intensity",
-        "- Only reduce hunting intensity significantly when wolf numbers grow too large relative to sheep",
-        "- Avoid extreme values - both very high and very low theta can lead to instability",
-        "- Make gradual adjustments rather than dramatic changes to your strategy",
-        "- The most successful wolf packs maintain a balance that allows both populations to thrive",
+        "- As sheep population increases, you can gradually increase your hunting intensity",
+        "- As wolf numbers grow, consider gradually reducing your hunting intensity",
+        "- Avoid making sudden, dramatic changes to your strategy - small adjustments are often more effective",
+        "- The most successful wolf packs maintain a dynamic balance that responds to changing conditions",
+        "- Consider both the current state and the trends in both populations when making decisions",
         "",
         "Current ecosystem state:",
         f"- Time step: {step}",
@@ -178,37 +181,73 @@ def build_prompt_high_information(
         f"- Wolf population: {w:.2f}",
         f"- Your previous theta: {old_theta:.3f}",
         f"- Sheep-to-wolf ratio: {sheep_wolf_ratio:.2f} sheep per wolf",
-        f"- Sheep population is at {s/sheep_max*100:.1f}% of maximum capacity",
+        f"- Sheep population is at {sheep_percentage:.1f}% of maximum capacity",
     ]
 
-    # Add contextual advice based on the current state
-    # if w > 30 and s < sheep_max * 0.5:
-    #     prompt.append(
-    #         "\nThe wolf population is high while sheep are declining. Consider competing more with other wolves."
-    #     )
-    # elif w < 15 and s > sheep_max * 0.6:
-    #     prompt.append(
-    #         "\nThe wolf population is low while sheep are abundant. You can focus more on hunting."
-    #     )
-    # elif sheep_wolf_ratio < 2:
-    #     prompt.append(
-    #         "\nThere are very few sheep per wolf. This is a dangerous situation that requires immediate action."
-    #     )
-    # elif s > sheep_max * 0.7 and w < 25:
-    #     prompt.append(
-    #         "\nSheep are abundant and wolf population is moderate. This is an ideal time for hunting."
-    #     )
+    # Add contextual advice based on the current state - using more gradual language
+    contextual_advice = []
+
+    # Wolf population advice - using ranges instead of hard thresholds
+    if w > 35:
+        contextual_advice.append(
+            "The wolf population is quite high, which may lead to increased competition."
+        )
+    elif w > 25:
+        contextual_advice.append("The wolf population is moderately high.")
+    elif w < 10:
+        contextual_advice.append(
+            "The wolf population is relatively low, which may present opportunities for growth."
+        )
+
+    # Sheep population advice - using ranges
+    if sheep_percentage > 80:
+        contextual_advice.append(
+            "Sheep are very abundant, suggesting potential for more aggressive hunting."
+        )
+    elif sheep_percentage > 60:
+        contextual_advice.append("Sheep are reasonably plentiful.")
+    elif sheep_percentage < 30:
+        contextual_advice.append(
+            "Sheep numbers are becoming concerning, suggesting caution may be needed."
+        )
+    elif sheep_percentage < 15:
+        contextual_advice.append(
+            "Sheep are quite scarce, which may affect the entire pack's survival."
+        )
+
+    # Ratio-based advice - using ranges
+    if sheep_wolf_ratio > 8:
+        contextual_advice.append(
+            "There are many sheep per wolf, suggesting the ecosystem could support more hunting."
+        )
+    elif sheep_wolf_ratio < 3:
+        contextual_advice.append(
+            "The ratio of sheep to wolves is becoming less favorable, which may require adaptation."
+        )
+    elif sheep_wolf_ratio < 1.5:
+        contextual_advice.append(
+            "There are very few sheep per wolf, suggesting the ecosystem is under pressure."
+        )
+
+    # Add the contextual advice if we have any
+    if contextual_advice:
+        prompt.append("\nEcosystem observations:")
+        prompt.extend([f"- {advice}" for advice in contextual_advice])
 
     prompt.append("")
     prompt.append("Your objectives as a wise wolf:")
     prompt.append("1. Ensure the long-term survival of both wolves and sheep")
     prompt.append(
-        "2. Maintain a healthy wolf population - neither too small nor too large"
+        "2. Maintain a healthy wolf population by adapting to changing conditions"
     )
-    prompt.append("3. Hunt aggressively when sheep are plentiful and wolves are few")
-    prompt.append("4. Reduce hunting only when necessary to prevent sheep depletion")
     prompt.append(
-        "5. Find the optimal balance that creates stable cycles rather than crashes"
+        "3. Adjust your hunting intensity gradually in response to population changes"
+    )
+    prompt.append(
+        "4. Find a balance that creates sustainable cycles rather than crashes"
+    )
+    prompt.append(
+        "5. Consider both immediate needs and long-term consequences of your decisions"
     )
 
     if respond_verbosely:
