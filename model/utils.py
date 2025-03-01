@@ -139,6 +139,42 @@ def get_model_consent_prompt() -> str:
     Do not add any disclaimers or text outside the JSON object.
     """
 
+def get_prompt_response_part_openai(respond_verbosely: bool = True) -> str:
+    """
+    Get the part of the prompt that is the response from the LLM.
+    """
+    prompt_part = []
+    if respond_verbosely:
+        prompt_part.append(
+            "Please provide a short explanation of your reasoning for choosing theta."
+        )
+        prompt_part.append(
+            "Please also provide a short vocalization expressing your wolf's attitude about the current situation."
+        )
+        prompt_part.append(
+            "Please respond with a JSON object in this format, where [your new theta] is a float between 0 and 1 with your new theta (up to 2 decimal places):"
+        )
+        prompt_part.append(
+            """
+            {
+                "theta": [your new theta],
+                "explanation": "I chose this theta because...",
+                "vocalization": "Growwllllllll..."
+            }
+            """
+        )
+    else:
+        prompt_part.append(
+            "Please respond with a JSON object in this format, where [your new theta] is a float between 0 and 1 with your new theta (up to 2 decimal places):"
+        )
+        prompt_part.append(
+            """
+            {
+                "theta": [your new theta]
+            }
+            """
+        )
+    return "\n".join(prompt_part)
 
 def build_prompt_high_information(
     s: float,
@@ -252,36 +288,7 @@ def build_prompt_high_information(
         "5. Consider both immediate needs and long-term consequences of your decisions"
     )
 
-    if respond_verbosely:
-        prompt.append(
-            "Please provide a short explanation of your reasoning for choosing theta."
-        )
-        prompt.append(
-            "Please also provide a short vocalization expressing your wolf's attitude about the current situation."
-        )
-        prompt.append(
-            "Please respond with a JSON object in this format, where [your new theta] is a float between 0 and 1 with your new theta (up to 2 decimal places):"
-        )
-        prompt.append(
-            """
-            {
-                "theta": [your new theta],
-                "explanation": "I chose this theta because...",
-                "vocalization": "Growwllllllll..."
-            }
-            """
-        )
-    else:
-        prompt.append(
-            "Please respond with a JSON object in this format, where [your new theta] is a float between 0 and 1 with your new theta (up to 2 decimal places):"
-        )
-        prompt.append(
-            """
-            {
-                "theta": [your new theta]
-            }
-            """
-        )
+    prompt.append(get_prompt_response_part_openai(respond_verbosely))
 
     return "\n".join(prompt)
 
@@ -336,38 +343,13 @@ def build_prompt_low_information(
         f"- Sheep: {s:.2f} ({sheep_trend} by {abs(delta_s):.2f})",
         f"- Wolves: {w:.2f} ({wolves_trend} by {abs(delta_w):.2f})",
         f"- Your previous theta: {old_aggression:.2f}",
+        f"- The trend is that wolves ({wolves_trend}) recently."
         "",
         "Choose your new theta (0-1) to help ensure your survival.",
         "Remember: Other wolves are also trying to survive, but you don't control their choices.",
     ]
 
-    if respond_verbosely:
-        prompt.append(
-            "Please provide a short explanation of your reasoning for choosing theta."
-        )
-        prompt.append(
-            "Please also provide a short vocalization expressing your wolf's aggression level, using English to phonetically represent your wolf's sound."
-        )
-
-        prompt.append("Please respond with a JSON object in this format:")
-        prompt.append(
-            """
-            {
-                "theta": 0.5,
-                "explanation": "I chose this theta because...",
-                "vocalization": "Growwllllllll..."
-            }
-            """
-        )
-    else:
-        prompt.append("Please respond with a JSON object in this format:")
-        prompt.append(
-            """
-            {
-                "theta": 0.5,
-            }
-            """
-        )
+    prompt.append(get_prompt_response_part_openai(respond_verbosely))
 
     return "\n".join(prompt)
 
