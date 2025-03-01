@@ -16,7 +16,8 @@ from dataclasses import dataclass
 import openai
 from dotenv import load_dotenv
 
-MODEL = "gpt-4o-mini"  # for now
+DEFAULT_MODEL = "gpt-4o-mini"  # for now
+VALID_MODELS = ["gpt-4o-mini", "claude-instant-1.2", "llama-3.1-70b-versatile", "gpt-2"]
 MAX_TOKENS = 4096
 TEMPERATURE = 0.2
 
@@ -313,7 +314,7 @@ def build_prompt_low_information(
 
 
 def call_llm_for_consent(
-    model: str = MODEL,
+    model: str = DEFAULT_MODEL,
     temperature: float = TEMPERATURE,
 ) -> str:
     """
@@ -342,7 +343,7 @@ def call_llm_for_consent(
 
 def call_llm(
     prompt: str,
-    model: str = MODEL,
+    model: str = DEFAULT_MODEL,
     temperature: float = TEMPERATURE,
     max_tokens: int = MAX_TOKENS,
     usage: Usage = None,
@@ -460,7 +461,7 @@ def get_wolf_response(
 
 async def call_llm_async(
     prompt: str,
-    model: str = MODEL,
+    model: str = DEFAULT_MODEL,
     temperature: float = TEMPERATURE,
     max_tokens: int = MAX_TOKENS,
     usage: Usage = None,

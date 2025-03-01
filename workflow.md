@@ -3,8 +3,8 @@
 [x] Save simulation data to file, including LLM interactions
 [x] In utils, compute and record simulation cost in tokens and dollars!\
 [x] Option for async operation plus option for thread count
+[x] Save plots
 [] Richer opts including agent toggles, save file commands, and file locations
-[] Save plots
 [] Command-line entry point, for setting up large experiments
 [] More models
 [] Gather parameter sweep data for initial publication
