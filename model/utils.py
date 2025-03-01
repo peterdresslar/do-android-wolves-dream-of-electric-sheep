@@ -147,6 +147,7 @@ def build_prompt_high_information(
     step: int,
     sheep_max: float,
     respond_verbosely: bool = True,
+    high_information: bool = True,
 ) -> str:
     """
     Build the prompt text to send to the LLM, providing details about the
@@ -184,55 +185,56 @@ def build_prompt_high_information(
         f"- Sheep population is at {sheep_percentage:.1f}% of maximum capacity",
     ]
 
-    # Add contextual advice based on the current state - using more gradual language
-    contextual_advice = []
+    if high_information:
+        # Add contextual advice based on the current state - using more gradual language
+        contextual_advice = []
 
-    # Wolf population advice - using ranges instead of hard thresholds
-    if w > 35:
-        contextual_advice.append(
-            "The wolf population is quite high, which may lead to increased competition."
-        )
-    elif w > 25:
-        contextual_advice.append("The wolf population is moderately high.")
-    elif w < 10:
-        contextual_advice.append(
-            "The wolf population is relatively low, which may present opportunities for growth."
-        )
+        # Wolf population advice - using ranges instead of hard thresholds
+        if w > 35:
+            contextual_advice.append(
+                "The wolf population is quite high, which may lead to increased competition."
+            )
+        elif w > 25:
+            contextual_advice.append("The wolf population is moderately high.")
+        elif w < 10:
+            contextual_advice.append(
+                "The wolf population is relatively low, which may present opportunities for growth."
+            )
 
-    # Sheep population advice - using ranges
-    if sheep_percentage > 80:
-        contextual_advice.append(
-            "Sheep are very abundant, suggesting potential for more aggressive hunting."
-        )
-    elif sheep_percentage > 60:
-        contextual_advice.append("Sheep are reasonably plentiful.")
-    elif sheep_percentage < 30:
-        contextual_advice.append(
-            "Sheep numbers are becoming concerning, suggesting caution may be needed."
-        )
-    elif sheep_percentage < 15:
-        contextual_advice.append(
-            "Sheep are quite scarce, which may affect the entire pack's survival."
-        )
+        # Sheep population advice - using ranges
+        if sheep_percentage > 80:
+            contextual_advice.append(
+                "Sheep are very abundant, suggesting potential for more aggressive hunting."
+            )
+        elif sheep_percentage > 60:
+            contextual_advice.append("Sheep are reasonably plentiful.")
+        elif sheep_percentage < 30:
+            contextual_advice.append(
+                "Sheep numbers are becoming concerning, suggesting caution may be needed."
+            )
+        elif sheep_percentage < 15:
+            contextual_advice.append(
+                "Sheep are quite scarce, which may affect the entire pack's survival."
+            )
 
-    # Ratio-based advice - using ranges
-    if sheep_wolf_ratio > 8:
-        contextual_advice.append(
-            "There are many sheep per wolf, suggesting the ecosystem could support more hunting."
-        )
-    elif sheep_wolf_ratio < 3:
-        contextual_advice.append(
-            "The ratio of sheep to wolves is becoming less favorable, which may require adaptation."
-        )
-    elif sheep_wolf_ratio < 1.5:
-        contextual_advice.append(
-            "There are very few sheep per wolf, suggesting the ecosystem is under pressure."
-        )
+        # Ratio-based advice - using ranges
+        if sheep_wolf_ratio > 8:
+            contextual_advice.append(
+                "There are many sheep per wolf, suggesting the ecosystem could support more hunting."
+            )
+        elif sheep_wolf_ratio < 3:
+            contextual_advice.append(
+                "The ratio of sheep to wolves is becoming less favorable, which may require adaptation."
+            )
+        elif sheep_wolf_ratio < 1.5:
+            contextual_advice.append(
+                "There are very few sheep per wolf, suggesting the ecosystem is under pressure."
+            )
 
-    # Add the contextual advice if we have any
-    if contextual_advice:
-        prompt.append("\nEcosystem observations:")
-        prompt.extend([f"- {advice}" for advice in contextual_advice])
+        # Add the contextual advice if we have any
+        if contextual_advice:
+            prompt.append("\nEcosystem observations:")
+            prompt.extend([f"- {advice}" for advice in contextual_advice])
 
     prompt.append("")
     prompt.append("Your objectives as a wise wolf:")
@@ -282,6 +284,24 @@ def build_prompt_high_information(
         )
 
     return "\n".join(prompt)
+
+def build_prompt_medium_information(
+    s: float,
+    w: float,
+    old_theta: float,
+    step: int,
+    sheep_max: float,
+    respond_verbosely: bool = True,
+) -> str:
+    return build_prompt_high_information(
+        s,
+        w,
+        old_theta,
+        step,
+        sheep_max,
+        respond_verbosely=respond_verbosely,
+        high_information=False,  # always false, this gives us a medium-information prompt
+    )
 
 
 def build_prompt_low_information(
@@ -561,6 +581,15 @@ async def get_wolf_response_async(
             delta_s=delta_s,
             delta_w=delta_w,
             old_aggression=old_theta,
+            respond_verbosely=respond_verbosely,
+        )
+    elif prompt_type == "medium":
+        prompt = build_prompt_medium_information(
+            s=s,
+            w=w,
+            old_theta=old_theta,
+            step=step,
+            sheep_max=sheep_max,
             respond_verbosely=respond_verbosely,
         )
     else:  # Default to high information

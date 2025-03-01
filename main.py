@@ -72,7 +72,7 @@ def main():
     parser.add_argument(
         "--prompt-type",
         type=str,
-        choices=["high", "low"],
+        choices=["high", "medium", "low"],
         default="high",
         help="Type of prompt to use for AI wolves: high or low information",
     )
