@@ -159,8 +159,6 @@ class Wolf:
             # Calculate theta using the function from the methods notebook
             calculated_theta = 1.0 / (1.0 + k * s0 / (sheep_state + epsilon))
 
-            print(f"  Calculated theta: {calculated_theta:.4f}")
-
             self.thetas.append(calculated_theta)
             self.decision_history["history_steps"].append(step)
             self.decision_history["new_thetas"].append(calculated_theta)
