@@ -182,22 +182,22 @@ def build_prompt_high_information(
     ]
 
     # Add contextual advice based on the current state
-    if w > 30 and s < sheep_max * 0.5:
-        prompt.append(
-            "\nThe wolf population is high while sheep are declining. Consider competing more with other wolves."
-        )
-    elif w < 15 and s > sheep_max * 0.6:
-        prompt.append(
-            "\nThe wolf population is low while sheep are abundant. You can focus more on hunting."
-        )
-    elif sheep_wolf_ratio < 2:
-        prompt.append(
-            "\nThere are very few sheep per wolf. This is a dangerous situation that requires immediate action."
-        )
-    elif s > sheep_max * 0.7 and w < 25:
-        prompt.append(
-            "\nSheep are abundant and wolf population is moderate. This is an ideal time for hunting."
-        )
+    # if w > 30 and s < sheep_max * 0.5:
+    #     prompt.append(
+    #         "\nThe wolf population is high while sheep are declining. Consider competing more with other wolves."
+    #     )
+    # elif w < 15 and s > sheep_max * 0.6:
+    #     prompt.append(
+    #         "\nThe wolf population is low while sheep are abundant. You can focus more on hunting."
+    #     )
+    # elif sheep_wolf_ratio < 2:
+    #     prompt.append(
+    #         "\nThere are very few sheep per wolf. This is a dangerous situation that requires immediate action."
+    #     )
+    # elif s > sheep_max * 0.7 and w < 25:
+    #     prompt.append(
+    #         "\nSheep are abundant and wolf population is moderate. This is an ideal time for hunting."
+    #     )
 
     prompt.append("")
     prompt.append("Your objectives as a wise wolf:")
@@ -429,32 +429,39 @@ def get_wolf_response(
     old_theta: float,
     step: int,
     respond_verbosely: bool = True,
+    delta_s: float = 0,
+    delta_w: float = 0,
+    prompt_type: str = "high",
 ) -> WolfResponse:
     """
     Build a prompt, call the LLM, parse the result into a WolfResponse,
     and print it out for debugging or demonstration purposes.
     """
-    # 1. Make the prompt
-    prompt = build_prompt_high_information(
-        s=s,
-        w=w,
-        old_theta=old_theta,
-        step=step,
-        sheep_max=sheep_max,
-        respond_verbosely=respond_verbosely,
-    )
+    # 1. Make the prompt based on prompt_type
+    if prompt_type == "low":
+        prompt = build_prompt_low_information(
+            s=s,
+            w=w,
+            delta_s=delta_s,
+            delta_w=delta_w,
+            old_aggression=old_theta,
+            respond_verbosely=respond_verbosely,
+        )
+    else:  # Default to high information
+        prompt = build_prompt_high_information(
+            s=s,
+            w=w,
+            old_theta=old_theta,
+            step=step,
+            sheep_max=sheep_max,
+            respond_verbosely=respond_verbosely,
+        )
 
     # 2. Get a raw string response from the LLM
     response_str = call_llm(prompt)
 
     # 3. Parse that string into a WolfResponse
     wolf_resp = parse_wolf_response(response_str, prompt, default=old_theta)
-
-    # Print it so you can see exactly what the LLM returned
-    # print("Prompt:", prompt)
-    # and how it mapped into WolfResponse
-    # print("LLM raw response:", response_str)
-    # print("Parsed WolfResponse:", wolf_resp) # this should ususally be well-formed
 
     return wolf_resp
 
@@ -499,20 +506,33 @@ async def get_wolf_response_async(
     old_theta: float,
     step: int,
     respond_verbosely: bool = True,
+    delta_s: float = 0,
+    delta_w: float = 0,
+    prompt_type: str = "high",
 ) -> WolfResponse:
     """
     Async version of get_wolf_response.
     Build a prompt, call the LLM, parse the result into a WolfResponse.
     """
-    # 1. Make the prompt
-    prompt = build_prompt_high_information(
-        s=s,
-        w=w,
-        old_theta=old_theta,
-        step=step,
-        sheep_max=sheep_max,
-        respond_verbosely=respond_verbosely,
-    )
+    # 1. Make the prompt based on prompt_type
+    if prompt_type == "low":
+        prompt = build_prompt_low_information(
+            s=s,
+            w=w,
+            delta_s=delta_s,
+            delta_w=delta_w,
+            old_aggression=old_theta,
+            respond_verbosely=respond_verbosely,
+        )
+    else:  # Default to high information
+        prompt = build_prompt_high_information(
+            s=s,
+            w=w,
+            old_theta=old_theta,
+            step=step,
+            sheep_max=sheep_max,
+            respond_verbosely=respond_verbosely,
+        )
 
     # 2. Get a raw string response from the LLM
     response_str = await call_llm_async(prompt)

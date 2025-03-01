@@ -32,6 +32,8 @@ class Wolf:
             "prompts": [],  # prompts used for those decisions
         }
     )
+    last_sheep_state: float = None  # Add this field
+    last_wolves_count: int = None  # Add this field
 
     def to_dict(self) -> dict:
         """
@@ -184,6 +186,9 @@ class Wolf:
         sheep_max: float,
         step: int,
         respond_verbosely: bool = True,
+        delta_s: float = 0,
+        delta_w: float = 0,
+        prompt_type: str = "high",
     ) -> float:
         """
         Async version of decide_theta.
@@ -202,6 +207,9 @@ class Wolf:
             old_theta=self.thetas[-1] if self.thetas else self.starting_theta,
             step=step,
             respond_verbosely=respond_verbosely,
+            delta_s=delta_s,
+            delta_w=delta_w,
+            prompt_type=prompt_type,
         )
 
         self.thetas.append(wolf_resp.theta)
@@ -544,6 +552,22 @@ class Agents:
         sheep_state = domain.sheep_state
         sheep_max = domain.sheep_capacity
         living_wolves = self.get_living_wolves()
+        living_wolves_count = self.living_wolves_count
+
+        # Calculate deltas for sheep and wolves
+        delta_s = 0
+        delta_w = 0
+
+        # If we have previous state, calculate deltas
+        if hasattr(self, "last_sheep_state") and self.last_sheep_state is not None:
+            delta_s = sheep_state - self.last_sheep_state
+
+        if hasattr(self, "last_wolves_count") and self.last_wolves_count is not None:
+            delta_w = living_wolves_count - self.last_wolves_count
+
+        # Store current state for next step's delta calculation
+        self.last_sheep_state = sheep_state
+        self.last_wolves_count = living_wolves_count
 
         if self.opts.get("no_ai", True):
             # No AI mode - use set_theta with domain and params to calculate theta
@@ -591,6 +615,7 @@ class Agents:
 
             # Process wolves in batches to respect thread limit
             max_threads = params.get("threads", THREADS_DEFAULT)
+            prompt_type = self.opts.get("prompt_type", "high")
 
             # Process wolves in batches
             for i in range(0, len(wolves_to_update), max_threads):
@@ -601,7 +626,14 @@ class Agents:
                 for wolf in batch:
                     tasks.append(
                         wolf.decide_theta_async(
-                            sheep_state, self.living_wolves_count, sheep_max, step, True
+                            sheep_state,
+                            self.living_wolves_count,
+                            sheep_max,
+                            step,
+                            True,
+                            delta_s,
+                            delta_w,
+                            prompt_type,
                         )
                     )
 
