@@ -81,7 +81,10 @@ def main():
     # AI and execution options
     parser.add_argument("--no-ai", action="store_true", help="Disable AI for wolves")
     parser.add_argument(
-        "--theta", type=float, default=0.5, help="Fixed theta value when AI is disabled"
+        "--theta-star",
+        type=float,
+        default=None,
+        help="Fixed theta value to use as a constant (if provided)"
     )
     parser.add_argument(
         "--churn-rate",
@@ -138,7 +141,7 @@ def main():
         "gamma": args.gamma,
         "delta": args.delta,
         "no_ai": args.no_ai,
-        "theta_star": args.theta,
+        "theta_star": args.theta_star,
         "churn_rate": args.churn_rate,
         "save_results": not args.no_save,
         "path": args.output_dir,

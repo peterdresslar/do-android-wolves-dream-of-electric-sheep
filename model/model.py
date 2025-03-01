@@ -64,9 +64,6 @@ class Model:
         self.opts["save_results"] = None
         self.opts["path"] = None
         self.opts["prompt_type"] = None
-        # If no_ai is set in opts and theta isn't already in params, add it
-        if self.opts.get("no_ai") and "theta" not in self.params:
-            self.params["theta"] = self.params.get("theta_star")
 
     def create_run(self) -> ModelRun:
         """
@@ -89,7 +86,7 @@ def initialize_model(**kwargs) -> Model:
     # Extract domain and agent parameters
     sheep_capacity = defaults.get("sheep_max")
     starting_sheep = defaults.get("s_start")
-    starting_wolves = defaults.get("w_start")
+    starting_wolves = defaults.get("w_start", 10)  # Add default value for starting_wolves
 
     # Create domain and agents
     model_domain = defaults.pop(
@@ -105,11 +102,13 @@ def initialize_model(**kwargs) -> Model:
     gamma = defaults.get("gamma")
     delta = defaults.get("delta")
 
-    if defaults.get("no_ai"):
-        # need a theta to run without AIs
+    # Set initial theta value based on theta_star or default
+    if defaults.get("no_ai") and defaults.get("theta_star") is not None:
+        # If no_ai is True and theta_star is provided, use it as initial theta
         theta = defaults.get("theta_star")
     else:
-        theta = None  # Don't pass theta when AI is enabled
+        # Otherwise, use 0.5 as a default initial theta
+        theta = 0.5
 
     # Create opts dictionary
     opts = {
@@ -141,10 +140,6 @@ def initialize_model(**kwargs) -> Model:
 
     # Set options on the model too
     model.opts.update(opts)
-
-    # If no_ai is True, explicitly store theta in model params
-    if opts["no_ai"]:
-        model.params["theta"] = theta
 
     # Add remaining parameters to model.params
     model.params.update(defaults)
