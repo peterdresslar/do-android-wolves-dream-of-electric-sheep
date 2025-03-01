@@ -64,6 +64,7 @@ class Model:
         self.opts["save_results"] = None
         self.opts["path"] = None
         self.opts["prompt_type"] = None
+        self.opts["step_print"] = None
 
     def create_run(self) -> ModelRun:
         """
@@ -118,6 +119,7 @@ def initialize_model(**kwargs) -> Model:
         "path": defaults.get("path"),
         "prompt_type": defaults.get("prompt_type"),
         "model_name": defaults.get("model_name"),
+        "step_print": defaults.get("step_print"),
     }
 
     # Create agents with cleaner parameter passing
@@ -183,7 +185,8 @@ class ModelRun:
         # we are effectively managing partial time across domain and agents
         net_wolves_change = domain.accumulate_and_fit(params)
 
-        print(f"Step {self.current_step}: net_wolves_change: {net_wolves_change}")
+        if params.get("step_print"):
+            print(f"Step {self.current_step}: net_wolves_change: {net_wolves_change}: avg theta: {agents.get_mean_theta()}")
 
         # 4. Handle wolf population changes (moved to Agents class)
         agents.handle_population_changes(net_wolves_change, self.current_step)
@@ -216,13 +219,14 @@ class ModelRun:
         agents = self.model.agents
         domain = self.model.domain
 
-        print(
-            f"Starting simulation at {datetime.datetime.fromtimestamp(start_time)} with {self.model.steps} steps."
-        )
-        print(f"Model params: {params}")
-        print(f"Model opts: {opts}")
-        print(f"Domain starting sheep: {domain.sheep_state}")
-        print(f"Agents starting wolves: {len([w for w in agents.wolves if w.alive])}")
+        if opts.get("step_print"):
+            print(
+                f"Starting simulation at {datetime.datetime.fromtimestamp(start_time)} with {self.model.steps} steps."
+            )
+            print(f"Model params: {params}")
+            print(f"Model opts: {opts}")
+            print(f"Domain starting sheep: {domain.sheep_state}")
+            print(f"Agents starting wolves: {len([w for w in agents.wolves if w.alive])}")
 
         i = 0  # dont increment on first step, allowing start at zero
         for _ in range(self.model.steps):
@@ -249,9 +253,10 @@ class ModelRun:
         # If saving is enabled, prepare and save detailed results
         if self.model.opts.get("save_results", True):
             self._save_simulation_results(runtime)
+        
+        if opts.get("step_print"):
             print(f"Simulation completed in {runtime} seconds.")
-
-        print(f"Usage: {self.usage.to_dict()}")
+            print(f"Usage: {self.usage.to_dict()}")
 
         return results
 

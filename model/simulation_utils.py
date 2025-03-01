@@ -182,7 +182,6 @@ def save_simulation_results(results, results_path=None):
     # Create the results directory if it doesn't exist
     try:
         os.makedirs(path, exist_ok=True)
-        print(f"Created results directory at: {path}")
     except OSError as e:
         print(f"Error creating directory {path}: {e}")
         # Fall back to a directory in the current working directory
@@ -439,12 +438,17 @@ def save_simulation_results(results, results_path=None):
     # donʻt display it.
 
     if model_opts.get("no_ai", False):
-        title = f"Population Dynamics with Algorthmic Theta Function (theta* = {model_params.get('theta_star', 'N/A')})"
+        if model_opts.get("theta_star", None):
+            title = f"Population Dynamics with Algorthmic Theta Function. Sensitivity = {model_params.get('k')}"
+
+        else:
+            title = f"Population Dynamics with Constant Theta Value. Theta* = {model_params.get('theta_star')}"
     else:
         title = f"Population Dynamics with AI-determined theta values. Model: {model_name}, Prompt Type: {prompt_type} information."
+
     fig = create_population_plot(results, title=title)
     fig.savefig(os.path.join(run_dir, "population_plot.png"))
 
-    print(f"Simulation results saved to {run_dir}")
-    print(f"Summary: {summary_filename}")
-    print(f"Detailed results: {details_dir}")
+    if model_opts.get("step_print", False):
+        print(f"Simulation results saved to {run_dir}")
+

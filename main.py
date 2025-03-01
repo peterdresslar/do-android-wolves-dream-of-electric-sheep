@@ -124,6 +124,10 @@ def main():
         "--no-save", action="store_true", help="Don't save simulation results"
     )
 
+    parser.add_argument(
+        "--step-print", action="store_true", help="Print step information"
+    )
+
     args = parser.parse_args()
 
     # Prepare parameters for the simulation
@@ -146,6 +150,7 @@ def main():
         "save_results": not args.no_save,
         "path": args.output_dir,
         "prompt_type": args.prompt_type,
+        "step_print": args.step_print,
     }
 
     # Apply preset, allowing command-line args to override
