@@ -78,7 +78,7 @@ def get_reference_ODE(model_params, model_time):
 #################################################################
 # Plotting
 #################################################################
-def create_population_plot(results) -> plt.Figure:
+def create_population_plot(results, title=None) -> plt.Figure:
     """Create a plot of the population over time."""
     # Create a proper time steps array
     time_steps = list(range(len(results["sheep_history"])))
@@ -129,7 +129,7 @@ def create_population_plot(results) -> plt.Figure:
     ax1.legend(title="", loc="upper left", frameon=False)
     ax2.legend(["Avg Theta"], loc="upper right", frameon=False)
 
-    plt.title("Wolf-Sheep Population Dynamics with AI-Enabled Wolves")
+    plt.title(title)
     plt.tight_layout()
 
     return fig
@@ -181,9 +181,7 @@ def save_simulation_results(results, results_path=None):
     starting_wolves = model_params.get("w_start", "W0")
 
     # Create a unique run directory name
-    run_dir_name = (
-        f"{model_name}_{steps}_{starting_sheep}-{starting_wolves}_{prompt_type}_{timestamp}"
-    )
+    run_dir_name = f"{model_name}_{steps}_{starting_sheep}-{starting_wolves}_{prompt_type}_{timestamp}"
     run_dir = os.path.join(path, run_dir_name)
 
     # Create the run directory
@@ -410,7 +408,11 @@ def save_simulation_results(results, results_path=None):
     # finally, write a plot and save it to the run_dir
     # donʻt display it.
 
-    fig = create_population_plot(results)
+    if model_opts.get("no_ai", False):
+        title = f"Population Dynamics with Algorthmic Theta Function (theta* = {model_params.get('theta_star', 'N/A')})"
+    else:
+        title = f"Population Dynamics with AI-determined theta values. Model: {model_name}, Prompt Type: {prompt_type} information."
+    fig = create_population_plot(results, title=title)
     fig.savefig(os.path.join(run_dir, "population_plot.png"))
 
     print(f"Simulation results saved to {run_dir}")
