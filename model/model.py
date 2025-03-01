@@ -12,18 +12,20 @@ from model.simulation_utils import save_simulation_results
 from model.utils import Usage, set_current_usage
 
 # Not converting sheep from the ODE for now
+
+
 MODEL_PARAMS = {
-    "alpha": 1,
-    "beta": 0.1,  # we need this at the model level only for the reference ODE
-    "gamma": 1.5,  # we need this at the model level only for the reference ODE
-    "delta": 0.75,  # we need this at the model level only for the reference ODE
-    "theta_star": 0.25,  # we might run without the AIs, in which case we could use this default
-    "s_start": 100,
-    "w_start": 10,
-    "dt": 0.02,
-    "sheep_max": 110,  # an upper bound on sheep, for clarity
-    "eps": 0.0001,  # will give a dead sheep bounce if nonzero! set to zero if you want "real" last-wolf scenario.
-    "steps": 250,
+    "alpha": None,
+    "beta": None,
+    "gamma": None,
+    "delta": None,
+    "theta_star": None,
+    "s_start": None,
+    "w_start": None,
+    "dt": None,
+    "sheep_max": None,
+    "eps": None,
+    "steps": None,
 }
 
 
@@ -42,25 +44,29 @@ class Model:
 
     domain: Domain
     agents: Agents
-    steps: int = 250
-    dt: float = 0.02
+    steps: int = None
+    dt: float = None
     t: int = field(init=False)
     params: dict[str, Any] = field(default_factory=dict)
     state: dict[str, Any] = field(default_factory=dict, init=False)
     opts: dict[str, Any] = field(default_factory=dict, init=False)
 
     def __post_init__(self):
-        self.t = int(self.steps * self.dt)
-        self.opts["no_ai"] = False
-        self.opts["model_name"] = "model"
+        self.t = (
+            int(self.steps * self.dt)
+            if self.steps is not None and self.dt is not None
+            else None
+        )
+        self.opts["no_ai"] = None
+        self.opts["model_name"] = None
         self.opts["models"] = []
-        self.opts["churn_rate"] = 0.05
-        self.opts["save_results"] = True
-        self.opts["path"] = "../data/results"
-        self.opts["prompt_type"] = "high"  # Add default prompt type
+        self.opts["churn_rate"] = None
+        self.opts["save_results"] = None
+        self.opts["path"] = None
+        self.opts["prompt_type"] = None
         # If no_ai is set in opts and theta isn't already in params, add it
-        if self.opts.get("no_ai", False) and "theta" not in self.params:
-            self.params["theta"] = self.params.get("theta_star", 0.5)
+        if self.opts.get("no_ai") and "theta" not in self.params:
+            self.params["theta"] = self.params.get("theta_star")
 
     def create_run(self) -> ModelRun:
         """
@@ -81,9 +87,9 @@ def initialize_model(**kwargs) -> Model:
     defaults.update(kwargs)
 
     # Extract domain and agent parameters
-    sheep_capacity = defaults.get("sheep_max", 110)
-    starting_sheep = defaults.get("s_start", 100)
-    starting_wolves = defaults.get("w_start", 10)
+    sheep_capacity = defaults.get("sheep_max")
+    starting_sheep = defaults.get("s_start")
+    starting_wolves = defaults.get("w_start")
 
     # Create domain and agents
     model_domain = defaults.pop(
@@ -95,24 +101,24 @@ def initialize_model(**kwargs) -> Model:
     )
 
     # Extract agent parameters
-    beta = defaults.get("beta", 0.1)
-    gamma = defaults.get("gamma", 1.5)
-    delta = defaults.get("delta", 0.75)
+    beta = defaults.get("beta")
+    gamma = defaults.get("gamma")
+    delta = defaults.get("delta")
 
-    if defaults.get("no_ai", False):
+    if defaults.get("no_ai"):
         # need a theta to run without AIs
-        theta = defaults.get("theta_star", 0.5)
+        theta = defaults.get("theta_star")
     else:
         theta = None  # Don't pass theta when AI is enabled
 
     # Create opts dictionary
     opts = {
-        "no_ai": defaults.get("no_ai", False),
-        "churn_rate": defaults.get("churn_rate", 0.05),
-        "save_results": defaults.get("save_results", True),
-        "path": defaults.get("path", "../data/results"),
-        "prompt_type": defaults.get("prompt_type", "high"),  # Add this line
-        "model_name": defaults.get("model_name", "model"),
+        "no_ai": defaults.get("no_ai"),
+        "churn_rate": defaults.get("churn_rate"),
+        "save_results": defaults.get("save_results"),
+        "path": defaults.get("path"),
+        "prompt_type": defaults.get("prompt_type"),
+        "model_name": defaults.get("model_name"),
     }
 
     # Create agents with cleaner parameter passing
@@ -127,8 +133,8 @@ def initialize_model(**kwargs) -> Model:
     )
 
     # Extract model parameters
-    steps = defaults.get("steps", 250)
-    dt = defaults.get("dt", 0.02)
+    steps = defaults.get("steps")
+    dt = defaults.get("dt")
 
     # Create the model
     model = Model(domain=model_domain, agents=model_agents, steps=steps, dt=dt)
@@ -257,18 +263,51 @@ class ModelRun:
     def _prepare_detailed_results(self, runtime: float) -> dict[str, Any]:
         """
         Prepare a detailed results object suitable for saving to files.
-
-        This separates the data preparation from the simulation running logic.
         """
+        # Ensure all histories have the same length
+        sheep_history = self.model.domain.sheep_history
+        wolf_history = self.model.agents.get_living_wolf_count_history()
+        theta_history = self.model.agents.average_thetas
+
+        # Find the maximum length
+        max_length = max(len(sheep_history), len(wolf_history), len(theta_history))
+
+        # Pad arrays if needed
+        if len(sheep_history) < max_length:
+            last_value = sheep_history[-1] if sheep_history else 0
+            sheep_history = sheep_history + [last_value] * (
+                max_length - len(sheep_history)
+            )
+
+        if len(wolf_history) < max_length:
+            last_value = wolf_history[-1] if wolf_history else 0
+            wolf_history = wolf_history + [last_value] * (
+                max_length - len(wolf_history)
+            )
+
+        if len(theta_history) < max_length:
+            last_value = theta_history[-1] if theta_history else 0
+            theta_history = theta_history + [last_value] * (
+                max_length - len(theta_history)
+            )
+
+        # Get the model_name from model_names if available
+        model_name = self.model.params.get("model_name", "Model")
+        if (
+            "model_names" in self.model.params
+            and isinstance(self.model.params["model_names"], list)
+            and self.model.params["model_names"]
+        ):
+            model_name = self.model.params["model_names"][0]
 
         detailed_results = {
             "runtime": runtime,
-            "model_name": self.model.params.get("model_name", "model"),
+            "model_name": model_name,
             "prompt_type": self.model.opts.get("prompt_type", "high"),
             "steps": self.current_step,
-            "sheep_history": self.model.domain.sheep_history,
-            "wolf_history": self.model.agents.get_living_wolf_count_history(),
-            "average_theta_history": self.model.agents.average_thetas,
+            "sheep_history": sheep_history,
+            "wolf_history": wolf_history,
+            "average_theta_history": theta_history,
             "final_sheep": self.model.domain.sheep_state,
             "final_wolves": self.model.agents.living_wolves_count,
             "model_params": self.model.params,
@@ -277,8 +316,8 @@ class ModelRun:
                 "sheep_capacity": self.model.domain.sheep_capacity,
                 "sheep_state": self.model.domain.sheep_state,
             },
-            "agents": self.model.agents.get_agents_summary(),  # list of dict per wolf
-            "usage": self.usage.to_dict(),  # Add usage information
+            "agents": self.model.agents.get_agents_summary(),
+            "usage": self.usage.to_dict(),
         }
 
         return detailed_results

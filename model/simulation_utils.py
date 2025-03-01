@@ -81,14 +81,34 @@ def get_reference_ODE(model_params, model_time):
 def create_population_plot(results, title=None) -> plt.Figure:
     """Create a plot of the population over time."""
     # Create a proper time steps array
-    time_steps = list(range(len(results["sheep_history"])))
+    sheep_history = results.get("sheep_history", [])
+    wolf_history = results.get("wolf_history", [])
+    theta_history = results.get("average_theta_history", [])
+
+    # Ensure all histories have the same length by padding with the last value
+    max_length = max(len(sheep_history), len(wolf_history), len(theta_history))
+
+    # Pad arrays if needed
+    if len(sheep_history) < max_length:
+        last_value = sheep_history[-1] if sheep_history else 0
+        sheep_history = sheep_history + [last_value] * (max_length - len(sheep_history))
+
+    if len(wolf_history) < max_length:
+        last_value = wolf_history[-1] if wolf_history else 0
+        wolf_history = wolf_history + [last_value] * (max_length - len(wolf_history))
+
+    if len(theta_history) < max_length:
+        last_value = theta_history[-1] if theta_history else 0
+        theta_history = theta_history + [last_value] * (max_length - len(theta_history))
+
+    time_steps = list(range(max_length))
 
     ai_df = pd.DataFrame(
         {
             "t": time_steps,
-            "Sheep": results["sheep_history"],
-            "Wolves": results["wolf_history"],
-            "Avg Theta": results["average_theta_history"],
+            "Sheep": sheep_history,
+            "Wolves": wolf_history,
+            "Avg Theta": theta_history,
         }
     )
 
@@ -117,8 +137,8 @@ def create_population_plot(results, title=None) -> plt.Figure:
     )
 
     # Set the y-axis limits for the right axis
-    max_theta = max(results["average_theta_history"])
-    min_theta = min(results["average_theta_history"])
+    max_theta = max(theta_history) if theta_history else 1.0
+    min_theta = min(theta_history) if theta_history else 0.0
     theta_range = max_theta - min_theta
     ax2.set_ylim(max(0, min_theta - 0.1 * theta_range), max_theta + 0.1 * theta_range)
 
@@ -174,7 +194,17 @@ def save_simulation_results(results, results_path=None):
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
     model_params = results.get("model_params", {})
     model_opts = results.get("model_opts", {})
-    model_name = model_opts.get("model_name", "Model")
+
+    # Use model_names[0] if available, otherwise fall back to model_name
+    if (
+        "model_names" in model_params
+        and isinstance(model_params["model_names"], list)
+        and model_params["model_names"]
+    ):
+        model_name = model_params["model_names"][0]
+    else:
+        model_name = model_opts.get("model_name", "Model")
+
     prompt_type = model_opts.get("prompt_type", "high")
     steps = model_params.get("steps", "steps")
     starting_sheep = model_params.get("s_start", "S0")

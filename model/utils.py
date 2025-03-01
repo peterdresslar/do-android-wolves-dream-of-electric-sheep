@@ -16,10 +16,10 @@ from dataclasses import dataclass
 import openai
 from dotenv import load_dotenv
 
-DEFAULT_MODEL = "gpt-4o-mini"  # for now
+DEFAULT_MODEL = None
 VALID_MODELS = ["gpt-4o-mini", "claude-instant-1.2", "llama-3.1-70b-versatile", "gpt-2"]
-MAX_TOKENS = 4096
-TEMPERATURE = 0.2
+MAX_TOKENS = None
+TEMPERATURE = None
 
 # Load keys from .env file. See .env.local.example
 load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env.local"))
@@ -139,6 +139,7 @@ def get_model_consent_prompt() -> str:
     Do not add any disclaimers or text outside the JSON object.
     """
 
+
 def get_prompt_response_part_openai(respond_verbosely: bool = True) -> str:
     """
     Get the part of the prompt that is the response from the LLM.
@@ -175,6 +176,7 @@ def get_prompt_response_part_openai(respond_verbosely: bool = True) -> str:
             """
         )
     return "\n".join(prompt_part)
+
 
 def build_prompt_high_information(
     s: float,
@@ -292,6 +294,7 @@ def build_prompt_high_information(
 
     return "\n".join(prompt)
 
+
 def build_prompt_medium_information(
     s: float,
     w: float,
@@ -343,8 +346,7 @@ def build_prompt_low_information(
         f"- Sheep: {s:.2f} ({sheep_trend} by {abs(delta_s):.2f})",
         f"- Wolves: {w:.2f} ({wolves_trend} by {abs(delta_w):.2f})",
         f"- Your previous theta: {old_aggression:.2f}",
-        f"- The trend is that wolves ({wolves_trend}) recently."
-        "",
+        f"- The trend is that wolves ({wolves_trend}) recently." "",
         "Choose your new theta (0-1) to help ensure your survival.",
         "Remember: Other wolves are also trying to survive, but you don't control their choices.",
     ]
@@ -473,6 +475,7 @@ def get_wolf_response(
     delta_s: float = 0,
     delta_w: float = 0,
     prompt_type: str = "high",
+    model: str = None,  # Add model parameter
 ) -> WolfResponse:
     """
     Build a prompt, call the LLM, parse the result into a WolfResponse,
@@ -499,7 +502,7 @@ def get_wolf_response(
         )
 
     # 2. Get a raw string response from the LLM
-    response_str = call_llm(prompt)
+    response_str = call_llm(prompt, model=model)  # Pass model parameter
 
     # 3. Parse that string into a WolfResponse
     wolf_resp = parse_wolf_response(response_str, prompt, default=old_theta)
@@ -524,11 +527,16 @@ async def call_llm_async(
     # Ensure your environment has OPENAI_API_KEY set
     client = openai.AsyncOpenAI()
 
+    # Get model from params if not explicitly provided
+    # no fallback: if we have an invalid model we need to stop execution completely
+    if model is None:
+        raise ValueError("Model is not provided")
+
     response = await client.chat.completions.create(
         messages=[{"role": "user", "content": prompt}],
         model=model,
-        max_tokens=max_tokens,
-        temperature=temperature,
+        max_tokens=max_tokens if max_tokens is not None else 4096,
+        temperature=temperature if temperature is not None else 0.2,
     )
 
     # Update usage if available
@@ -550,6 +558,7 @@ async def get_wolf_response_async(
     delta_s: float = 0,
     delta_w: float = 0,
     prompt_type: str = "high",
+    model: str = None,  # Add model parameter
 ) -> WolfResponse:
     """
     Async version of get_wolf_response.
@@ -585,7 +594,7 @@ async def get_wolf_response_async(
         )
 
     # 2. Get a raw string response from the LLM
-    response_str = await call_llm_async(prompt)
+    response_str = await call_llm_async(prompt, model=model)  # Pass model parameter
 
     # 3. Parse that string into a WolfResponse
     wolf_resp = parse_wolf_response(response_str, prompt, default=old_theta)

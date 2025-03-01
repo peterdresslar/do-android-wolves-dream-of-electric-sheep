@@ -13,13 +13,13 @@ THREADS_DEFAULT = 10
 @dataclass
 class Wolf:
     wolf_id: int
-    beta: float = 0.1  # Predation rate
-    gamma: float = 1.5  # Death rate
-    delta: float = 0.75  # Conversion efficiency
+    beta: float = None
+    gamma: float = None
+    delta: float = None
     alive: bool = True
     born_at_step: int = field(default=None)
     died_at_step: int = field(default=None)
-    starting_theta: float = 0.5  # Default starting theta
+    starting_theta: float = None
     # All thetas for every step (always populated)
     thetas: list[float] = field(default_factory=list)
     # Decision history (only populated when a decision is made)
@@ -76,7 +76,7 @@ class Wolf:
         if theta is not None:
             self.starting_theta = theta
         else:
-            self.starting_theta = round(random.uniform(0, 1), 2)
+            self.starting_theta = random.uniform(0, 1)
 
     def handle_birth(self, step: int, theta: float | None = None):
         self.born_at_step = step
@@ -189,6 +189,7 @@ class Wolf:
         delta_s: float = 0,
         delta_w: float = 0,
         prompt_type: str = "high",
+        model: str = None,  # Add model parameter
     ) -> float:
         """
         Async version of decide_theta.
@@ -210,6 +211,7 @@ class Wolf:
             delta_s=delta_s,
             delta_w=delta_w,
             prompt_type=prompt_type,
+            model=model,  # Pass model parameter
         )
 
         self.thetas.append(wolf_resp.theta)
@@ -264,9 +266,9 @@ class Wolf:
 class Agents:
     def __init__(
         self,
-        beta: float = 0.1,
-        gamma: float = 1.5,
-        delta: float = 0.75,
+        beta: float = None,
+        gamma: float = None,
+        delta: float = None,
         opts: dict[str, Any] = field(default_factory=dict),
     ):
         """
@@ -279,18 +281,18 @@ class Agents:
         self.delta = delta
         self.wolves: list[Wolf] = []
         self.opts = opts
-        self.churn_rate = opts.get("churn_rate", 0.05)
+        self.churn_rate = opts.get("churn_rate")
         self.average_thetas: list[float] = []
 
     @staticmethod
     def create_agents(
-        n_wolves: int = 10,
-        beta: float = 0.1,
-        gamma: float = 1.5,
-        delta: float = 0.75,
+        n_wolves: int = None,
+        beta: float = None,
+        gamma: float = None,
+        delta: float = None,
         theta: float = None,
         opts: dict[str, Any] = None,
-        initial_step: int = 0,
+        initial_step: int = None,
     ) -> "Agents":
         """
         Create a new Agents instance with n_wolves.
@@ -301,7 +303,7 @@ class Agents:
         agents = Agents(beta=beta, gamma=gamma, delta=delta, opts=opts)
 
         # Initialize with proper theta values
-        default_theta = theta if theta is not None else 0.5  # Use 0.5 as default
+        default_theta = theta
 
         for i in range(n_wolves):
             wolf = Wolf(
@@ -314,7 +316,7 @@ class Agents:
             agents.wolves.append(wolf)
 
         # Initialize average theta history with the initial theta
-        agents.average_thetas = [default_theta]
+        agents.average_thetas = [default_theta] if default_theta is not None else []
 
         return agents
 
@@ -617,6 +619,15 @@ class Agents:
             max_threads = params.get("threads", THREADS_DEFAULT)
             prompt_type = self.opts.get("prompt_type", "high")
 
+            # Get the model_name from params or model_names
+            model = None
+            if (
+                "model_names" in params
+                and isinstance(params["model_names"], list)
+                and params["model_names"]
+            ):
+                model = params["model_names"][0]
+
             # Process wolves in batches
             for i in range(0, len(wolves_to_update), max_threads):
                 batch = wolves_to_update[i : i + max_threads]
@@ -634,6 +645,7 @@ class Agents:
                             delta_s,
                             delta_w,
                             prompt_type,
+                            model,  # Pass model parameter
                         )
                     )
 

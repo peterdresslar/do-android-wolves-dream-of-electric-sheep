@@ -11,6 +11,7 @@ from model.utils import VALID_MODELS
 project_root = Path(__file__).parent
 sys.path.append(str(project_root))
 
+
 def get_preset(preset_name: str) -> dict:
     """
     Get a preset from the preset.json file.
@@ -21,6 +22,7 @@ def get_preset(preset_name: str) -> dict:
             raise ValueError(f"Preset {preset_name} not found in preset.json")
         return preset[preset_name]
 
+
 def handle_preset(params: dict) -> dict:
     """
     Handle the preset for the simulation.
@@ -28,20 +30,20 @@ def handle_preset(params: dict) -> dict:
     Command-line arguments override preset values.
     """
     preset = get_preset(params["preset"])
-    
+
     # Start with a clean dictionary
     result_params = {}
-    
+
     # First, add all preset values
     for key, value in preset.items():
         result_params[key] = value
-    
+
     # Then override with any explicitly provided command-line arguments
     # Only include non-None values from params to preserve preset values
     for key, value in params.items():
         if key != "preset" and value is not None:
             result_params[key] = value
-    
+
     return result_params
 
 
