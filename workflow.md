@@ -4,8 +4,8 @@
 [x] In utils, compute and record simulation cost in tokens and dollars!\
 [x] Option for async operation plus option for thread count
 [x] Save plots
-[] Richer opts including agent toggles, save file commands, and file locations
-[] Command-line entry point, for setting up large experiments
+[x] Richer opts including agent toggles, save file commands, and file locations
+[x] Command-line entry point, for setting up large experiments
 [] More models
 [] Gather parameter sweep data for initial publication
 
