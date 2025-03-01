@@ -18,6 +18,7 @@ dependencies = [
     "ipywidgets>=8.1.5",
     "jupyter>=1.1.1",
     "nest-asyncio>=1.6.0",
+    "anthropic>=0.49.0",
 ]
 
 [tool.ruff]

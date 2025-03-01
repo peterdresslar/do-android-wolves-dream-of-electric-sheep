@@ -1,5 +1,6 @@
 # main.py
 import argparse
+import json
 import sys
 from pathlib import Path
 
@@ -10,10 +11,47 @@ from model.utils import VALID_MODELS
 project_root = Path(__file__).parent
 sys.path.append(str(project_root))
 
+def get_preset(preset_name: str) -> dict:
+    """
+    Get a preset from the preset.json file.
+    """
+    with open("presets.json") as f:
+        preset = json.load(f)
+        if preset_name not in preset:
+            raise ValueError(f"Preset {preset_name} not found in preset.json")
+        return preset[preset_name]
+
+def handle_preset(params: dict) -> dict:
+    """
+    Handle the preset for the simulation.
+    Append all preset values to the params dict.
+    Command-line arguments override preset values.
+    """
+    preset = get_preset(params["preset"])
+    
+    # Start with a clean dictionary
+    result_params = {}
+    
+    # First, add all preset values
+    for key, value in preset.items():
+        result_params[key] = value
+    
+    # Then override with any explicitly provided command-line arguments
+    # Only include non-None values from params to preserve preset values
+    for key, value in params.items():
+        if key != "preset" and value is not None:
+            result_params[key] = value
+    
+    return result_params
+
 
 def main():
     parser = argparse.ArgumentParser(
         description="Run wolf-sheep predator-prey simulation"
+    )
+
+    parser.add_argument(
+        "--preset", type=str, default="base", help="Preset to use for the simulation"
     )
 
     # Basic simulation parameters
@@ -84,7 +122,9 @@ def main():
     args = parser.parse_args()
 
     # Prepare parameters for the simulation
+    # Keep all the default values from argparse
     params = {
+        "preset": args.preset,
         "model_name": args.model_name,
         "model_names": args.model_names,
         "steps": args.steps,
@@ -102,6 +142,9 @@ def main():
         "path": args.output_dir,
         "prompt_type": args.prompt_type,
     }
+
+    # Apply preset, allowing command-line args to override
+    params = handle_preset(params)
 
     print(f"Running simulation with parameters: {params}")
 
