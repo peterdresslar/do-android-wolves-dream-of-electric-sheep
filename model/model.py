@@ -87,7 +87,9 @@ def initialize_model(**kwargs) -> Model:
     # Extract domain and agent parameters
     sheep_capacity = defaults.get("sheep_max")
     starting_sheep = defaults.get("s_start")
-    starting_wolves = defaults.get("w_start", 10)  # Add default value for starting_wolves
+    starting_wolves = defaults.get(
+        "w_start", 10
+    )  # Add default value for starting_wolves
 
     # Create domain and agents
     model_domain = defaults.pop(
@@ -186,7 +188,9 @@ class ModelRun:
         net_wolves_change = domain.accumulate_and_fit(params)
 
         if params.get("step_print"):
-            print(f"Step {self.current_step}: net_wolves_change: {net_wolves_change}: avg theta: {agents.get_mean_theta()}")
+            print(
+                f"Step {self.current_step}: net_wolves_change: {net_wolves_change}: avg theta: {agents.get_mean_theta()}"
+            )
 
         # 4. Handle wolf population changes (moved to Agents class)
         agents.handle_population_changes(net_wolves_change, self.current_step)
@@ -226,7 +230,9 @@ class ModelRun:
             print(f"Model params: {params}")
             print(f"Model opts: {opts}")
             print(f"Domain starting sheep: {domain.sheep_state}")
-            print(f"Agents starting wolves: {len([w for w in agents.wolves if w.alive])}")
+            print(
+                f"Agents starting wolves: {len([w for w in agents.wolves if w.alive])}"
+            )
 
         i = 0  # dont increment on first step, allowing start at zero
         for _ in range(self.model.steps):
@@ -253,7 +259,7 @@ class ModelRun:
         # If saving is enabled, prepare and save detailed results
         if self.model.opts.get("save_results", True):
             self._save_simulation_results(runtime)
-        
+
         if opts.get("step_print"):
             print(f"Simulation completed in {runtime} seconds.")
             print(f"Usage: {self.usage.to_dict()}")

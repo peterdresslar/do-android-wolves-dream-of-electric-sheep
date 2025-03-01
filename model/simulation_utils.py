@@ -139,8 +139,27 @@ def create_population_plot(results, title=None) -> plt.Figure:
     # Set the y-axis limits for the right axis
     max_theta = max(theta_history) if theta_history else 1.0
     min_theta = min(theta_history) if theta_history else 0.0
-    theta_range = max_theta - min_theta
-    ax2.set_ylim(max(0, min_theta - 0.1 * theta_range), max_theta + 0.1 * theta_range)
+
+    # Fix for identical y-limits when theta is constant (especially at 0)
+    if max_theta == min_theta:
+        # If theta is constant, create a small range around it
+        if max_theta == 0:
+            # Special case for theta = 0
+            y_min = -0.05
+            y_max = 0.05
+        else:
+            # For other constant values, create a small range around the value
+            margin = max(0.1, abs(max_theta * 0.1))  # At least 0.1 or 10% of the value
+            y_min = max(0, min_theta - margin)
+            y_max = max_theta + margin
+    else:
+        # Normal case with varying theta
+        theta_range = max_theta - min_theta
+        y_min = max(0, min_theta - 0.1 * theta_range)
+        y_max = max_theta + 0.1 * theta_range
+
+    # Set the limits with the calculated values
+    ax2.set_ylim(y_min, y_max)
 
     # Add labels and legend
     ax1.set_xlabel("Time Steps")
@@ -451,4 +470,3 @@ def save_simulation_results(results, results_path=None):
 
     if model_opts.get("step_print", False):
         print(f"Simulation results saved to {run_dir}")
-

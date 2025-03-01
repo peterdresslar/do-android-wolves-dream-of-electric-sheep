@@ -110,22 +110,20 @@ class Wolf:
             # If no previous theta exists, use the starting theta
             self.thetas.append(self.starting_theta)
 
-    def set_theta(
-        self, step: int, theta: float, domain, params: dict
-    ):  # no ai
+    def set_theta(self, step: int, theta: float, domain, params: dict):  # no ai
         """
         Set theta value for this wolf (used in no_ai mode).
-        
+
         Logic:
         1. If theta_star is provided in params, use it as a constant
         2. Otherwise, calculate theta using the function that responds to prey scarcity
-        
+
         Args:
             step: Current simulation step
             theta: Fixed theta value if provided
             domain: Domain object containing sheep state and capacity
             params: Parameters dictionary for theta function configuration
-            
+
         Returns:
             The set theta value
         """
@@ -144,7 +142,7 @@ class Wolf:
                 f"Using constant theta_star: {constant_theta}"
             )
             return constant_theta
-        
+
         else:
             # Calculate theta using the function: θ(s) = 1/(1 + k*s0/(s + ε))
             k = params.get("k", 1.0)  # Sensitivity parameter
@@ -153,7 +151,7 @@ class Wolf:
             )  # Reference sheep population
             epsilon = params.get(
                 "eps", 0.0001
-                )  # Small constant to avoid division by zero
+            )  # Small constant to avoid division by zero
             sheep_state = domain.sheep_state
 
             # Calculate theta using the function from the methods notebook
@@ -170,7 +168,6 @@ class Wolf:
                 f"Calculated theta: {calculated_theta:.4f} based on sheep population: {sheep_state:.2f}"
             )
             return calculated_theta
-
 
     async def decide_theta_async(
         self,
@@ -296,7 +293,9 @@ class Agents:
         agents = Agents(beta=beta, gamma=gamma, delta=delta, opts=opts)
 
         # Initialize with proper theta values
-        default_theta = theta if theta is not None else 0.5  # Ensure default_theta is never None
+        default_theta = (
+            theta if theta is not None else 0.5
+        )  # Ensure default_theta is never None
 
         for i in range(n_wolves):
             wolf = Wolf(
@@ -305,7 +304,9 @@ class Agents:
                 gamma=gamma,
                 delta=delta,
             )
-            wolf.handle_birth(initial_step, default_theta)  # Pass default_theta directly
+            wolf.handle_birth(
+                initial_step, default_theta
+            )  # Pass default_theta directly
             agents.wolves.append(wolf)
 
         # Initialize average theta history with the initial theta
@@ -570,8 +571,6 @@ class Agents:
             if "sheep_max" not in params:
                 params = params.copy()  # Create a copy to avoid modifying the original
                 params["sheep_max"] = sheep_max
-
-   
 
             for wolf in living_wolves:
                 # Don't pass theta parameter at all to force using the function
