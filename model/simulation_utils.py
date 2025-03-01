@@ -7,8 +7,10 @@ import datetime
 import json
 import os
 
+import matplotlib.pyplot as plt  # type: ignore
 import numpy as np
-import pandas as pd
+import pandas as pd  # type: ignore
+import seaborn as sns  # type: ignore
 from scipy.integrate import odeint
 
 DEFAULT_RESULTS_PATH = "../data/results"
@@ -71,6 +73,66 @@ def get_reference_ODE(model_params, model_time):
         {"t": times, "s": round4(integration[:, 0]), "w": round4(integration[:, 1])}
     )
     return ode_df
+
+
+#################################################################
+# Plotting
+#################################################################
+def create_population_plot(results) -> plt.Figure:
+    """Create a plot of the population over time."""
+    # Create a proper time steps array
+    time_steps = list(range(len(results["sheep_history"])))
+
+    ai_df = pd.DataFrame(
+        {
+            "t": time_steps,
+            "Sheep": results["sheep_history"],
+            "Wolves": results["wolf_history"],
+            "Avg Theta": results["average_theta_history"],
+        }
+    )
+
+    # Create a plot with dual y-axes
+    fig, ax1 = plt.subplots(figsize=(12, 7))
+
+    # Plot populations on left y-axis
+    sns.lineplot(
+        data=pd.melt(ai_df, id_vars=["t"], value_vars=["Sheep", "Wolves"]),
+        x="t",
+        y="value",
+        hue="variable",
+        palette=["cadetblue", "darkred"],
+        ax=ax1,
+    )
+
+    # Plot average theta on right y-axis
+    ax2 = ax1.twinx()
+    sns.lineplot(
+        data=ai_df,
+        x="t",
+        y="Avg Theta",
+        color="darkgreen",
+        ax=ax2,
+        linewidth=2,
+    )
+
+    # Set the y-axis limits for the right axis
+    max_theta = max(results["average_theta_history"])
+    min_theta = min(results["average_theta_history"])
+    theta_range = max_theta - min_theta
+    ax2.set_ylim(max(0, min_theta - 0.1 * theta_range), max_theta + 0.1 * theta_range)
+
+    # Add labels and legend
+    ax1.set_xlabel("Time Steps")
+    ax1.set_ylabel("Population")
+    ax2.set_ylabel("Average Theta")
+    ax1.legend(title="", loc="upper left", frameon=False)
+    ax2.legend(["Avg Theta"], loc="upper right", frameon=False)
+
+    plt.title("Wolf-Sheep Population Dynamics with AI-Enabled Wolves")
+    plt.tight_layout()
+
+    return fig
 
 
 #################################################################
@@ -206,6 +268,7 @@ def save_simulation_results(results, results_path=None):
     # Use runtime from results if available
     real_time_elapsed = f"{results.get('runtime', 'not measured')} seconds"
     tokens_cost = "not computed"
+    prompt_type = results.get("prompt_type", "high")
 
     usage = results.get("usage", {})  # sent with to_dict()
 
@@ -218,6 +281,7 @@ def save_simulation_results(results, results_path=None):
         "**Runtime and Usage:**",
         f"Runtime: {real_time_elapsed}",
         f"Usage: {usage}",
+        f"Prompt Type: {prompt_type}",
         "",
         "**Final Counts:**",
         f"Sheep: {results.get('final_sheep', 'N/A')}",
@@ -340,6 +404,12 @@ def save_simulation_results(results, results_path=None):
 
         with open(wolf_filename, "w") as wf:
             json.dump(wolf_data, wf, indent=4)
+
+    # finally, write a plot and save it to the run_dir
+    # donʻt display it.
+
+    fig = create_population_plot(results)
+    fig.savefig(os.path.join(run_dir, "population_plot.png"))
 
     print(f"Simulation results saved to {run_dir}")
     print(f"Summary: {summary_filename}")
