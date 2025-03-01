@@ -112,6 +112,7 @@ def initialize_model(**kwargs) -> Model:
         "save_results": defaults.get("save_results", True),
         "path": defaults.get("path", "../data/results"),
         "prompt_type": defaults.get("prompt_type", "high"),  # Add this line
+        "model_name": defaults.get("model_name", "model"),
     }
 
     # Create agents with cleaner parameter passing
@@ -263,6 +264,7 @@ class ModelRun:
         detailed_results = {
             "runtime": runtime,
             "model_name": self.model.params.get("model_name", "model"),
+            "prompt_type": self.model.opts.get("prompt_type", "high"),
             "steps": self.current_step,
             "sheep_history": self.model.domain.sheep_history,
             "wolf_history": self.model.agents.get_living_wolf_count_history(),

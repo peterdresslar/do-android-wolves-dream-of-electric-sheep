@@ -173,14 +173,16 @@ def save_simulation_results(results, results_path=None):
     # Construct a summary filename based on simulation parameters and current timestamp
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
     model_params = results.get("model_params", {})
-    model_name = model_params.get("model_name", "Model")
+    model_opts = results.get("model_opts", {})
+    model_name = model_opts.get("model_name", "Model")
+    prompt_type = model_opts.get("prompt_type", "high")
     steps = model_params.get("steps", "steps")
     starting_sheep = model_params.get("s_start", "S0")
     starting_wolves = model_params.get("w_start", "W0")
 
     # Create a unique run directory name
     run_dir_name = (
-        f"{model_name}_{steps}_{starting_sheep}-{starting_wolves}_{timestamp}"
+        f"{model_name}_{steps}_{starting_sheep}-{starting_wolves}_{prompt_type}_{timestamp}"
     )
     run_dir = os.path.join(path, run_dir_name)
 
