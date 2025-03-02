@@ -2,6 +2,8 @@
 
 A python ABM project that definitely uses `uv` and probably uses some other stuff. 
 
+<img src="https://raw.githubusercontent.com/peterdresslar/do-android-wolves-dream-of-electric-sheep/main/public/output-gpt-4o-mini.png">
+
 ## Project Checklist
 
 Below is our rough roadmap:
