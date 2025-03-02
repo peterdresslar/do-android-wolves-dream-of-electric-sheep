@@ -1,6 +1,6 @@
 ### Do Android Wolves Dream of Electric Sheep?
 
-A python ABM project that definitely uses `uv` and probably uses some other stuff. 
+A Python ABM project that definitely uses `uv` and probably uses some other stuff.
 
 <img src="https://raw.githubusercontent.com/peterdresslar/do-android-wolves-dream-of-electric-sheep/main/public/output-gpt-4o-mini.png">
 
