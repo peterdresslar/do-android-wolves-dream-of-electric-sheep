@@ -136,30 +136,8 @@ def create_population_plot(results, title=None) -> plt.Figure:
         linewidth=2,
     )
 
-    # Set the y-axis limits for the right axis
-    max_theta = max(theta_history) if theta_history else 1.0
-    min_theta = min(theta_history) if theta_history else 0.0
-
-    # Fix for identical y-limits when theta is constant (especially at 0)
-    if max_theta == min_theta:
-        # If theta is constant, create a small range around it
-        if max_theta == 0:
-            # Special case for theta = 0
-            y_min = -0.05
-            y_max = 0.05
-        else:
-            # For other constant values, create a small range around the value
-            margin = max(0.1, abs(max_theta * 0.1))  # At least 0.1 or 10% of the value
-            y_min = max(0, min_theta - margin)
-            y_max = max_theta + margin
-    else:
-        # Normal case with varying theta
-        theta_range = max_theta - min_theta
-        y_min = max(0, min_theta - 0.1 * theta_range)
-        y_max = max_theta + 0.1 * theta_range
-
-    # Set the limits with the calculated values
-    ax2.set_ylim(y_min, y_max)
+    # Set the y-axis limits for the right axis to always be 0-1 for theta
+    ax2.set_ylim(0, 1)
 
     # Add labels and legend
     ax1.set_xlabel("Time Steps")
@@ -172,6 +150,160 @@ def create_population_plot(results, title=None) -> plt.Figure:
     plt.tight_layout()
 
     return fig
+
+
+def create_replot(path, width=12, dpi=100):
+    """
+    Replot the population plot from a given path to a census.csv file.
+
+    Args:
+        path (str): Path to the census.csv file or directory containing it
+        width (int): Width of the plot in inches (default: 12)
+        dpi (int): Dots per inch for the figure (default: 100)
+
+    Returns:
+        plt.Figure: The generated figure
+    """
+    # Handle if path is a directory by looking for census.csv inside
+    if os.path.isdir(path):
+        # Check for detailed_results subdirectory
+        detailed_path = os.path.join(path, "_detailed_results")
+        if os.path.exists(detailed_path):
+            census_path = os.path.join(detailed_path, "census.csv")
+        else:
+            # Look for census.csv directly in the provided directory
+            census_path = os.path.join(path, "census.csv")
+    else:
+        # Assume path is directly to the census file
+        census_path = path
+
+    # Check if the file exists
+    if not os.path.exists(census_path):
+        raise FileNotFoundError(f"Census file not found at {census_path}")
+
+    # Read the census data
+    df = pd.read_csv(census_path)
+
+    # If width is very large (>100), assume it's in pixels and convert to inches
+    if width > 100:
+        width_inches = width / dpi
+        height_inches = (width * 7 / 12) / dpi
+    else:
+        width_inches = width
+        height_inches = width * 7 / 12
+
+    # Create a plot with dual y-axes
+    fig, ax1 = plt.subplots(figsize=(width_inches, height_inches), dpi=dpi)
+
+    # Plot populations on left y-axis
+    sns.lineplot(
+        data=pd.melt(df, id_vars=["step"], value_vars=["sheep", "wolves"]),
+        x="step",
+        y="value",
+        hue="variable",
+        palette=["cadetblue", "darkred"],
+        ax=ax1,
+    )
+
+    # Plot average theta on right y-axis
+    ax2 = ax1.twinx()
+    sns.lineplot(
+        data=df,
+        x="step",
+        y="mean_theta",
+        color="darkgreen",
+        ax=ax2,
+        linewidth=2,
+    )
+
+    # Set the y-axis limits for the right axis to always be 0-1 for theta
+    ax2.set_ylim(0, 1)
+
+    # Add labels and legend
+    ax1.set_xlabel("Time Steps")
+    ax1.set_ylabel("Population")
+    ax2.set_ylabel("Average Theta")
+    ax1.legend(["Sheep", "Wolves"], loc="upper left", frameon=False)
+    ax2.legend(["Avg Theta"], loc="upper right", frameon=False)
+
+    # Try to extract information for the title from the path
+    try:
+        # Get the directory name which contains the run information
+        if os.path.isdir(path):
+            dir_name = os.path.basename(path)
+        else:
+            dir_name = os.path.basename(os.path.dirname(path))
+
+        # Parse the directory name to extract model and prompt type
+        parts = dir_name.split("_")
+        if len(parts) >= 4:
+            model_name = parts[0]
+            prompt_type = parts[3] if parts[3] not in ["20", "19", "18"] else "None"
+
+            if prompt_type == "None":
+                # Check if there's a theta_star value in the summary file
+                summary_path = os.path.join(
+                    os.path.dirname(census_path), "..", "summary.md"
+                )
+                if os.path.exists(summary_path):
+                    with open(summary_path, "r") as f:
+                        summary_text = f.read()
+                        if "theta_star" in summary_text:
+                            import re
+
+                            theta_match = re.search(
+                                r"theta_star['\"]?: ?([0-9.]+)", summary_text
+                            )
+                            if theta_match:
+                                theta_star = float(theta_match.group(1))
+                                title = f"Population Dynamics with Constant Theta Value. Theta* = {theta_star}"
+                            else:
+                                title = "Population Dynamics with Algorithmic Theta Function"
+                        else:
+                            title = (
+                                "Population Dynamics with Algorithmic Theta Function"
+                            )
+                else:
+                    title = "Population Dynamics with Algorithmic Theta Function"
+            else:
+                title = f"Population Dynamics with AI-determined theta values. Model: {model_name}, Prompt Type: {prompt_type} information."
+        else:
+            title = "Population Dynamics"
+    except:
+        title = "Population Dynamics"
+
+    plt.title(title)
+    plt.tight_layout()
+
+    return fig
+
+
+def save_replot(path, output_path=None, width=12):
+    """
+    Create and save a replot from census data
+
+    Args:
+        path (str): Path to the census.csv file or directory containing it
+        output_path (str): Path to save the plot (default: same directory as census with name 'replot.png')
+        width (int): Width of the plot in inches
+
+    Returns:
+        str: Path to the saved plot
+    """
+    fig = create_replot(path, width)
+
+    # Determine output path
+    if output_path is None:
+        if os.path.isdir(path):
+            output_path = os.path.join(path, "replot.png")
+        else:
+            output_path = os.path.join(os.path.dirname(path), "replot.png")
+
+    # Save the figure
+    fig.savefig(output_path, dpi=100, bbox_inches="tight")
+    plt.close(fig)
+
+    return output_path
 
 
 #################################################################
