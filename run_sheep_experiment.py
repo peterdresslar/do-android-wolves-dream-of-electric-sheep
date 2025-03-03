@@ -79,13 +79,17 @@ def main():
     )
     parser.add_argument("--churn-rate", type=float, default=0.05, help="Churn rate")
 
+    # Define sheep counts to test
+    # sheep_counts = [19, 18, 17, 16, 15]
+    parser.add_argument("--s_start", type=int, default=15, help="Starting sheep count")
+
     args = parser.parse_args()
 
     # Create output directory if it doesn't exist
     os.makedirs(args.output_dir, exist_ok=True)
 
-    # Define sheep counts to test
-    sheep_counts = [19, 18, 17, 16, 15]
+    # Define churn levels to test
+    churn_rates = [0.05, 0.1, 0.2, 0.4, 0.7, 1.0]
 
     # Define prompt types
     prompt_types = ["high", "medium", "low"]
@@ -95,12 +99,13 @@ def main():
 
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
 
-    for sheep_count in sheep_counts:
+    # for sheep_count in sheep_counts:
+    for churn_rate in churn_rates:
         for prompt_type in prompt_types:
             config = {
                 "model_name": args.model_name,
                 "steps": args.steps,
-                "s_start": sheep_count,  # Use s_start instead of sheep
+                "s_start": args.s_start,  # Use s_start instead of sheep
                 "w_start": args.wolves,  # Use w_start instead of wolves
                 "sheep_max": args.sheep_max,
                 "dt": args.dt,
@@ -108,7 +113,7 @@ def main():
                 "beta": args.beta,
                 "gamma": args.gamma,
                 "delta": args.delta,
-                "churn_rate": args.churn_rate,
+                "churn_rate": churn_rate,
                 "prompt_type": prompt_type,
                 "path": args.output_dir,  # Use path instead of output_dir
                 "save_results": True,
