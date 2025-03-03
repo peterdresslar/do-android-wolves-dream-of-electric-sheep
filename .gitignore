@@ -38,3 +38,5 @@ notebook_results/*
 
 # data results
 /data/*
+/data/results/*
+/model/data/results/*
