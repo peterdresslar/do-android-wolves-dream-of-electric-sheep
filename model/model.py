@@ -8,8 +8,8 @@ from typing import Any
 
 from model.agents import Agents
 from model.domain import Domain
-from model.simulation_utils import save_simulation_results
-from model.utils import Usage, set_current_usage
+from model.utils.simulation_utils import save_simulation_results
+from model.utils.utils import Usage, set_current_usage
 
 # Not converting sheep from the ODE for now
 

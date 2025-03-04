@@ -5,7 +5,7 @@ import random
 from dataclasses import dataclass, field
 from typing import Any
 
-from .utils import get_wolf_response
+from .utils.utils import get_wolf_response
 
 THREADS_DEFAULT = 10
 
@@ -189,7 +189,7 @@ class Wolf:
             return self.thetas[-1] if self.thetas else self.starting_theta
 
         # Call LLM to decide theta asynchronously
-        from .utils import get_wolf_response_async
+        from .utils.utils import get_wolf_response_async
 
         wolf_resp = await get_wolf_response_async(
             s=s,

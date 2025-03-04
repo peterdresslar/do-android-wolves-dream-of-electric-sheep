@@ -99,6 +99,9 @@ def main():
 
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
 
+    # Initialize sheep_counts before using it
+    sheep_counts = []
+
     # for sheep_count in sheep_counts:
     for churn_rate in churn_rates:
         for prompt_type in prompt_types:

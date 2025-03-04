@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from model.utils import (
+from model.utils.utils import (
     WolfResponse,
     build_prompt_high_information,
     build_prompt_low_information,

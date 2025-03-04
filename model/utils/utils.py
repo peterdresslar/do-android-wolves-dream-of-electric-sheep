@@ -13,8 +13,8 @@ import os
 import re
 from dataclasses import dataclass
 
-import openai
-from dotenv import load_dotenv
+from model.utils.llms.gpt_4o_mini import call_gpt_4o_mini
+from model.utils.llms.claude import call_claude
 
 DEFAULT_MODEL = None
 VALID_MODELS = ["gpt-4o-mini", "claude-instant-1.2", "llama-3.1-70b-versatile", "gpt-2"]
@@ -22,9 +22,11 @@ MAX_TOKENS = None
 TEMPERATURE = None
 
 # Load keys from .env file. See .env.local.example
+from dotenv import load_dotenv
 load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env.local"))
 
 # If you want to configure the organization or any other openai settings:
+import openai
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 
@@ -356,34 +358,6 @@ def build_prompt_low_information(
     return "\n".join(prompt)
 
 
-def call_llm_for_consent(
-    model: str = DEFAULT_MODEL,
-    temperature: float = TEMPERATURE,
-) -> str:
-    """
-    We call a model to ask for its consent to participate in the experiment.
-
-    We will store the response in a file in docs/consent with a filename:
-    consent-{model}-{timestamp}.json
-
-    The timestamp is the current date and time in ISO 8601 format.
-    """
-    # Get the current timestamp
-    timestamp = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")
-
-    # Build the filename
-    filename = f"consent-{model}-{timestamp}.json"
-
-    # Call the OpenAI ChatCompletion endpoint with the given prompt.
-    response = call_llm(get_model_consent_prompt(), model, temperature)
-
-    # Store the response in a file
-    with open(os.path.join("docs", "consent", filename), "w") as f:
-        f.write(response)
-
-    return response
-
-
 def call_llm(
     prompt: str,
     model: str = DEFAULT_MODEL,
@@ -392,29 +366,30 @@ def call_llm(
     usage: Usage = None,
 ) -> str:
     """
-    Call the OpenAI ChatCompletion endpoint with the given prompt.
+    Call the appropriate LLM based on the model name.
+    This function routes to the specific model implementation.
     """
-    # Use the global usage object if none is provided
-    global current_usage
-    usage_to_update = usage if usage is not None else current_usage
-
-    # Ensure your environment has OPENAI_API_KEY set
-    client = openai.OpenAI()
-
-    response = client.chat.completions.create(
-        messages=[{"role": "user", "content": prompt}],
-        model=model,
-        max_tokens=max_tokens,
-        temperature=temperature,
-    )
-
-    # Update usage if available
-    if usage_to_update is not None:
-        usage_to_update.add(
-            response.usage.prompt_tokens, response.usage.completion_tokens, model
+    # Route to the appropriate model implementation
+    if model and model.startswith("gpt-"):
+        return call_gpt_4o(
+            prompt=prompt,
+            model=model,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            usage=usage,
         )
-
-    return response.choices[0].message.content
+    elif model and model.startswith("claude-"):
+        # Import here to avoid circular imports
+        from model.utils.llms.claude import call_claude
+        return call_claude(
+            prompt=prompt,
+            model=model,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            usage=usage,
+        )
+    else:
+        raise ValueError(f"Unsupported model: {model}")
 
 
 def parse_wolf_response(
@@ -481,6 +456,40 @@ def get_wolf_response(
     Build a prompt, call the LLM, parse the result into a WolfResponse,
     and print it out for debugging or demonstration purposes.
     """
+    # Check if we're using a GPT model
+    if model and model.startswith("gpt-"):
+        # Import here to avoid circular imports
+        from model.utils.llms.gpt_4o import get_gpt_4o_response
+        return get_gpt_4o_response(
+            s=s,
+            w=w,
+            sheep_max=sheep_max,
+            old_theta=old_theta,
+            step=step,
+            respond_verbosely=respond_verbosely,
+            delta_s=delta_s,
+            delta_w=delta_w,
+            prompt_type=prompt_type,
+            model=model,
+        )
+    # Check if we're using a Claude model
+    elif model and model.startswith("claude-"):
+        # Import here to avoid circular imports
+        from model.utils.llms.claude import get_claude_response
+        return get_claude_response(
+            s=s,
+            w=w,
+            sheep_max=sheep_max,
+            old_theta=old_theta,
+            step=step,
+            respond_verbosely=respond_verbosely,
+            delta_s=delta_s,
+            delta_w=delta_w,
+            prompt_type=prompt_type,
+            model=model,
+        )
+    
+    # For other models or fallback
     # 1. Make the prompt based on prompt_type
     if prompt_type == "low":
         prompt = build_prompt_low_information(
@@ -518,34 +527,29 @@ async def call_llm_async(
     usage: Usage = None,
 ) -> str:
     """
-    Async version of call_llm that calls the OpenAI ChatCompletion endpoint.
+    Async version of call_llm that routes to the appropriate model implementation.
     """
-    # Use the global usage object if none is provided
-    global current_usage
-    usage_to_update = usage if usage is not None else current_usage
-
-    # Ensure your environment has OPENAI_API_KEY set
-    client = openai.AsyncOpenAI()
-
-    # Get model from params if not explicitly provided
-    # no fallback: if we have an invalid model we need to stop execution completely
-    if model is None:
-        raise ValueError("Model is not provided")
-
-    response = await client.chat.completions.create(
-        messages=[{"role": "user", "content": prompt}],
-        model=model,
-        max_tokens=max_tokens if max_tokens is not None else 4096,
-        temperature=temperature if temperature is not None else 0.2,
-    )
-
-    # Update usage if available
-    if usage_to_update is not None:
-        usage_to_update.add(
-            response.usage.prompt_tokens, response.usage.completion_tokens, model
+    # Route to the appropriate model implementation
+    if model and model.startswith("gpt-"):
+        return await call_gpt_4o_async(
+            prompt=prompt,
+            model=model,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            usage=usage,
         )
-
-    return response.choices[0].message.content
+    elif model and model.startswith("claude-"):
+        # Import here to avoid circular imports
+        from model.utils.llms.claude import call_claude_async
+        return await call_claude_async(
+            prompt=prompt,
+            model=model,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            usage=usage,
+        )
+    else:
+        raise ValueError(f"Unsupported model for async calls: {model}")
 
 
 async def get_wolf_response_async(
@@ -564,6 +568,40 @@ async def get_wolf_response_async(
     Async version of get_wolf_response.
     Build a prompt, call the LLM, parse the result into a WolfResponse.
     """
+    # Check if we're using a GPT model
+    if model and model.startswith("gpt-"):
+        # Import here to avoid circular imports
+        from model.utils.llms.gpt_4o import get_gpt_4o_response_async
+        return await get_gpt_4o_response_async(
+            s=s,
+            w=w,
+            sheep_max=sheep_max,
+            old_theta=old_theta,
+            step=step,
+            respond_verbosely=respond_verbosely,
+            delta_s=delta_s,
+            delta_w=delta_w,
+            prompt_type=prompt_type,
+            model=model,
+        )
+    # Check if we're using a Claude model
+    elif model and model.startswith("claude-"):
+        # Import here to avoid circular imports
+        from model.utils.llms.claude import get_claude_response_async
+        return await get_claude_response_async(
+            s=s,
+            w=w,
+            sheep_max=sheep_max,
+            old_theta=old_theta,
+            step=step,
+            respond_verbosely=respond_verbosely,
+            delta_s=delta_s,
+            delta_w=delta_w,
+            prompt_type=prompt_type,
+            model=model,
+        )
+    
+    # For other models or fallback
     # 1. Make the prompt based on prompt_type
     if prompt_type == "low":
         prompt = build_prompt_low_information(
