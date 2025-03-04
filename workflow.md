@@ -19,6 +19,6 @@
 [x] Sim file data
 [x] Step count off by one
 [x] Fix charts
+[] Fix chart titles
 [] Escape hatch if LLM not responding
-[] Sim file should include reference ODE
 [] Oversetting opts in model.py? (Too many setters?)
