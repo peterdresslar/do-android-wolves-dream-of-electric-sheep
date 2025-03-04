@@ -15,7 +15,10 @@ load_environment()
 import openai
 
 DEFAULT_MODEL = None
-VALID_MODELS = ["gpt-4o-mini", "claude-instant-1.2", "llama-3.1-70b-versatile", "gpt-2"]
+VALID_MODELS = [
+    {"alias": "gpt-4o-mini", "realname": "gpt-4o-mini-2024-07-18"},
+    {"alias": "claude-3-5-haiku", "realname": "claude-3-5-haiku-20241022"},
+]
 MAX_TOKENS = None
 TEMPERATURE = None
 
@@ -39,19 +42,33 @@ def calculate_cost(prompt_tokens: int, completion_tokens: int, model: str) -> fl
         Estimated cost in USD.
     """
     # Pricing per 1000 tokens as of May 2024 (update as needed)
-    pricing = {
+    model_pricing = {
         "gpt-4o-mini": {"prompt": 0.00015, "completion": 0.00060},
+        "gpt-4o-mini-2024-07-18": {"prompt": 0.00015, "completion": 0.00060},
         "gpt-4o": {"prompt": 0.00050, "completion": 0.00150},
         "gpt-4": {"prompt": 0.00300, "completion": 0.00600},
         "gpt-3.5-turbo": {"prompt": 0.00010, "completion": 0.00020},
+        "claude-3-5-haiku": {"prompt": 0.00080, "completion": 0.00400},
+        "claude-3-5-haiku-20241022": {"prompt": 0.00080, "completion": 0.00400},
         # Add other models as needed
     }
 
-    # Default to gpt-3.5-turbo pricing if model not found
-    model_pricing = pricing.get(model, pricing["gpt-3.5-turbo"])
-
-    prompt_cost = (prompt_tokens / 1000) * model_pricing["prompt"]
-    completion_cost = (completion_tokens / 1000) * model_pricing["completion"]
+    # Try to get pricing for the exact model name
+    if model in model_pricing:
+        pricing = model_pricing[model]
+    else:
+        # If not found, try to get pricing for the alias
+        model_alias = None
+        for valid_model in VALID_MODELS:
+            if valid_model["realname"] == model:
+                model_alias = valid_model["alias"]
+                break
+        
+        # Use the alias pricing if available, otherwise default to gpt-3.5-turbo
+        pricing = model_pricing.get(model_alias, model_pricing["gpt-3.5-turbo"])
+    
+    prompt_cost = (prompt_tokens / 1000) * pricing["prompt"]
+    completion_cost = (completion_tokens / 1000) * pricing["completion"]
 
     return prompt_cost + completion_cost
 
@@ -295,6 +312,23 @@ def build_prompt_low_information(
     return "\n".join(prompt)
 
 
+def get_real_model_name(model_alias: str) -> str:
+    """
+    Convert a model alias to its real name if it exists in VALID_MODELS.
+    If the provided name is already a real name or not found, return it unchanged.
+    """
+    if not model_alias:
+        return None
+        
+    # Check if this is an alias we know
+    for model_info in VALID_MODELS:
+        if model_alias == model_info["alias"]:
+            return model_info["realname"]
+    
+    # If not found as an alias, return the original name
+    return model_alias
+
+
 def call_llm(
     prompt: str,
     model: str = DEFAULT_MODEL,
@@ -306,29 +340,32 @@ def call_llm(
     Call the appropriate LLM based on the model name.
     This function routes to the specific model implementation.
     """
+    # Convert alias to real model name if needed
+    real_model = get_real_model_name(model)
+    
     # Route to the appropriate model implementation
-    if model and model.startswith("gpt-"):
+    if real_model and real_model.startswith("gpt-"):
         # Import here to avoid circular imports
         from model.utils.llms.gpt_4o_mini import call_gpt_4o_mini
         return call_gpt_4o_mini(
             prompt=prompt,
-            model=model,
+            model=real_model,
             temperature=temperature,
             max_tokens=max_tokens,
             usage=usage,
         )
-    elif model and model.startswith("claude-"):
+    elif real_model and real_model.startswith("claude-"):
         # Import here to avoid circular imports
         from model.utils.llms.claude import call_claude
         return call_claude(
             prompt=prompt,
-            model=model,
+            model=real_model,
             temperature=temperature,
             max_tokens=max_tokens,
             usage=usage,
         )
     else:
-        raise ValueError(f"Unsupported model: {model}")
+        raise ValueError(f"Unsupported model: {model} (real name: {real_model})")
 
 
 def parse_wolf_response(
@@ -389,14 +426,17 @@ def get_wolf_response(
     delta_s: float = 0,
     delta_w: float = 0,
     prompt_type: str = "high",
-    model: str = None,  # Add model parameter
+    model: str = None,
 ) -> WolfResponse:
     """
     Build a prompt, call the LLM, parse the result into a WolfResponse,
     and print it out for debugging or demonstration purposes.
     """
+    # Convert alias to real model name if needed
+    real_model = get_real_model_name(model)
+    
     # Check if we're using a GPT model
-    if model and model.startswith("gpt-"):
+    if real_model and real_model.startswith("gpt-"):
         # Import here to avoid circular imports
         from model.utils.llms.gpt_4o_mini import get_gpt_4o_response
         return get_gpt_4o_response(
@@ -409,10 +449,10 @@ def get_wolf_response(
             delta_s=delta_s,
             delta_w=delta_w,
             prompt_type=prompt_type,
-            model=model,
+            model=real_model,
         )
     # Check if we're using a Claude model
-    elif model and model.startswith("claude-"):
+    elif real_model and real_model.startswith("claude-"):
         # Import here to avoid circular imports
         from model.utils.llms.claude import get_claude_response
         return get_claude_response(
@@ -425,7 +465,7 @@ def get_wolf_response(
             delta_s=delta_s,
             delta_w=delta_w,
             prompt_type=prompt_type,
-            model=model,
+            model=real_model,
         )
     
     # For other models or fallback
@@ -450,7 +490,7 @@ def get_wolf_response(
         )
 
     # 2. Get a raw string response from the LLM
-    response_str = call_llm(prompt, model=model)  # Pass model parameter
+    response_str = call_llm(prompt, model=real_model)  # Pass model parameter
 
     # 3. Parse that string into a WolfResponse
     wolf_resp = parse_wolf_response(response_str, prompt, default=old_theta)
@@ -468,29 +508,32 @@ async def call_llm_async(
     """
     Async version of call_llm that routes to the appropriate model implementation.
     """
+    # Convert alias to real model name if needed
+    real_model = get_real_model_name(model)
+    
     # Route to the appropriate model implementation
-    if model and model.startswith("gpt-"):
+    if real_model and real_model.startswith("gpt-"):
         # Import here to avoid circular imports
         from model.utils.llms.gpt_4o_mini import call_gpt_4o_async
         return await call_gpt_4o_async(
             prompt=prompt,
-            model=model,
+            model=real_model,
             temperature=temperature,
             max_tokens=max_tokens,
             usage=usage,
         )
-    elif model and model.startswith("claude-"):
+    elif real_model and real_model.startswith("claude-"):
         # Import here to avoid circular imports
         from model.utils.llms.claude import call_claude_async
         return await call_claude_async(
             prompt=prompt,
-            model=model,
+            model=real_model,
             temperature=temperature,
             max_tokens=max_tokens,
             usage=usage,
         )
     else:
-        raise ValueError(f"Unsupported model for async calls: {model}")
+        raise ValueError(f"Unsupported model for async calls: {model} (real name: {real_model})")
 
 
 async def get_wolf_response_async(
@@ -503,14 +546,17 @@ async def get_wolf_response_async(
     delta_s: float = 0,
     delta_w: float = 0,
     prompt_type: str = "high",
-    model: str = None,  # Add model parameter
+    model: str = None,
 ) -> WolfResponse:
     """
     Async version of get_wolf_response.
     Build a prompt, call the LLM, parse the result into a WolfResponse.
     """
+    # Convert alias to real model name if needed
+    real_model = get_real_model_name(model)
+    
     # Check if we're using a GPT model
-    if model and model.startswith("gpt-"):
+    if real_model and real_model.startswith("gpt-"):
         # Import here to avoid circular imports
         from model.utils.llms.gpt_4o_mini import get_gpt_4o_response_async
         return await get_gpt_4o_response_async(
@@ -523,10 +569,10 @@ async def get_wolf_response_async(
             delta_s=delta_s,
             delta_w=delta_w,
             prompt_type=prompt_type,
-            model=model,
+            model=real_model,
         )
     # Check if we're using a Claude model
-    elif model and model.startswith("claude-"):
+    elif real_model and real_model.startswith("claude-"):
         # Import here to avoid circular imports
         from model.utils.llms.claude import get_claude_response_async
         return await get_claude_response_async(
@@ -539,7 +585,7 @@ async def get_wolf_response_async(
             delta_s=delta_s,
             delta_w=delta_w,
             prompt_type=prompt_type,
-            model=model,
+            model=real_model,
         )
     
     # For other models or fallback
