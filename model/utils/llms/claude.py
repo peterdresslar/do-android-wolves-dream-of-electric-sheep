@@ -50,14 +50,25 @@ def call_claude(
         temperature=temperature,
     )
 
+    # Extract text content from the response
+    # Claude 3 returns content as a list of content blocks
+    response_text = ""
+    if isinstance(message.content, list):
+        for content_block in message.content:
+            if content_block.type == "text":
+                response_text += content_block.text
+    else:
+        # Fallback for older versions or if the API changes
+        response_text = str(message.content)
+
     # Update usage if available (Claude doesn't provide token counts in the same way)
     if usage is not None:
         # Estimate tokens as a workaround
         prompt_tokens = len(prompt) // 4  # Rough estimate
-        completion_tokens = len(message.content) // 4  # Rough estimate
+        completion_tokens = len(response_text) // 4  # Rough estimate
         usage.add(prompt_tokens, completion_tokens, model)
 
-    return message.content
+    return response_text
 
 
 async def call_claude_async(
