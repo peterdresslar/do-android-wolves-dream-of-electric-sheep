@@ -9,7 +9,12 @@ from typing import Any
 from model.agents import Agents
 from model.domain import Domain
 from model.utils.simulation_utils import save_simulation_results
-from model.utils.utils import Usage, set_current_usage
+from model.utils.data_types import Usage
+from model.utils.data_types import set_current_usage
+from model.utils.init_utils import initialize_model
+
+# Initialize the model environment
+initialize_model()
 
 # Not converting sheep from the ODE for now
 

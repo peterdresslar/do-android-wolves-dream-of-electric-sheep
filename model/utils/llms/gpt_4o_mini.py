@@ -1,15 +1,12 @@
 import os
 import openai
-from dotenv import load_dotenv
 
-from model.utils.utils import Usage, current_usage, WolfResponse, parse_wolf_response
-from model.utils.utils import build_prompt_high_information, build_prompt_medium_information, build_prompt_low_information
+# Import shared data types
+from model.utils.data_types import Usage, WolfResponse, current_usage
+from model.utils.init_utils import load_environment
 
-# Load environment variables
-load_dotenv(os.path.join(os.path.dirname(__file__), "..", "..", ".env.local"))
-
-# Configure OpenAI API key
-openai.api_key = os.getenv("OPENAI_API_KEY")
+# Load environment variables once
+load_environment()
 
 def call_gpt_4o_mini(
     prompt: str,
@@ -99,6 +96,14 @@ def get_gpt_4o_response(
     """
     Build a prompt, call GPT-4o, parse the result into a WolfResponse.
     """
+    # Import here to avoid circular imports
+    from model.utils.llm_utils import (
+        build_prompt_high_information,
+        build_prompt_medium_information,
+        build_prompt_low_information,
+        parse_wolf_response,
+    )
+    
     # 1. Make the prompt based on prompt_type
     if prompt_type == "low":
         prompt = build_prompt_low_information(
@@ -161,6 +166,14 @@ async def get_gpt_4o_response_async(
     Async version of get_gpt_4o_response.
     Build a prompt, call GPT-4o, parse the result into a WolfResponse.
     """
+    # Import here to avoid circular imports
+    from model.utils.llm_utils import (
+        build_prompt_high_information,
+        build_prompt_medium_information,
+        build_prompt_low_information,
+        parse_wolf_response,
+    )
+    
     # 1. Make the prompt based on prompt_type
     if prompt_type == "low":
         prompt = build_prompt_low_information(

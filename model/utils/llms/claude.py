@@ -1,15 +1,14 @@
 # claude.py
 
 import os
-
 from anthropic import Anthropic
-from dotenv import load_dotenv
 
-from model.utils.utils import Usage, WolfResponse, parse_wolf_response
-from model.utils.utils import build_prompt_high_information, build_prompt_medium_information, build_prompt_low_information
+# Import shared data types
+from model.utils.data_types import Usage, WolfResponse
+from model.utils.init_utils import load_environment
 
-# Load environment variables
-load_dotenv(os.path.join(os.path.dirname(__file__), "..", "..", ".env.local"))
+# Load environment variables once
+load_environment()
 
 # Get API key
 api_key = os.environ.get("ANTHROPIC_API_KEY")
@@ -95,6 +94,14 @@ def get_claude_response(
     """
     Build a prompt, call Claude, parse the result into a WolfResponse.
     """
+    # Import here to avoid circular imports
+    from model.utils.llm_utils import (
+        build_prompt_high_information,
+        build_prompt_medium_information,
+        build_prompt_low_information,
+        parse_wolf_response,
+    )
+    
     # 1. Make the prompt based on prompt_type
     if prompt_type == "low":
         prompt = build_prompt_low_information(
@@ -157,6 +164,14 @@ async def get_claude_response_async(
     """
     Async version of get_claude_response.
     """
+    # Import here to avoid circular imports
+    from model.utils.llm_utils import (
+        build_prompt_high_information,
+        build_prompt_medium_information,
+        build_prompt_low_information,
+        parse_wolf_response,
+    )
+    
     # For now, just call the synchronous version
     # In the future, this should be updated when Anthropic adds async support
     return get_claude_response(

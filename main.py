@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 
 from model.model import run
-from model.utils.utils import VALID_MODELS
+from model.utils.llm_utils import VALID_MODELS
 
 # Add the project root to the Python path
 project_root = Path(__file__).parent

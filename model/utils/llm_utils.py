@@ -1,86 +1,23 @@
-"""
-utils.py
+# llm_utils.py
 
-Helper utilities for AI-based parameter selection in the
-'do-android-wolves-dream-of-electric-sheep' project.
-
-we may deal with multiple LLMs with different schemas.
-"""
-
-import datetime
 import json
 import os
 import re
-from dataclasses import dataclass
 
-from model.utils.llms.gpt_4o_mini import call_gpt_4o_mini
-from model.utils.llms.claude import call_claude
+# Import shared data types
+from model.utils.data_types import WolfResponse, Usage, current_usage, set_current_usage, get_current_usage
+from model.utils.init_utils import load_environment
+
+# Load environment variables once
+load_environment()
+
+# Import OpenAI after environment is loaded
+import openai
 
 DEFAULT_MODEL = None
 VALID_MODELS = ["gpt-4o-mini", "claude-instant-1.2", "llama-3.1-70b-versatile", "gpt-2"]
 MAX_TOKENS = None
 TEMPERATURE = None
-
-# Load keys from .env file. See .env.local.example
-from dotenv import load_dotenv
-load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env.local"))
-
-# If you want to configure the organization or any other openai settings:
-import openai
-openai.api_key = os.getenv("OPENAI_API_KEY")
-
-
-@dataclass
-class WolfResponse:
-    theta: float
-    prompt: str | None = None
-    explanation: str | None = None
-    vocalization: str | None = None
-
-
-@dataclass
-class Usage:
-    """Track token usage and cost for LLM calls"""
-
-    prompt_tokens: int = 0
-    completion_tokens: int = 0
-    total_tokens: int = 0
-    cost: float = 0.0
-    calls: int = 0
-
-    def add(self, prompt_tokens: int, completion_tokens: int, model: str) -> None:
-        """Add token usage from a single LLM call"""
-        self.prompt_tokens += prompt_tokens
-        self.completion_tokens += completion_tokens
-        self.total_tokens += prompt_tokens + completion_tokens
-        self.cost += calculate_cost(prompt_tokens, completion_tokens, model)
-        self.calls += 1
-
-    def to_dict(self) -> dict:
-        """Convert to dictionary for serialization"""
-        return {
-            "prompt_tokens": self.prompt_tokens,
-            "completion_tokens": self.completion_tokens,
-            "total_tokens": self.total_tokens,
-            "cost": self.cost,
-            "calls": self.calls,
-        }
-
-
-# Add this after the Usage class definition
-current_usage = None
-
-
-def set_current_usage(usage: Usage):
-    """Set the current usage object for tracking LLM calls"""
-    global current_usage
-    current_usage = usage
-
-
-def get_current_usage() -> Usage:
-    """Get the current usage object"""
-    global current_usage
-    return current_usage
 
 
 def calculate_cost(prompt_tokens: int, completion_tokens: int, model: str) -> float:
@@ -371,7 +308,9 @@ def call_llm(
     """
     # Route to the appropriate model implementation
     if model and model.startswith("gpt-"):
-        return call_gpt_4o(
+        # Import here to avoid circular imports
+        from model.utils.llms.gpt_4o_mini import call_gpt_4o_mini
+        return call_gpt_4o_mini(
             prompt=prompt,
             model=model,
             temperature=temperature,
@@ -459,7 +398,7 @@ def get_wolf_response(
     # Check if we're using a GPT model
     if model and model.startswith("gpt-"):
         # Import here to avoid circular imports
-        from model.utils.llms.gpt_4o import get_gpt_4o_response
+        from model.utils.llms.gpt_4o_mini import get_gpt_4o_response
         return get_gpt_4o_response(
             s=s,
             w=w,
@@ -531,6 +470,8 @@ async def call_llm_async(
     """
     # Route to the appropriate model implementation
     if model and model.startswith("gpt-"):
+        # Import here to avoid circular imports
+        from model.utils.llms.gpt_4o_mini import call_gpt_4o_async
         return await call_gpt_4o_async(
             prompt=prompt,
             model=model,
@@ -571,7 +512,7 @@ async def get_wolf_response_async(
     # Check if we're using a GPT model
     if model and model.startswith("gpt-"):
         # Import here to avoid circular imports
-        from model.utils.llms.gpt_4o import get_gpt_4o_response_async
+        from model.utils.llms.gpt_4o_mini import get_gpt_4o_response_async
         return await get_gpt_4o_response_async(
             s=s,
             w=w,
