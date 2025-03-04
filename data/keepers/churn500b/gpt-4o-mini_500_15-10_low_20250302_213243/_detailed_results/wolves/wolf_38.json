@@ -1,0 +1,82 @@
+{
+    "wolf_id": 38,
+    "beta": 0.1,
+    "gamma": 1.5,
+    "delta": 0.75,
+    "alive": false,
+    "born_at_step": 36,
+    "died_at_step": 59,
+    "thetas": [
+        0.6855614213686613,
+        0.6855614213686613,
+        0.6855614213686613,
+        0.6855614213686613,
+        0.6855614213686613,
+        0.6855614213686613,
+        0.6855614213686613,
+        0.6855614213686613,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.3,
+        0.3,
+        0.3,
+        0.3,
+        0.5,
+        0.5,
+        0.5,
+        0.7,
+        0.7,
+        0.5,
+        0.65,
+        0.5
+    ],
+    "decision_history": {
+        "history_steps": [
+            44,
+            48,
+            52,
+            55,
+            57,
+            58,
+            59
+        ],
+        "new_thetas": [
+            0.5,
+            0.3,
+            0.5,
+            0.7,
+            0.5,
+            0.65,
+            0.5
+        ],
+        "prompts": [
+            null,
+            "You are a wolf who can adjust hunting intensity (theta) between 0 and 1.\nNormal wolves always hunt at maximum intensity (theta=1), but you can choose differently.\n\nCurrent situation:\n- Sheep: 14.40 (decreased by 0.81)\n- Wolves: 27.00 (decreased by 3.00)\n- Your previous theta: 0.50\n- The trend is that wolves (decreased) recently.\nChoose your new theta (0-1) to help ensure your survival.\nRemember: Other wolves are also trying to survive, but you don't control their choices.\nPlease provide a short explanation of your reasoning for choosing theta.\nPlease also provide a short vocalization expressing your wolf's attitude about the current situation.\nPlease respond with a JSON object in this format, where [your new theta] is a float between 0 and 1 with your new theta (up to 2 decimal places):\n\n            {\n                \"theta\": [your new theta],\n                \"explanation\": \"I chose this theta because...\",\n                \"vocalization\": \"Growwllllllll...\"\n            }\n            ",
+            "You are a wolf who can adjust hunting intensity (theta) between 0 and 1.\nNormal wolves always hunt at maximum intensity (theta=1), but you can choose differently.\n\nCurrent situation:\n- Sheep: 13.64 (increased by 0.10)\n- Wolves: 18.00 (decreased by 2.00)\n- Your previous theta: 0.30\n- The trend is that wolves (decreased) recently.\nChoose your new theta (0-1) to help ensure your survival.\nRemember: Other wolves are also trying to survive, but you don't control their choices.\nPlease provide a short explanation of your reasoning for choosing theta.\nPlease also provide a short vocalization expressing your wolf's attitude about the current situation.\nPlease respond with a JSON object in this format, where [your new theta] is a float between 0 and 1 with your new theta (up to 2 decimal places):\n\n            {\n                \"theta\": [your new theta],\n                \"explanation\": \"I chose this theta because...\",\n                \"vocalization\": \"Growwllllllll...\"\n            }\n            ",
+            null,
+            null,
+            null,
+            null
+        ],
+        "explanations": [
+            "I chose this theta because the number of sheep has decreased significantly, and the overall population of wolves is also declining. By reducing my hunting intensity to 0.50, I can conserve energy and increase my chances of survival while still contributing to the pack's efforts. This balanced approach allows me to adapt to the current scarcity of prey and the competitive environment.",
+            "I chose this theta because the number of sheep has decreased, indicating a scarcity of food. With fewer sheep available, hunting at maximum intensity may not be sustainable, and I need to conserve energy for future hunts. A lower intensity allows me to adapt to the current situation while still contributing to the pack",
+            "I chose this theta because the number of sheep has increased, providing a better opportunity for hunting without overexerting myself. With the wolf population decreasing, a moderate intensity allows me to conserve energy while still being competitive in the hunt.",
+            "I chose this theta because the number of sheep has increased, providing a better opportunity for hunting. However, the decrease in the wolf population suggests that competition is less intense. By increasing my hunting intensity to 0.70, I can take advantage of the plentiful food while still being cautious, as the trend indicates a recent decline in wolves.",
+            "I chose this theta because the number of sheep is relatively high compared to the decreased number of wolves. By reducing my hunting intensity to 0.50, I can conserve energy and avoid competition with other wolves while still being able to catch enough prey to survive. This balanced approach allows me to adapt to the current situation and increases my chances of survival.",
+            "I chose this theta because the number of sheep has increased, providing a better opportunity for hunting. However, with the recent decrease in the wolf population, I need to balance my hunting intensity to ensure I can still compete with other wolves while also conserving energy for future hunts. A theta of 0.65 allows me to take advantage of the current sheep population without overexerting myself.",
+            "I chose this theta because the sheep population has increased, providing a good opportunity for hunting without overexerting myself. By reducing my intensity to 0.50, I can conserve energy while still participating in the hunt, allowing me to adapt to the current situation and ensure my survival amidst the competition with other wolves."
+        ],
+        "vocalizations": [
+            "Grrrrrrr... times are tough, but we must be smart!",
+            "Grrrrr... times are tough, but we must be wise.",
+            "Growwllllllll... The hunt is on, but I must be smart!",
+            "Growwllllllll... the hunt is on!",
+            "Growwllllllll... It's a tough world out here!",
+            "Growwwwwwwl... Survival is key!",
+            "Growwllllllll..."
+        ]
+    }
+}

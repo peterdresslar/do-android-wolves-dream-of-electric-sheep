@@ -1,0 +1,59 @@
+{
+    "wolf_id": 67,
+    "beta": 0.1,
+    "gamma": 1.5,
+    "delta": 0.75,
+    "alive": false,
+    "born_at_step": 88,
+    "died_at_step": 108,
+    "thetas": [
+        0.5941068763627977,
+        0.5941068763627977,
+        0.5941068763627977,
+        0.5941068763627977,
+        0.5941068763627977,
+        0.5941068763627977,
+        0.5941068763627977,
+        0.5941068763627977,
+        0.5941068763627977,
+        0.5941068763627977,
+        0.45,
+        0.3,
+        0.3,
+        0.3,
+        0.3,
+        0.3,
+        0.3,
+        0.3,
+        0.3,
+        0.3,
+        0.5
+    ],
+    "decision_history": {
+        "history_steps": [
+            98,
+            99,
+            108
+        ],
+        "new_thetas": [
+            0.45,
+            0.3,
+            0.5
+        ],
+        "prompts": [
+            null,
+            null,
+            null
+        ],
+        "explanations": [
+            "I chose this theta because the number of sheep has decreased significantly, and the wolf population is also declining. By reducing my hunting intensity, I can conserve energy and resources while still contributing to the pack's survival. This cautious approach allows me to adapt to the current scarcity and increases my chances of survival in a challenging environment.",
+            "I chose this theta because the number of sheep has decreased significantly, and the competition among wolves is high with their population also declining. By reducing my hunting intensity, I can conserve energy and avoid overexertion while still being able to hunt effectively when the opportunity arises. This strategy allows me to adapt to the current scarcity of prey and ensures my survival in a challenging environment.",
+            "I chose this theta because the number of sheep has increased, providing a better opportunity for hunting. However, the decrease in the wolf population suggests competition is still present. A moderate intensity allows me to balance between conserving energy and taking advantage of the available prey without overexerting myself."
+        ],
+        "vocalizations": [
+            "Growwllllllll... We must be wise and patient.",
+            "Growwllllllll... the hunt is tough, but I will endure!",
+            "Growwllllllll... Survival is key!"
+        ]
+    }
+}

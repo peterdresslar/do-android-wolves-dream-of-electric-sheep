@@ -1,0 +1,63 @@
+{
+    "wolf_id": 20,
+    "beta": 0.1,
+    "gamma": 1.5,
+    "delta": 0.75,
+    "alive": false,
+    "born_at_step": 30,
+    "died_at_step": 49,
+    "thetas": [
+        0.586420153632995,
+        0.586420153632995,
+        0.586420153632995,
+        0.586420153632995,
+        0.45,
+        0.45,
+        0.45,
+        0.45,
+        0.45,
+        0.45,
+        0.6,
+        0.6,
+        0.6,
+        0.4,
+        0.4,
+        0.3,
+        0.3,
+        0.3,
+        0.3,
+        0.3
+    ],
+    "decision_history": {
+        "history_steps": [
+            34,
+            40,
+            43,
+            45
+        ],
+        "new_thetas": [
+            0.45,
+            0.6,
+            0.4,
+            0.3
+        ],
+        "prompts": [
+            null,
+            null,
+            null,
+            null
+        ],
+        "explanations": [
+            "I chose this theta because the number of sheep has decreased, making hunting less rewarding. With more wolves around, competition for food is higher, and a lower intensity will help conserve energy while still allowing me to hunt effectively. This balance increases my chances of survival in a challenging environment.",
+            "I chose this theta because the number of sheep has decreased significantly, and while the wolf population has increased, I need to balance my hunting intensity to ensure I can still catch enough food without exhausting myself. A moderate intensity allows me to be more strategic and conserve energy while still being competitive.",
+            "I chose this theta because the sheep population has decreased significantly, and the number of wolves is still high. By reducing my hunting intensity, I can conserve energy and avoid competition with other wolves, while still being able to hunt effectively when the opportunity arises. This strategy allows me to adapt to the current situation and increase my chances of survival in the long run.",
+            "I chose this theta because the decrease in both sheep and wolves indicates a challenging environment. By reducing my hunting intensity, I can conserve energy and avoid competition with other wolves who are also struggling. This strategy allows me to adapt to the current scarcity of prey while still having a chance to catch food when the opportunity arises."
+        ],
+        "vocalizations": [
+            "Growwllllllll...",
+            "Growwllllllll... the hunt is on, but I must be clever!",
+            "Growwllllllll... times are tough, but I will adapt!",
+            "Growwllllllll... times are tough, but I will survive!"
+        ]
+    }
+}

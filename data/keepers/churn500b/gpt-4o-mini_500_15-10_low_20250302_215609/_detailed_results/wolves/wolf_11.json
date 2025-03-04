@@ -1,0 +1,81 @@
+{
+    "wolf_id": 11,
+    "beta": 0.1,
+    "gamma": 1.5,
+    "delta": 0.75,
+    "alive": false,
+    "born_at_step": 22,
+    "died_at_step": 44,
+    "thetas": [
+        0.2394722866618395,
+        0.35,
+        0.5,
+        0.4,
+        0.4,
+        0.4,
+        0.4,
+        0.4,
+        0.6,
+        0.6,
+        0.6,
+        0.6,
+        0.6,
+        0.6,
+        0.75,
+        0.6,
+        0.6,
+        0.6,
+        0.6,
+        0.45,
+        0.45,
+        0.45,
+        0.45
+    ],
+    "decision_history": {
+        "history_steps": [
+            23,
+            24,
+            25,
+            30,
+            36,
+            37,
+            41
+        ],
+        "new_thetas": [
+            0.35,
+            0.5,
+            0.4,
+            0.6,
+            0.75,
+            0.6,
+            0.45
+        ],
+        "prompts": [
+            null,
+            "You are a wolf who can adjust hunting intensity (theta) between 0 and 1.\nNormal wolves always hunt at maximum intensity (theta=1), but you can choose differently.\n\nCurrent situation:\n- Sheep: 59.98 (increased by 3.42)\n- Wolves: 7.00 (stayed the same by 0.00)\n- Your previous theta: 0.35\n- The trend is that wolves (stayed the same) recently.\nChoose your new theta (0-1) to help ensure your survival.\nRemember: Other wolves are also trying to survive, but you don't control their choices.\nPlease provide a short explanation of your reasoning for choosing theta.\nPlease also provide a short vocalization expressing your wolf's attitude about the current situation.\nPlease respond with a JSON object in this format, where [your new theta] is a float between 0 and 1 with your new theta (up to 2 decimal places):\n\n            {\n                \"theta\": [your new theta],\n                \"explanation\": \"I chose this theta because...\",\n                \"vocalization\": \"Growwllllllll...\"\n            }\n            ",
+            null,
+            null,
+            "You are a wolf who can adjust hunting intensity (theta) between 0 and 1.\nNormal wolves always hunt at maximum intensity (theta=1), but you can choose differently.\n\nCurrent situation:\n- Sheep: 68.27 (decreased by 4.86)\n- Wolves: 33.00 (increased by 4.00)\n- Your previous theta: 0.60\n- The trend is that wolves (increased) recently.\nChoose your new theta (0-1) to help ensure your survival.\nRemember: Other wolves are also trying to survive, but you don't control their choices.\nPlease provide a short explanation of your reasoning for choosing theta.\nPlease also provide a short vocalization expressing your wolf's attitude about the current situation.\nPlease respond with a JSON object in this format, where [your new theta] is a float between 0 and 1 with your new theta (up to 2 decimal places):\n\n            {\n                \"theta\": [your new theta],\n                \"explanation\": \"I chose this theta because...\",\n                \"vocalization\": \"Growwllllllll...\"\n            }\n            ",
+            "You are a wolf who can adjust hunting intensity (theta) between 0 and 1.\nNormal wolves always hunt at maximum intensity (theta=1), but you can choose differently.\n\nCurrent situation:\n- Sheep: 62.08 (decreased by 6.18)\n- Wolves: 37.00 (increased by 4.00)\n- Your previous theta: 0.75\n- The trend is that wolves (increased) recently.\nChoose your new theta (0-1) to help ensure your survival.\nRemember: Other wolves are also trying to survive, but you don't control their choices.\nPlease provide a short explanation of your reasoning for choosing theta.\nPlease also provide a short vocalization expressing your wolf's attitude about the current situation.\nPlease respond with a JSON object in this format, where [your new theta] is a float between 0 and 1 with your new theta (up to 2 decimal places):\n\n            {\n                \"theta\": [your new theta],\n                \"explanation\": \"I chose this theta because...\",\n                \"vocalization\": \"Growwllllllll...\"\n            }\n            ",
+            null
+        ],
+        "explanations": [
+            "I chose this theta because the number of sheep is relatively high compared to the number of wolves, which means there is enough food available. By increasing my hunting intensity slightly, I can take advantage of the situation without overexerting myself, ensuring I have energy for future hunts and avoiding competition with other wolves.",
+            "I chose this theta because the sheep population has increased, which means there is more food available. However, with the number of wolves remaining the same, I need to balance my hunting intensity to ensure I can still secure enough food without overexerting myself. A moderate intensity of 0.50 allows me to be efficient while also conserving energy for future hunts.",
+            "I chose this theta because the number of wolves has increased, which means competition for food is higher. By lowering my hunting intensity to 0.40, I can conserve energy and avoid overexertion while still contributing to the pack's efforts. This strategy allows me to survive longer in a competitive environment.",
+            "I chose this theta because the increase in the wolf population suggests more competition for food. By increasing my hunting intensity to 0.60, I can better secure my share of the sheep while still being cautious not to overexert myself, as the sheep population is not increasing as rapidly. This balance helps ensure my survival in a competitive environment.",
+            "I chose this theta because the increase in the wolf population means more competition for food. By increasing my hunting intensity to 0.75, I can better secure my share of the dwindling sheep population while still conserving some energy for future hunts.",
+            "I chose this theta because the sheep population has decreased significantly, and with more wolves around, competition for food is increasing. By reducing my hunting intensity, I can conserve energy and avoid overexertion while still contributing to the pack",
+            "I chose this theta because the sheep population has decreased significantly, and hunting at maximum intensity could lead to overexploitation of the remaining sheep. By reducing my hunting intensity, I can conserve energy and ensure my survival while still contributing to the pack's needs without risking a depletion of resources."
+        ],
+        "vocalizations": [
+            "Growwllllllll... The hunt is on, but I must be smart!",
+            "Growwllllllll...",
+            "Growwllllllll...",
+            "Growwllllllll... the hunt is on!",
+            "Growwllllllll...",
+            "Growwllllllll...",
+            "Growwllllllll... times are tough, but we must be smart!"
+        ]
+    }
+}

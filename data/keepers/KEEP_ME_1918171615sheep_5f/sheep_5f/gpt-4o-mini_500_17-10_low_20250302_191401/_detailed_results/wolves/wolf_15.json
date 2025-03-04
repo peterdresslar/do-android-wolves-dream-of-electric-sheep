@@ -1,0 +1,72 @@
+{
+    "wolf_id": 15,
+    "beta": 0.1,
+    "gamma": 1.5,
+    "delta": 0.75,
+    "alive": false,
+    "born_at_step": 25,
+    "died_at_step": 48,
+    "thetas": [
+        0.13914828328173734,
+        0.3,
+        0.3,
+        0.3,
+        0.3,
+        0.3,
+        0.3,
+        0.3,
+        0.3,
+        0.3,
+        0.3,
+        0.3,
+        0.3,
+        0.3,
+        0.3,
+        0.3,
+        0.3,
+        0.4,
+        0.4,
+        0.3,
+        0.3,
+        0.3,
+        0.5,
+        0.3
+    ],
+    "decision_history": {
+        "history_steps": [
+            26,
+            42,
+            44,
+            47,
+            48
+        ],
+        "new_thetas": [
+            0.3,
+            0.4,
+            0.3,
+            0.5,
+            0.3
+        ],
+        "prompts": [
+            null,
+            null,
+            "You are a wolf who can adjust hunting intensity (theta) between 0 and 1.\nNormal wolves always hunt at maximum intensity (theta=1), but you can choose differently.\n\nCurrent situation:\n- Sheep: 27.22 (decreased by 1.94)\n- Wolves: 31.00 (decreased by 2.00)\n- Your previous theta: 0.40\n- The trend is that wolves (decreased) recently.\nChoose your new theta (0-1) to help ensure your survival.\nRemember: Other wolves are also trying to survive, but you don't control their choices.\nPlease provide a short explanation of your reasoning for choosing theta.\nPlease also provide a short vocalization expressing your wolf's attitude about the current situation.\nPlease respond with a JSON object in this format, where [your new theta] is a float between 0 and 1 with your new theta (up to 2 decimal places):\n\n            {\n                \"theta\": [your new theta],\n                \"explanation\": \"I chose this theta because...\",\n                \"vocalization\": \"Growwllllllll...\"\n            }\n            ",
+            null,
+            null
+        ],
+        "explanations": [
+            "I chose this theta because the number of sheep is relatively high compared to the number of wolves, which means there is enough food to sustain a moderate hunting intensity. By increasing my theta from 0.14 to 0.30, I can take advantage of the current abundance while still being cautious, as the recent increase in wolves suggests competition for food is rising. This balance helps ensure my survival without overexerting myself.",
+            "I chose this theta because the sheep population has decreased, and the number of wolves remains high. By increasing my hunting intensity slightly, I can take advantage of the current situation without overexerting myself, which could lead to exhaustion or injury. A moderate increase in theta allows me to balance the need for food with the risk of competition from other wolves.",
+            "I chose this theta because the number of sheep is decreasing, and the competition among wolves is increasing. By lowering my hunting intensity, I can conserve energy and avoid direct competition with other wolves, which may be more aggressive in their hunting. This strategy allows me to survive longer while waiting for a more favorable situation.",
+            "I chose this theta because the decrease in both sheep and wolves indicates a competitive environment. By increasing my hunting intensity to 0.50, I can balance the need for food while still conserving energy, as hunting at maximum intensity may lead to overexertion and risk of injury. This moderate approach allows me to adapt to the current situation and increases my chances of survival.",
+            "I chose this theta because the sheep population is relatively high compared to the number of wolves, and hunting at a lower intensity allows me to conserve energy while still contributing to the pack's needs. With the recent decrease in wolves, a more cautious approach may help ensure my survival and avoid overexertion."
+        ],
+        "vocalizations": [
+            "Growwllllllll... the hunt is on, but I must be wise!",
+            "Growwllllllll...",
+            "Growwllllllll...",
+            "Growwwwwl... the hunt is on, but I must be wise!",
+            "Grrrrrrr... we must be wise in these times."
+        ]
+    }
+}

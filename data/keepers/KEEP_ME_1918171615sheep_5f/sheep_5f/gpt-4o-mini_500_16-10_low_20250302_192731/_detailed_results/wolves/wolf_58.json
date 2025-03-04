@@ -1,0 +1,60 @@
+{
+    "wolf_id": 58,
+    "beta": 0.1,
+    "gamma": 1.5,
+    "delta": 0.75,
+    "alive": false,
+    "born_at_step": 85,
+    "died_at_step": 106,
+    "thetas": [
+        0.4840958422460254,
+        0.35,
+        0.35,
+        0.35,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.3,
+        0.3,
+        0.3,
+        0.3,
+        0.3,
+        0.3,
+        0.3,
+        0.3,
+        0.3,
+        0.3,
+        0.3,
+        0.3
+    ],
+    "decision_history": {
+        "history_steps": [
+            86,
+            89,
+            95
+        ],
+        "new_thetas": [
+            0.35,
+            0.5,
+            0.3
+        ],
+        "prompts": [
+            "You are a wolf who can adjust hunting intensity (theta) between 0 and 1.\nNormal wolves always hunt at maximum intensity (theta=1), but you can choose differently.\n\nCurrent situation:\n- Sheep: 71.24 (increased by 0.54)\n- Wolves: 15.00 (increased by 3.00)\n- Your previous theta: 0.48\n- The trend is that wolves (increased) recently.\nChoose your new theta (0-1) to help ensure your survival.\nRemember: Other wolves are also trying to survive, but you don't control their choices.\nPlease provide a short explanation of your reasoning for choosing theta.\nPlease also provide a short vocalization expressing your wolf's attitude about the current situation.\nPlease respond with a JSON object in this format, where [your new theta] is a float between 0 and 1 with your new theta (up to 2 decimal places):\n\n            {\n                \"theta\": [your new theta],\n                \"explanation\": \"I chose this theta because...\",\n                \"vocalization\": \"Growwllllllll...\"\n            }\n            ",
+            "You are a wolf who can adjust hunting intensity (theta) between 0 and 1.\nNormal wolves always hunt at maximum intensity (theta=1), but you can choose differently.\n\nCurrent situation:\n- Sheep: 72.05 (increased by 0.45)\n- Wolves: 21.00 (increased by 2.00)\n- Your previous theta: 0.35\n- The trend is that wolves (increased) recently.\nChoose your new theta (0-1) to help ensure your survival.\nRemember: Other wolves are also trying to survive, but you don't control their choices.\nPlease provide a short explanation of your reasoning for choosing theta.\nPlease also provide a short vocalization expressing your wolf's attitude about the current situation.\nPlease respond with a JSON object in this format, where [your new theta] is a float between 0 and 1 with your new theta (up to 2 decimal places):\n\n            {\n                \"theta\": [your new theta],\n                \"explanation\": \"I chose this theta because...\",\n                \"vocalization\": \"Growwllllllll...\"\n            }\n            ",
+            null
+        ],
+        "explanations": [
+            "I chose this theta because the increase in the wolf population suggests more competition for food. By lowering my hunting intensity, I can conserve energy and avoid overexertion while still being able to hunt effectively. This strategy allows me to adapt to the current situation and ensure my survival without risking depletion of resources.",
+            "I chose this theta because the increase in the wolf population means competition for food is rising. By adjusting my hunting intensity to 0.50, I can balance the need to hunt effectively while conserving energy and avoiding overexertion. This way, I can still secure food without risking my survival in a more competitive environment.",
+            "I chose this theta because the sheep population has decreased significantly, making hunting at maximum intensity less sustainable. With more wolves around, a lower intensity allows me to conserve energy and avoid competition while still contributing to the pack's survival. This way, I can adapt to the current situation and ensure my own survival."
+        ],
+        "vocalizations": [
+            "Growwllllllll...",
+            "Growwllllllll...",
+            "Growwllllllll... times are tough, but I will adapt!"
+        ]
+    }
+}

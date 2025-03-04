@@ -1,0 +1,48 @@
+{
+    "wolf_id": 64,
+    "beta": 0.1,
+    "gamma": 1.5,
+    "delta": 0.75,
+    "alive": false,
+    "born_at_step": 86,
+    "died_at_step": 105,
+    "thetas": [
+        0.8068752742041141,
+        0.8068752742041141,
+        0.8068752742041141,
+        0.65,
+        0.65,
+        0.65,
+        0.65,
+        0.65,
+        0.65,
+        0.65,
+        0.65,
+        0.65,
+        0.65,
+        0.65,
+        0.65,
+        0.65,
+        0.65,
+        0.65,
+        0.65,
+        0.65
+    ],
+    "decision_history": {
+        "history_steps": [
+            89
+        ],
+        "new_thetas": [
+            0.65
+        ],
+        "prompts": [
+            "You are a wolf who can adjust hunting intensity (theta) between 0 and 1.\nNormal wolves always hunt at maximum intensity (theta=1), but you can choose differently.\n\nCurrent situation:\n- Sheep: 72.33 (decreased by 1.77)\n- Wolves: 25.00 (increased by 3.00)\n- Your previous theta: 0.81\n- The trend is that wolves (increased) recently.\nChoose your new theta (0-1) to help ensure your survival.\nRemember: Other wolves are also trying to survive, but you don't control their choices.\nPlease provide a short explanation of your reasoning for choosing theta.\nPlease also provide a short vocalization expressing your wolf's attitude about the current situation.\nPlease respond with a JSON object in this format, where [your new theta] is a float between 0 and 1 with your new theta (up to 2 decimal places):\n\n            {\n                \"theta\": [your new theta],\n                \"explanation\": \"I chose this theta because...\",\n                \"vocalization\": \"Growwllllllll...\"\n            }\n            "
+        ],
+        "explanations": [
+            "I chose this theta because the number of sheep has decreased, indicating a potential scarcity of food. With an increase in the wolf population, hunting at maximum intensity may lead to competition and overexploitation of the remaining sheep. By reducing my hunting intensity, I can conserve energy and ensure my survival while still contributing to the pack"
+        ],
+        "vocalizations": [
+            "Growwllllllll..."
+        ]
+    }
+}

@@ -1,0 +1,39 @@
+{
+    "wolf_id": 2,
+    "beta": 0.1,
+    "gamma": 1.5,
+    "delta": 0.75,
+    "alive": false,
+    "born_at_step": 0,
+    "died_at_step": 4,
+    "thetas": [
+        0.5,
+        0.7,
+        0.7,
+        0.5,
+        0.5,
+        0.5
+    ],
+    "decision_history": {
+        "history_steps": [
+            0,
+            2
+        ],
+        "new_thetas": [
+            0.7,
+            0.5
+        ],
+        "prompts": [
+            null,
+            null
+        ],
+        "explanations": [
+            "I chose this theta because with 10 wolves and only 15 sheep, the competition for food is high. By increasing my hunting intensity to 0.70, I can improve my chances of successfully catching prey while still conserving some energy for future hunts. This balance is crucial for my survival in a competitive environment.",
+            "I chose this theta because the number of sheep has increased, but the wolf population has also decreased. By lowering my hunting intensity to 0.50, I can conserve energy and avoid overexertion while still contributing to the hunt. This balance helps ensure my survival in a challenging environment where resources are limited."
+        ],
+        "vocalizations": [
+            "Growwwwwl! The hunt is on!",
+            "Growwllllllll... the hunt is tough, but I will adapt!"
+        ]
+    }
+}

@@ -1,0 +1,63 @@
+{
+    "wolf_id": 17,
+    "beta": 0.1,
+    "gamma": 1.5,
+    "delta": 0.75,
+    "alive": false,
+    "born_at_step": 28,
+    "died_at_step": 47,
+    "thetas": [
+        0.36836889572664755,
+        0.36836889572664755,
+        0.5,
+        0.5,
+        0.7,
+        0.7,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.3,
+        0.3,
+        0.3,
+        0.3,
+        0.3,
+        0.3,
+        0.3,
+        0.3
+    ],
+    "decision_history": {
+        "history_steps": [
+            30,
+            32,
+            34,
+            40
+        ],
+        "new_thetas": [
+            0.5,
+            0.7,
+            0.5,
+            0.3
+        ],
+        "prompts": [
+            "You are a wolf who can adjust hunting intensity (theta) between 0 and 1.\nNormal wolves always hunt at maximum intensity (theta=1), but you can choose differently.\n\nCurrent situation:\n- Sheep: 71.68 (increased by 1.06)\n- Wolves: 15.00 (increased by 2.00)\n- Your previous theta: 0.37\n- The trend is that wolves (increased) recently.\nChoose your new theta (0-1) to help ensure your survival.\nRemember: Other wolves are also trying to survive, but you don't control their choices.\nPlease provide a short explanation of your reasoning for choosing theta.\nPlease also provide a short vocalization expressing your wolf's attitude about the current situation.\nPlease respond with a JSON object in this format, where [your new theta] is a float between 0 and 1 with your new theta (up to 2 decimal places):\n\n            {\n                \"theta\": [your new theta],\n                \"explanation\": \"I chose this theta because...\",\n                \"vocalization\": \"Growwllllllll...\"\n            }\n            ",
+            null,
+            null,
+            null
+        ],
+        "explanations": [
+            "I chose this theta because the number of sheep is still relatively high compared to the number of wolves, allowing for a moderate hunting intensity. This balance helps ensure that I can still secure food while avoiding overexertion and competition with other wolves, who are also increasing in number.",
+            "I chose this theta because the number of sheep is decreasing, which means competition for food is increasing among wolves. By increasing my hunting intensity to 0.70, I can improve my chances of catching prey while still conserving some energy for future hunts. This balance is crucial for my survival in a competitive environment.",
+            "I chose this theta because the sheep population has decreased, making food scarcer. With more wolves around, hunting at maximum intensity could lead to competition and risk. A moderate intensity allows me to conserve energy while still being effective in hunting, increasing my chances of survival.",
+            "I chose this theta because the sheep population has decreased significantly, and with more wolves around, hunting at maximum intensity could lead to competition and scarcity. A lower intensity allows me to conserve energy and wait for a better opportunity while still contributing to the pack's success."
+        ],
+        "vocalizations": [
+            "Growwllllllll...",
+            "Growwwwwl! The hunt is on!",
+            "Growwllllllll...",
+            "Growwllllllll..."
+        ]
+    }
+}

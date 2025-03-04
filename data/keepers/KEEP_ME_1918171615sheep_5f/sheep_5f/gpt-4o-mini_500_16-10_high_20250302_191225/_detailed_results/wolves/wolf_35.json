@@ -1,0 +1,45 @@
+{
+    "wolf_id": 35,
+    "beta": 0.1,
+    "gamma": 1.5,
+    "delta": 0.75,
+    "alive": false,
+    "born_at_step": 31,
+    "died_at_step": 47,
+    "thetas": [
+        0.8893746843796416,
+        0.8893746843796416,
+        0.8893746843796416,
+        0.8893746843796416,
+        0.8893746843796416,
+        0.8893746843796416,
+        0.8893746843796416,
+        0.8893746843796416,
+        0.8893746843796416,
+        0.65,
+        0.65,
+        0.65,
+        0.65,
+        0.65,
+        0.65,
+        0.65,
+        0.65
+    ],
+    "decision_history": {
+        "history_steps": [
+            40
+        ],
+        "new_thetas": [
+            0.65
+        ],
+        "prompts": [
+            null
+        ],
+        "explanations": [
+            "I chose this theta because the sheep population is low and the wolf population is high, indicating a need for caution in hunting. A moderate increase in hunting intensity will allow for some reproduction while still giving sheep a chance to recover. This balance is crucial for the long-term survival of both species."
+        ],
+        "vocalizations": [
+            "Growwllllllll... We must tread carefully, for the balance of our world hangs in the balance."
+        ]
+    }
+}

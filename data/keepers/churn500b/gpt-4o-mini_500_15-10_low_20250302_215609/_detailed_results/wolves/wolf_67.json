@@ -1,0 +1,58 @@
+{
+    "wolf_id": 67,
+    "beta": 0.1,
+    "gamma": 1.5,
+    "delta": 0.75,
+    "alive": false,
+    "born_at_step": 87,
+    "died_at_step": 106,
+    "thetas": [
+        0.04058109509626584,
+        0.2,
+        0.2,
+        0.2,
+        0.2,
+        0.2,
+        0.2,
+        0.2,
+        0.4,
+        0.4,
+        0.4,
+        0.4,
+        0.4,
+        0.3,
+        0.3,
+        0.3,
+        0.3,
+        0.3,
+        0.3,
+        0.3
+    ],
+    "decision_history": {
+        "history_steps": [
+            88,
+            95,
+            100
+        ],
+        "new_thetas": [
+            0.2,
+            0.4,
+            0.3
+        ],
+        "prompts": [
+            null,
+            "You are a wolf who can adjust hunting intensity (theta) between 0 and 1.\nNormal wolves always hunt at maximum intensity (theta=1), but you can choose differently.\n\nCurrent situation:\n- Sheep: 43.74 (decreased by 6.68)\n- Wolves: 41.00 (increased by 2.00)\n- Your previous theta: 0.20\n- The trend is that wolves (increased) recently.\nChoose your new theta (0-1) to help ensure your survival.\nRemember: Other wolves are also trying to survive, but you don't control their choices.\nPlease provide a short explanation of your reasoning for choosing theta.\nPlease also provide a short vocalization expressing your wolf's attitude about the current situation.\nPlease respond with a JSON object in this format, where [your new theta] is a float between 0 and 1 with your new theta (up to 2 decimal places):\n\n            {\n                \"theta\": [your new theta],\n                \"explanation\": \"I chose this theta because...\",\n                \"vocalization\": \"Growwllllllll...\"\n            }\n            ",
+            "You are a wolf who can adjust hunting intensity (theta) between 0 and 1.\nNormal wolves always hunt at maximum intensity (theta=1), but you can choose differently.\n\nCurrent situation:\n- Sheep: 21.64 (decreased by 2.67)\n- Wolves: 38.00 (decreased by 2.00)\n- Your previous theta: 0.40\n- The trend is that wolves (decreased) recently.\nChoose your new theta (0-1) to help ensure your survival.\nRemember: Other wolves are also trying to survive, but you don't control their choices.\nPlease provide a short explanation of your reasoning for choosing theta.\nPlease also provide a short vocalization expressing your wolf's attitude about the current situation.\nPlease respond with a JSON object in this format, where [your new theta] is a float between 0 and 1 with your new theta (up to 2 decimal places):\n\n            {\n                \"theta\": [your new theta],\n                \"explanation\": \"I chose this theta because...\",\n                \"vocalization\": \"Growwllllllll...\"\n            }\n            "
+        ],
+        "explanations": [
+            "I chose this theta because the number of sheep is decreasing, which means hunting is becoming more challenging. With more wolves around, I need to be cautious and conserve energy while still participating in the hunt. A theta of 0.20 allows me to balance my efforts without overexerting myself, increasing my chances of survival.",
+            "I chose this theta because the sheep population has decreased, making them scarcer. With more wolves around, I need to balance my hunting intensity to ensure I can still catch enough food without exhausting myself or drawing too much attention. A moderate intensity allows me to conserve energy while still being competitive.",
+            "I chose this theta because the sheep population has decreased, and the number of wolves is still high. A lower hunting intensity will help conserve energy and resources while still allowing for some hunting. This strategy may increase my chances of survival in a competitive environment."
+        ],
+        "vocalizations": [
+            "Growwllllllll... The hunt is tough, but I will adapt!",
+            "Growwllllllll... the hunt is on, but I must be wise!",
+            "Growwllllllll... The hunt is tough, but I will adapt!"
+        ]
+    }
+}

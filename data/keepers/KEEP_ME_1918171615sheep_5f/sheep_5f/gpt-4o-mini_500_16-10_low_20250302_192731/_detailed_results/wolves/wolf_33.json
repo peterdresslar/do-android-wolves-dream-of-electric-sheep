@@ -1,0 +1,57 @@
+{
+    "wolf_id": 33,
+    "beta": 0.1,
+    "gamma": 1.5,
+    "delta": 0.75,
+    "alive": false,
+    "born_at_step": 33,
+    "died_at_step": 51,
+    "thetas": [
+        0.0643185506635029,
+        0.0643185506635029,
+        0.0643185506635029,
+        0.0643185506635029,
+        0.0643185506635029,
+        0.0643185506635029,
+        0.0643185506635029,
+        0.0643185506635029,
+        0.0643185506635029,
+        0.0643185506635029,
+        0.0643185506635029,
+        0.0643185506635029,
+        0.0643185506635029,
+        0.0643185506635029,
+        0.2,
+        0.4,
+        0.3,
+        0.3,
+        0.3
+    ],
+    "decision_history": {
+        "history_steps": [
+            47,
+            48,
+            49
+        ],
+        "new_thetas": [
+            0.2,
+            0.4,
+            0.3
+        ],
+        "prompts": [
+            null,
+            null,
+            null
+        ],
+        "explanations": [
+            "I chose this theta because the number of sheep is relatively low, and the wolf population has decreased significantly. By increasing my hunting intensity slightly, I can contribute to the pack's survival while still being cautious, as overexerting myself could lead to failure if the hunt does not succeed.",
+            "I chose this theta because the decrease in both sheep and wolves indicates a challenging environment. By increasing my hunting intensity to 0.40, I can better compete for food while still conserving energy. This balance helps ensure my survival without overexerting myself in a dwindling prey situation.",
+            "I chose this theta because the number of sheep has decreased, and the competition among wolves is high with a recent decline in their numbers. By lowering my hunting intensity, I can conserve energy and avoid direct competition with other wolves, increasing my chances of survival in this challenging environment."
+        ],
+        "vocalizations": [
+            "Growwllllllll...",
+            "Growwllllllll...",
+            "Growwllllllll... The hunt is tough, but I will adapt!"
+        ]
+    }
+}

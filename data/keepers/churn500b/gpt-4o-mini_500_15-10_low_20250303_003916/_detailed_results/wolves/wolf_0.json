@@ -1,0 +1,36 @@
+{
+    "wolf_id": 0,
+    "beta": 0.1,
+    "gamma": 1.5,
+    "delta": 0.75,
+    "alive": false,
+    "born_at_step": 0,
+    "died_at_step": 1,
+    "thetas": [
+        0.5,
+        0.75,
+        0.6
+    ],
+    "decision_history": {
+        "history_steps": [
+            0,
+            1
+        ],
+        "new_thetas": [
+            0.75,
+            0.6
+        ],
+        "prompts": [
+            null,
+            "You are a wolf who can adjust hunting intensity (theta) between 0 and 1.\nNormal wolves always hunt at maximum intensity (theta=1), but you can choose differently.\n\nCurrent situation:\n- Sheep: 15.32 (increased by 0.32)\n- Wolves: 10.00 (stayed the same by 0.00)\n- Your previous theta: 0.75\n- The trend is that wolves (stayed the same) recently.\nChoose your new theta (0-1) to help ensure your survival.\nRemember: Other wolves are also trying to survive, but you don't control their choices.\nPlease provide a short explanation of your reasoning for choosing theta.\nPlease also provide a short vocalization expressing your wolf's attitude about the current situation.\nPlease respond with a JSON object in this format, where [your new theta] is a float between 0 and 1 with your new theta (up to 2 decimal places):\n\n            {\n                \"theta\": [your new theta],\n                \"explanation\": \"I chose this theta because...\",\n                \"vocalization\": \"Growwllllllll...\"\n            }\n            "
+        ],
+        "explanations": [
+            "I chose this theta because the number of sheep is stable, and with 10 wolves competing for the same resource, a moderate hunting intensity will allow me to conserve energy while still being competitive. This way, I can adapt to the situation and avoid overexertion, ensuring my survival in the long run.",
+            "I chose this theta because with the number of sheep increasing and the wolf population stable, a slightly reduced hunting intensity allows me to conserve energy while still being effective. This way, I can avoid overexertion and increase my chances of survival in a competitive environment."
+        ],
+        "vocalizations": [
+            "Growwllllllll...",
+            "Growwllllllll..."
+        ]
+    }
+}

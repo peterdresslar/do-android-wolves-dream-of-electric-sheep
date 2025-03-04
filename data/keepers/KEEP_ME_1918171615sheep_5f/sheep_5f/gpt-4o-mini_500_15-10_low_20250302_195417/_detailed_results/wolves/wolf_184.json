@@ -1,0 +1,59 @@
+{
+    "wolf_id": 184,
+    "beta": 0.1,
+    "gamma": 1.5,
+    "delta": 0.75,
+    "alive": true,
+    "born_at_step": 484,
+    "died_at_step": null,
+    "thetas": [
+        0.7019257055568816,
+        0.7019257055568816,
+        0.7019257055568816,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.65,
+        0.65,
+        0.65,
+        0.65,
+        0.65,
+        0.65,
+        0.45,
+        0.45,
+        0.3
+    ],
+    "decision_history": {
+        "history_steps": [
+            487,
+            491,
+            497,
+            499
+        ],
+        "new_thetas": [
+            0.5,
+            0.65,
+            0.45,
+            0.3
+        ],
+        "prompts": [
+            null,
+            null,
+            null,
+            null
+        ],
+        "explanations": [
+            "I chose this theta because the sheep population has decreased, indicating a potential scarcity of food. By reducing my hunting intensity to 0.50, I can conserve energy and avoid competition with other wolves who are likely to hunt at maximum intensity. This balanced approach allows me to adapt to the current situation while still being able to hunt effectively when the opportunity arises.",
+            "I chose this theta because the number of sheep has decreased, indicating a tougher hunting environment. By increasing my hunting intensity slightly, I can improve my chances of catching enough food while still conserving energy for future hunts. This balance is crucial for my survival, especially with the current wolf population remaining stable.",
+            "I chose this theta because the population of sheep is still relatively high compared to the number of wolves, and with the recent decrease in both sheep and wolves, a lower hunting intensity will help conserve energy and ensure my survival while still allowing for some successful hunts.",
+            "I chose this theta because the number of sheep is relatively low compared to the number of wolves, and hunting at a lower intensity will help conserve energy while still allowing for a chance to catch prey. This approach also reduces competition with other wolves, as they may be hunting at maximum intensity and depleting resources quickly."
+        ],
+        "vocalizations": [
+            "Growwwwwl... Survival is key!",
+            "Growwllllllll... the hunt is on!",
+            "Growwllllllll...",
+            "Growl... the hunt is tough, but I must be smart."
+        ]
+    }
+}

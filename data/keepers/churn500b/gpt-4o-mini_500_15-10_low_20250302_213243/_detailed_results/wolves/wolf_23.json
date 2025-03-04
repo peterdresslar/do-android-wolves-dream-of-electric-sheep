@@ -1,0 +1,46 @@
+{
+    "wolf_id": 23,
+    "beta": 0.1,
+    "gamma": 1.5,
+    "delta": 0.75,
+    "alive": false,
+    "born_at_step": 32,
+    "died_at_step": 49,
+    "thetas": [
+        0.6493740965006366,
+        0.6493740965006366,
+        0.6493740965006366,
+        0.6493740965006366,
+        0.6493740965006366,
+        0.6493740965006366,
+        0.6493740965006366,
+        0.6493740965006366,
+        0.6493740965006366,
+        0.6493740965006366,
+        0.6493740965006366,
+        0.6493740965006366,
+        0.6493740965006366,
+        0.6493740965006366,
+        0.6493740965006366,
+        0.6493740965006366,
+        0.6493740965006366,
+        0.45
+    ],
+    "decision_history": {
+        "history_steps": [
+            49
+        ],
+        "new_thetas": [
+            0.45
+        ],
+        "prompts": [
+            "You are a wolf who can adjust hunting intensity (theta) between 0 and 1.\nNormal wolves always hunt at maximum intensity (theta=1), but you can choose differently.\n\nCurrent situation:\n- Sheep: 13.96 (decreased by 0.44)\n- Wolves: 25.00 (decreased by 2.00)\n- Your previous theta: 0.65\n- The trend is that wolves (decreased) recently.\nChoose your new theta (0-1) to help ensure your survival.\nRemember: Other wolves are also trying to survive, but you don't control their choices.\nPlease provide a short explanation of your reasoning for choosing theta.\nPlease also provide a short vocalization expressing your wolf's attitude about the current situation.\nPlease respond with a JSON object in this format, where [your new theta] is a float between 0 and 1 with your new theta (up to 2 decimal places):\n\n            {\n                \"theta\": [your new theta],\n                \"explanation\": \"I chose this theta because...\",\n                \"vocalization\": \"Growwllllllll...\"\n            }\n            "
+        ],
+        "explanations": [
+            "I chose this theta because the number of sheep has decreased, making hunting more challenging. By lowering my intensity, I can conserve energy and avoid competition with other wolves who are also hunting at maximum intensity. This strategy allows me to adapt to the current situation and increase my chances of survival."
+        ],
+        "vocalizations": [
+            "Growwllllllll..."
+        ]
+    }
+}
