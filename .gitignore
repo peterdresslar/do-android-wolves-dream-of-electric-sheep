@@ -37,6 +37,5 @@ notebooks/notebook_results/*
 notebook_results/*
 
 # data results
-/data/*
 /data/results/*
 /model/data/results/*
