@@ -21,4 +21,5 @@
 [x] Fix charts
 [] Fix chart titles
 [] Escape hatch if LLM not responding
+[] Lots of code debt in the LLM utils due to going too fast
 [] Oversetting opts in model.py? (Too many setters?)
