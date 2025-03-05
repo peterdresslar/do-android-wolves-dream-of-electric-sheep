@@ -5,8 +5,6 @@ import random
 from dataclasses import dataclass, field
 from typing import Any
 
-from .utils.llm_utils import get_wolf_response
-
 THREADS_DEFAULT = 10
 
 

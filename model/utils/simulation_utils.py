@@ -13,7 +13,34 @@ import pandas as pd  # type: ignore
 import seaborn as sns  # type: ignore
 from scipy.integrate import odeint
 
-DEFAULT_RESULTS_PATH = "../data/results"
+
+# Function to get the project root directory
+def get_project_root():
+    """Return the path to the project root directory."""
+    # Start from the directory of this file
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    # Go up two levels (from model/utils to project root)
+    return os.path.abspath(os.path.join(current_dir, "../.."))
+
+
+# Define results path relative to project root
+DEFAULT_RESULTS_PATH = os.path.join(get_project_root(), "data", "results")
+
+
+# Function to resolve paths relative to project root
+def resolve_path(path):
+    """
+    Resolve a path relative to the project root if it's not absolute.
+
+    Args:
+        path (str): Path to resolve
+
+    Returns:
+        str: Absolute path
+    """
+    if os.path.isabs(path):
+        return path
+    return os.path.join(get_project_root(), path)
 
 
 #################################################################
@@ -246,7 +273,7 @@ def create_replot(path, width=12, dpi=100):
                     os.path.dirname(census_path), "..", "summary.md"
                 )
                 if os.path.exists(summary_path):
-                    with open(summary_path, "r") as f:
+                    with open(summary_path) as f:
                         summary_text = f.read()
                         if "theta_star" in summary_text:
                             import re
@@ -317,18 +344,11 @@ def save_simulation_results(results, results_path=None):
                         final counts, and optionally model and agents details.
         results_path (str or None): Path to save results. If None, a default filename with timestamp is used.
     """
-    # Get current working directory (which will be the notebook directory if running from a notebook)
-    current_dir = os.path.dirname(
-        os.path.abspath(__file__)
-    )  # Use module directory as base
     # Use the provided path or default
     results_path = results_path if results_path else DEFAULT_RESULTS_PATH
 
-    # If the path is not absolute, make it relative to the module directory
-    if not os.path.isabs(results_path):
-        path = os.path.abspath(os.path.join(current_dir, results_path))
-    else:
-        path = results_path
+    # Resolve the path relative to project root if it's not absolute
+    path = resolve_path(results_path)
 
     # Create the results directory if it doesn't exist
     try:
@@ -336,9 +356,10 @@ def save_simulation_results(results, results_path=None):
     except OSError as e:
         print(f"Error creating directory {path}: {e}")
         # Fall back to a directory in the current working directory
-        path = os.path.join(current_dir, "notebook_results")
-        print(f"Falling back to: {path}")
-        os.makedirs(path, exist_ok=True)
+        fallback_path = os.path.join(get_project_root(), "notebook_results")
+        print(f"Falling back to: {fallback_path}")
+        os.makedirs(fallback_path, exist_ok=True)
+        path = fallback_path
 
     # Construct a summary filename based on simulation parameters and current timestamp
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")

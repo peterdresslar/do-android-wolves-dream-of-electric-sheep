@@ -1,4 +1,3 @@
-import os
 import openai
 
 # Import shared data types
@@ -7,6 +6,7 @@ from model.utils.init_utils import load_environment
 
 # Load environment variables once
 load_environment()
+
 
 def call_gpt_4o_mini(
     prompt: str,
@@ -43,6 +43,7 @@ def call_gpt_4o_mini(
 
     return response.choices[0].message.content
 
+
 async def call_gpt_4o_async(
     prompt: str,
     model: str = None,
@@ -78,6 +79,7 @@ async def call_gpt_4o_async(
 
     return response.choices[0].message.content
 
+
 def get_gpt_4o_response(
     s: float,
     w: float,
@@ -99,11 +101,11 @@ def get_gpt_4o_response(
     # Import here to avoid circular imports
     from model.utils.llm_utils import (
         build_prompt_high_information,
-        build_prompt_medium_information,
         build_prompt_low_information,
+        build_prompt_medium_information,
         parse_wolf_response,
     )
-    
+
     # 1. Make the prompt based on prompt_type
     if prompt_type == "low":
         prompt = build_prompt_low_information(
@@ -135,17 +137,14 @@ def get_gpt_4o_response(
 
     # 2. Get a raw string response from GPT-4o
     response_str = call_gpt_4o_mini(
-        prompt, 
-        model=model, 
-        temperature=temperature, 
-        max_tokens=max_tokens,
-        usage=usage
+        prompt, model=model, temperature=temperature, max_tokens=max_tokens, usage=usage
     )
 
     # 3. Parse that string into a WolfResponse
     wolf_resp = parse_wolf_response(response_str, prompt, default=old_theta)
 
     return wolf_resp
+
 
 async def get_gpt_4o_response_async(
     s: float,
@@ -169,11 +168,11 @@ async def get_gpt_4o_response_async(
     # Import here to avoid circular imports
     from model.utils.llm_utils import (
         build_prompt_high_information,
-        build_prompt_medium_information,
         build_prompt_low_information,
+        build_prompt_medium_information,
         parse_wolf_response,
     )
-    
+
     # 1. Make the prompt based on prompt_type
     if prompt_type == "low":
         prompt = build_prompt_low_information(
@@ -205,11 +204,7 @@ async def get_gpt_4o_response_async(
 
     # 2. Get a raw string response from GPT-4o
     response_str = await call_gpt_4o_async(
-        prompt, 
-        model=model, 
-        temperature=temperature, 
-        max_tokens=max_tokens,
-        usage=usage
+        prompt, model=model, temperature=temperature, max_tokens=max_tokens, usage=usage
     )
 
     # 3. Parse that string into a WolfResponse

@@ -19,6 +19,7 @@
 [x] Sim file data
 [x] Step count off by one
 [x] Fix charts
+[] Get rid of *any* breaking defaults
 [] Fix chart titles
 [] Escape hatch if LLM not responding
 [] Lots of code debt in the LLM utils due to going too fast

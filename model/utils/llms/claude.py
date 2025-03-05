@@ -1,6 +1,7 @@
 # claude.py
 
 import os
+
 from anthropic import Anthropic
 
 # Import shared data types
@@ -108,11 +109,11 @@ def get_claude_response(
     # Import here to avoid circular imports
     from model.utils.llm_utils import (
         build_prompt_high_information,
-        build_prompt_medium_information,
         build_prompt_low_information,
+        build_prompt_medium_information,
         parse_wolf_response,
     )
-    
+
     # 1. Make the prompt based on prompt_type
     if prompt_type == "low":
         prompt = build_prompt_low_information(
@@ -144,11 +145,7 @@ def get_claude_response(
 
     # 2. Get a raw string response from Claude
     response_str = call_claude(
-        prompt, 
-        model=model, 
-        temperature=temperature, 
-        max_tokens=max_tokens,
-        usage=usage
+        prompt, model=model, temperature=temperature, max_tokens=max_tokens, usage=usage
     )
 
     # 3. Parse that string into a WolfResponse
@@ -176,13 +173,7 @@ async def get_claude_response_async(
     Async version of get_claude_response.
     """
     # Import here to avoid circular imports
-    from model.utils.llm_utils import (
-        build_prompt_high_information,
-        build_prompt_medium_information,
-        build_prompt_low_information,
-        parse_wolf_response,
-    )
-    
+
     # For now, just call the synchronous version
     # In the future, this should be updated when Anthropic adds async support
     return get_claude_response(
@@ -198,5 +189,5 @@ async def get_claude_response_async(
         model=model,
         temperature=temperature,
         max_tokens=max_tokens,
-        usage=usage
+        usage=usage,
     )
