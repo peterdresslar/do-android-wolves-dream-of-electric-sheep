@@ -30,20 +30,20 @@ from model.model import run
 #  ... they will be set in the calls below
 
 my_args = {
-        "model_name": "gpt-4o-mini",
-        "temperature": 0.2,
-        "max_tokens": 4096,
-        "churn_rate": 0.1,
-        "dt": 0.02,
-        "sheep_max": 110,
-        "eps": 0.0001,
-        "alpha": 1,
-        "beta": 0.1,
-        "gamma": 1.5,
-        "delta": 0.75,
-        "s_start": 100,
-        "w_start": 10,
-        "step_print": False,
+    "model_name": "gpt-4o-mini",
+    "temperature": 0.2,
+    "max_tokens": 4096,
+    "churn_rate": 0.1,
+    "dt": 0.02,
+    "sheep_max": 110,
+    "eps": 0.0001,
+    "alpha": 1,
+    "beta": 0.1,
+    "gamma": 1.5,
+    "delta": 0.75,
+    "s_start": 100,
+    "w_start": 10,
+    "step_print": False,
 }
 
 
@@ -80,13 +80,7 @@ my_args = {
 
 
 # Run model with no_ai=True (note the correct keyword argument syntax)
-results = run(
-    **my_args,
-    theta_star=1,
-    steps=200,
-    no_ai=True,
-    save_results=True
-    )
+results = run(**my_args, theta_star=1, steps=200, no_ai=True, save_results=True)
 
 
 # Here we have a base Lotka-Volterra system output as we would expect. Note that the wolf population is made up of individual "agents" in our implementation, so the population graph for the wolves is "blocky." It moves in steps, unlike the sheep population.
@@ -99,13 +93,7 @@ results = run(
 
 
 # Run model with no_ai=True (note the correct keyword argument syntax)
-results = run(
-    **my_args,
-    theta_star=0,
-    steps=200,
-    no_ai=True,
-    save_results=True
-    )
+results = run(**my_args, theta_star=0, steps=200, no_ai=True, save_results=True)
 
 
 # Or we can try a value in between:
@@ -114,13 +102,7 @@ results = run(
 
 
 # Run model with no_ai=True (note the correct keyword argument syntax)
-results = run(
-    **my_args,
-    theta_star=0.5,
-    steps=5000,
-    no_ai=True,
-    save_results=True
-    )
+results = run(**my_args, theta_star=0.5, steps=5000, no_ai=True, save_results=True)
 
 
 # In fact, theta_star = 0.5 works as a great stabilizer for our model over very many cycles, with our default model values, anyway.
@@ -149,13 +131,7 @@ results = run(
 
 
 # Run model with no_ai=True (note the correct keyword argument syntax)
-results = run(
-    **my_args,
-    k = 1,
-    steps=5000,
-    no_ai=True,
-    save_results=True
-    )
+results = run(**my_args, k=1, steps=5000, no_ai=True, save_results=True)
 
 
 # This is a nicely-modulating function, although, again, may not be fully stabilizing for every starting state of the model variables.
@@ -175,11 +151,7 @@ results = run(
 
 # Run model with AI-enabled wolves
 ai_results = run(
-    **my_args,
-    no_ai=False,
-    steps=5000,
-    save_results=True,
-    prompt_type="high"
+    **my_args, no_ai=False, steps=5000, save_results=True, prompt_type="high"
 )
 
 
@@ -196,11 +168,7 @@ ai_results = run(
 
 # Run model with AI-enabled wolves
 ai_results_low = run(
-    **my_args,
-    no_ai=False,
-    steps=5000,
-    save_results=True,
-    prompt_type="medium"
+    **my_args, no_ai=False, steps=5000, save_results=True, prompt_type="medium"
 )
 
 
@@ -217,11 +185,7 @@ ai_results_low = run(
 
 # Run model with AI-enabled wolves
 ai_results_low = run(
-    **my_args,
-    no_ai=False,
-    steps=5000,
-    save_results=True,
-    prompt_type="low"
+    **my_args, no_ai=False, steps=5000, save_results=True, prompt_type="low"
 )
 
 

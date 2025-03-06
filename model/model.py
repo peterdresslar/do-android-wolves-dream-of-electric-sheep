@@ -250,6 +250,7 @@ class ModelRun:
             "average_theta_history": agents.get_average_theta_history(),
             "final_sheep": domain.sheep_state,
             "final_wolves": agents.living_wolves_count,
+            "last_wolf_death_step": agents.last_wolf_death_step,
             "runtime": runtime,
             "usage": self.usage.to_dict(),  # Add usage information
         }
@@ -314,6 +315,7 @@ class ModelRun:
             "average_theta_history": theta_history,
             "final_sheep": self.model.domain.sheep_state,
             "final_wolves": self.model.agents.living_wolves_count,
+            "last_wolf_death_step": self.model.agents.last_wolf_death_step,
             "model_params": self.model.params,
             "model_opts": self.model.opts,
             "domain": {

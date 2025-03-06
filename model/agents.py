@@ -271,6 +271,7 @@ class Agents:
         self.opts = opts
         self.churn_rate = opts.get("churn_rate")
         self.average_thetas: list[float] = []
+        self.last_wolf_death_step: int = None
 
     @staticmethod
     def create_agents(
@@ -532,6 +533,11 @@ class Agents:
             self.birth_wolves(step, net_wolves_change)
         elif net_wolves_change < 0:
             self.kill_wolves(step, abs(net_wolves_change))
+
+        # Check if wolves went extinct. Only fire the first time
+        if self.living_wolves_count == 0 and self.last_wolf_death_step is None:
+            print(f"Wolves went extinct at step {step}")
+            self.last_wolf_death_step = step
 
     async def process_step_async(self, params, domain, step) -> None:
         """

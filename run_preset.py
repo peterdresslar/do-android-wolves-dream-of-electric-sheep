@@ -28,7 +28,7 @@ def load_presets(presets_file="presets.json"):
         project_root = get_project_root()
         presets_path = os.path.join(project_root, presets_file)
 
-        with open(presets_path, "r") as f:
+        with open(presets_path) as f:
             data = json.load(f)
 
         # Convert the list of presets to a dictionary for easier access
@@ -175,7 +175,10 @@ def main():
 
     # Add optional arguments
     parser.add_argument(
-        "--max-workers", type=int, default=3, help="Maximum number of parallel workers"
+        "--max-workers",
+        type=int,
+        default=3,
+        help="Maximum number of parallel workers",  # This default is acceptable
     )
 
     parser.add_argument(
@@ -286,18 +289,22 @@ def main():
     for result_entry in results:
         if not result_entry["success"]:
             continue
-        
+
         config = result_entry["config"]
         sim_results = result_entry["results"]
-        
+
         # Create a stats entry for this configuration
         stats_entry = {
-            "config": {var: config.get(var) for var in preset.get("sweep_variables", [])},
-            "final_sheep": round4(sim_results.get("final_sheep", 0)),
-            "final_wolves": sim_results.get("final_wolves", 0),
-            "step_of_last_wolf_death": sim_results.get("step_of_last_wolf_death", "N/A")
+            "config": {
+                var: config.get(var) for var in preset.get("sweep_variables", [])
+            },
+            "final_sheep": round4(sim_results.get("final_sheep")),
+            "final_wolves": sim_results.get("final_wolves"),
+            "last_wolf_death_step": sim_results.get(
+                "last_wolf_death_step", "N/A"
+            ),  # Acceptable default, N/A for null
         }
-        
+
         # Add any other key metrics you want to track
         sweep_stats.append(stats_entry)
 
@@ -308,10 +315,12 @@ def main():
         if len(sweep_vars) == 1:
             sweep_stats.sort(key=lambda x: x["config"].get(sweep_vars[0]))
         elif len(sweep_vars) >= 2:
-            sweep_stats.sort(key=lambda x: (
-                x["config"].get(sweep_vars[0]), 
-                x["config"].get(sweep_vars[1])
-            ))
+            sweep_stats.sort(
+                key=lambda x: (
+                    x["config"].get(sweep_vars[0]),
+                    x["config"].get(sweep_vars[1]),
+                )
+            )
 
     # Create experiment summary
     experiment_config = {

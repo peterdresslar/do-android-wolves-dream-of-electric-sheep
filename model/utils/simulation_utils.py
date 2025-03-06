@@ -334,7 +334,7 @@ def save_replot(path, output_path=None, width=12):
 def save_simulation_results(results, results_path=None):
     """Save simulation parameters (starting conditions) and results information to a summary file and a directory with detailed results.
 
-    For example, if we do not get a path, we set up a results base directory relative to DEFAULT_RESULTS_PATH 
+    For example, if we do not get a path, we set up a results base directory relative to DEFAULT_RESULTS_PATH
     based on the model_name, steps, starting_sheep, starting_wolves, prompt_type, and timestamp.
 
     If we do get a path, that path, relative to the DEFAULT_RESULTS_PATH, is used as the base directory.
@@ -490,8 +490,11 @@ def save_simulation_results(results, results_path=None):
         f"Prompt Type: {prompt_type}",
         "",
         "**Final Counts:**",
-        f"Sheep: {results.get('final_sheep', 'N/A')}",
-        f"Wolves: {results.get('final_wolves', 'N/A')}",
+        f"Sheep: {results.get('final_sheep')}",
+        f"Wolves: {results.get('final_wolves')}",
+        "",
+        "**Step of Last Wolf Death:**",
+        f"{results.get('last_wolf_death_step')}",
         "",
         "**Theta Statistics:**",
         f"Mean Theta: {final_mean_theta}",
@@ -508,32 +511,24 @@ def save_simulation_results(results, results_path=None):
         theta_val = state.get("mean_theta")
 
         # Format values if they exist
-        sheep_str = format4(sheep_val) if sheep_val is not None else "N/A"
-        wolves_str = str(wolves_val) if wolves_val is not None else "N/A"
-        theta_str = format4(theta_val) if theta_val is not None else "N/A"
+        sheep_str = format4(sheep_val)
+        wolves_str = str(wolves_val)
+        theta_str = format4(theta_val)
 
         summary_lines.append(
             f"Step {state.get('step')}: Sheep={sheep_str}, Wolves={wolves_str}, Mean Theta={theta_str}"
         )
 
-    # Determine step of last wolf death
-    step_of_last_wolf_death = None
-    if results.get("wolf_history", []) and len(results["wolf_history"]) > 1:
-        # Check if wolves went extinct
-        if results["wolf_history"][-1] == 0:
-            # Find the last step where wolves were alive
-            for i in range(len(results["wolf_history"]) - 2, -1, -1):
-                if results["wolf_history"][i] > 0:
-                    step_of_last_wolf_death = i + 1  # +1 because the death happened after this step
-                    break
-    
     # Add to results for later retrieval
-    results["step_of_last_wolf_death"] = step_of_last_wolf_death
-    results["final_wolves"] = results["wolf_history"][-1] if results.get("wolf_history", []) else 0
+    results["final_wolves"] = (
+        results["wolf_history"][-1] if results.get("wolf_history", []) else 0
+    )
 
     # Add this information to the summary file
-    if step_of_last_wolf_death is not None:
-        summary_lines.append(f"**Step of Last Wolf Death:** {step_of_last_wolf_death}")
+    if results.get("last_wolf_death_step", None) is not None:
+        summary_lines.append(
+            f"**Step of Last Wolf Death:** {results.get('last_wolf_death_step')}"
+        )
     else:
         if results.get("wolf_history", []) and results["wolf_history"][-1] > 0:
             summary_lines.append("**Step of Last Wolf Death:** N/A (wolves survived)")

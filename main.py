@@ -84,7 +84,7 @@ def main():
         "--theta-star",
         type=float,
         default=None,
-        help="Fixed theta value to use as a constant (if provided)"
+        help="Fixed theta value to use as a constant (if provided)",
     )
     parser.add_argument(
         "--churn-rate",
