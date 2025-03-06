@@ -1,11 +1,16 @@
 {
-    "base": {
+  "presets": [
+    {
+      "preset_name": "base",
+      "preset_type": "single",
+      "preset_description": "The base parameters for the model.",
+      "fixed_parameters": {
         "model_name": "gpt-4o-mini",
         "temperature": 0.2,
         "max_tokens": 4096,
         "steps": 250,
         "dt": 0.02,
-        "sheep_max": 110,
+        "sheep_max": 1000,
         "eps": 0.0001,
         "alpha": 1,
         "beta": 0.1,
@@ -14,12 +19,40 @@
         "theta_star": 0.25,
         "s_start": 100,
         "w_start": 10,
+        "churn_rate": 0.1,
         "no_ai": false,
         "prompt_type": "high",
         "path": "data/results/base"
+      }
+    },
+    {
+      "preset_name": "k-dt-sweep",
+      "preset_type": "sweep",
+      "preset_description": "A sweep of k values, determining the effectiveness of the theta function at different values of k. We will use a starting sheep population of 17, since that is the best starting population for the base parameters of [1,0.1]",
+      "sweep_variables": ["k", "dt"],
+      "sweep_parameters": {
+        "k_values": [0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1.0, 2.0],
+        "dt_values": [0.001, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1.0]
+      },
+      "fixed_parameters": {
+        "model_name": "gpt-4o-mini",
+        "temperature": 0.2,
+        "max_tokens": 4096,
+        "steps": 5,
+        "sheep_max": 1000,
+        "eps": 0.0001,
+        "alpha": 1,
+        "beta": 0.1,
+        "gamma": 1.5,
+        "delta": 0.75,
+        "s_start": 17,
+        "w_start": 10,
+        "churn_rate": 1.0,
+        "no_ai": true,
+        "path": "data/results/k-dt-sweep",
+        "step_print": false,
+        "save_results": true
+      }
     }
-}
-
-{
-    ""
+  ]
 }

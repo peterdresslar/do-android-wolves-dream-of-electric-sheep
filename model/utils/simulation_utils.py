@@ -516,6 +516,30 @@ def save_simulation_results(results, results_path=None):
             f"Step {state.get('step')}: Sheep={sheep_str}, Wolves={wolves_str}, Mean Theta={theta_str}"
         )
 
+    # Determine step of last wolf death
+    step_of_last_wolf_death = None
+    if results.get("wolf_history", []) and len(results["wolf_history"]) > 1:
+        # Check if wolves went extinct
+        if results["wolf_history"][-1] == 0:
+            # Find the last step where wolves were alive
+            for i in range(len(results["wolf_history"]) - 2, -1, -1):
+                if results["wolf_history"][i] > 0:
+                    step_of_last_wolf_death = i + 1  # +1 because the death happened after this step
+                    break
+    
+    # Add to results for later retrieval
+    results["step_of_last_wolf_death"] = step_of_last_wolf_death
+    results["final_wolves"] = results["wolf_history"][-1] if results.get("wolf_history", []) else 0
+
+    # Add this information to the summary file
+    if step_of_last_wolf_death is not None:
+        summary_lines.append(f"**Step of Last Wolf Death:** {step_of_last_wolf_death}")
+    else:
+        if results.get("wolf_history", []) and results["wolf_history"][-1] > 0:
+            summary_lines.append("**Step of Last Wolf Death:** N/A (wolves survived)")
+        else:
+            summary_lines.append("**Step of Last Wolf Death:** N/A (no data)")
+
     summary_lines += [
         "",
         f"**Real Time Elapsed:** {real_time_elapsed}",
