@@ -1,6 +1,5 @@
 """
-Shared data types used across the model.
-This module contains dataclasses and other shared types to avoid circular imports.
+Shared data types used across the model. Avoids circular imports.
 """
 
 from dataclasses import dataclass

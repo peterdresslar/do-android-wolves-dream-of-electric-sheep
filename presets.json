@@ -15,6 +15,11 @@
         "s_start": 100,
         "w_start": 10,
         "no_ai": false,
-        "prompt_type": "high"
+        "prompt_type": "high",
+        "path": "data/results/base"
     }
+}
+
+{
+    ""
 }

@@ -30,17 +30,12 @@ DEFAULT_RESULTS_PATH = os.path.join(get_project_root(), "data", "results")
 # Function to resolve paths relative to project root
 def resolve_path(path):
     """
-    Resolve a path relative to the project root if it's not absolute.
-
-    Args:
-        path (str): Path to resolve
-
-    Returns:
-        str: Absolute path
+    With any relative path, resolve it to the results directory,
+    which, relative to the project root, is "data/results".
     """
     if os.path.isabs(path):
         return path
-    return os.path.join(get_project_root(), path)
+    return os.path.join(DEFAULT_RESULTS_PATH, path)
 
 
 #################################################################
@@ -339,16 +334,26 @@ def save_replot(path, output_path=None, width=12):
 def save_simulation_results(results, results_path=None):
     """Save simulation parameters (starting conditions) and results information to a summary file and a directory with detailed results.
 
+    For example, if we do not get a path, we set up a results base directory relative to DEFAULT_RESULTS_PATH 
+    based on the model_name, steps, starting_sheep, starting_wolves, prompt_type, and timestamp.
+
+    If we do get a path, that path, relative to the DEFAULT_RESULTS_PATH, is used as the base directory.
+
     Args:
         results (dict): The simulation results dictionary, expected to include simulation history,
                         final counts, and optionally model and agents details.
         results_path (str or None): Path to save results. If None, a default filename with timestamp is used.
     """
-    # Use the provided path or default
-    results_path = results_path if results_path else DEFAULT_RESULTS_PATH
-
-    # Resolve the path relative to project root if it's not absolute
-    path = resolve_path(results_path)
+    # If no path is provided, use DEFAULT_RESULTS_PATH directly
+    if results_path is None:
+        path = DEFAULT_RESULTS_PATH
+    else:
+        # If a path is provided, resolve it relative to DEFAULT_RESULTS_PATH
+        # unless it's an absolute path
+        if os.path.isabs(results_path):
+            path = results_path
+        else:
+            path = os.path.join(DEFAULT_RESULTS_PATH, results_path)
 
     # Create the results directory if it doesn't exist
     try:
