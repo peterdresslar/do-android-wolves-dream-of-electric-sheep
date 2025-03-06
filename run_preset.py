@@ -7,6 +7,9 @@ import json
 import os
 import time
 from pathlib import Path
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib.gridspec import GridSpec
 
 # Import the run function directly from model.py
 from model.model import run
@@ -161,6 +164,171 @@ def run_simulation(config):
     except Exception as e:
         print(f"Error running simulation: {str(e)}")
         return False, config, {"error": str(e)}
+
+
+def create_sweep_visualization(sweep_stats, results, preset, output_dir):
+    """
+    Create a grid visualization of simulation results for parameter sweeps.
+    
+    For each parameter combination, creates a small plot showing wolf population,
+    sheep population, and average theta over time. Plots are arranged in a grid
+    with rows and columns labeled by parameter values.
+    
+    Args:
+        sweep_stats (list): List of statistics for each sweep configuration
+        results (list): List of detailed results for each simulation
+        preset (dict): The preset configuration used for the sweep
+        output_dir (str): Directory to save the visualization
+    
+    Returns:
+        str: Path to the saved visualization file
+    """
+    sweep_variables = preset.get("sweep_variables", [])
+    if not sweep_variables or not sweep_stats:
+        print("No sweep variables or results to visualize")
+        return None
+    
+    # Extract unique values for each sweep variable
+    unique_values = {}
+    for var in sweep_variables:
+        unique_values[var] = sorted(set(stat["config"].get(var) for stat in sweep_stats))
+    
+    # Determine grid dimensions
+    if len(sweep_variables) == 1:
+        # Single variable sweep - horizontal layout
+        var = sweep_variables[0]
+        n_cols = len(unique_values[var])
+        n_rows = 1
+        grid_positions = {
+            (0, i): {var: val} 
+            for i, val in enumerate(unique_values[var])
+        }
+    elif len(sweep_variables) == 2:
+        # Two variable sweep - grid layout
+        var1, var2 = sweep_variables
+        n_rows = len(unique_values[var1])
+        n_cols = len(unique_values[var2])
+        grid_positions = {
+            (i, j): {var1: val1, var2: val2}
+            for i, val1 in enumerate(unique_values[var1])
+            for j, val2 in enumerate(unique_values[var2])
+        }
+    else:
+        print("Cannot visualize more than two sweep variables")
+        return None
+    
+    # Find the maximum sheep capacity across all simulations
+    sheep_max = 0
+    for result_entry in results:
+        if not result_entry["success"]:
+            continue
+        sim_results = result_entry["results"]
+        sheep_history = sim_results.get("sheep_history", [])
+        if sheep_history:
+            sheep_max = max(sheep_max, max(sheep_history))
+    
+    # Create the figure with appropriate size
+    # Base size of 3 inches per plot, with extra space for labels
+    fig_width = max(8, 2 + 2 * n_cols)
+    fig_height = max(6, 2 + 2 * n_rows)
+    fig = plt.figure(figsize=(fig_width, fig_height))
+    
+    # Create GridSpec for the main grid and labels
+    gs = GridSpec(n_rows + 1, n_cols + 1, figure=fig)
+    
+    # Create the plots
+    for (row, col), config in grid_positions.items():
+        # Find the matching result for this configuration
+        matching_result = None
+        for result_entry in results:
+            if not result_entry["success"]:
+                continue
+            
+            entry_config = result_entry["config"]
+            matches = all(
+                entry_config.get(var) == val 
+                for var, val in config.items()
+            )
+            
+            if matches:
+                matching_result = result_entry
+                break
+        
+        if not matching_result:
+            continue
+        
+        sim_results = matching_result["results"]
+        
+        # Get history data
+        sheep_history = sim_results.get("sheep_history", [])
+        wolf_history = sim_results.get("wolf_history", [])
+        theta_history = sim_results.get("average_theta_history", [])
+        
+        # Create subplot
+        ax = fig.add_subplot(gs[row + 1, col + 1])
+        
+        # Plot data if available
+        steps = range(len(sheep_history))
+        if sheep_history:
+            ax.plot(steps, sheep_history, color='cadetblue', linewidth=1)
+        if wolf_history:
+            ax.plot(steps, wolf_history, color='darkred', linewidth=1)
+        
+        # Create a twin axis for theta
+        if theta_history:
+            ax2 = ax.twinx()
+            ax2.plot(steps, theta_history, color='darkgreen', linewidth=1)
+            ax2.set_ylim(0, 1)
+            ax2.axis('off')  # Hide the second y-axis
+        
+        # Set y-limit for sheep and wolves based on sheep_max
+        ax.set_ylim(0, sheep_max * 1.1)  # Add 10% margin
+        
+        # Remove ticks and labels for a cleaner look
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+        ax.spines['bottom'].set_visible(False)
+        ax.spines['left'].set_visible(False)
+    
+    # Add row labels (first sweep variable)
+    if len(sweep_variables) >= 1 and n_rows > 1:
+        var1 = sweep_variables[0]
+        for i, val in enumerate(unique_values[var1]):
+            ax = fig.add_subplot(gs[i + 1, 0])
+            ax.text(0.5, 0.5, f"{var1}={val}", 
+                    ha='center', va='center', rotation=90)
+            ax.axis('off')
+    
+    # Add column labels (second sweep variable or first if only one)
+    label_var = sweep_variables[1] if len(sweep_variables) > 1 else sweep_variables[0]
+    for j, val in enumerate(unique_values[label_var]):
+        ax = fig.add_subplot(gs[0, j + 1])
+        ax.text(0.5, 0.5, f"{label_var}={val}", ha='center', va='center')
+        ax.axis('off')
+    
+    # Add a title
+    plt.suptitle(f"Parameter Sweep: {preset.get('preset_name', 'Unnamed')}")
+    
+    # Add a small legend in the top-left corner
+    legend_ax = fig.add_subplot(gs[0, 0])
+    legend_ax.plot([], [], color='cadetblue', label='Sheep')
+    legend_ax.plot([], [], color='darkred', label='Wolves')
+    legend_ax.plot([], [], color='darkgreen', label='Theta')
+    legend_ax.legend(loc='center', frameon=False, fontsize='small')
+    legend_ax.axis('off')
+    
+    # Adjust layout and save
+    plt.tight_layout()
+    plt.subplots_adjust(top=0.95)  # Make room for the title
+    
+    # Save the figure
+    output_path = os.path.join(output_dir, f"sweep_visualization.png")
+    plt.savefig(output_path, dpi=150, bbox_inches='tight')
+    plt.close(fig)
+    
+    return output_path
 
 
 def main():
@@ -334,6 +502,16 @@ def main():
         "results": results,
     }
 
+    # Create visualization for parameter sweeps
+    if preset_type == "sweep" and successful > 0:
+        print("Creating parameter sweep visualization...")
+        viz_path = create_sweep_visualization(sweep_stats, results, preset, output_dir)
+        if viz_path:
+            print(f"Visualization saved to {viz_path}")
+            # Add the visualization path to the experiment config
+            experiment_config["visualization_path"] = str(viz_path)
+
+    # Save experiment configuration
     config_path = Path(output_dir) / f"experiment_summary_{timestamp}.json"
     with open(config_path, "w") as f:
         json.dump(experiment_config, f, indent=2)
