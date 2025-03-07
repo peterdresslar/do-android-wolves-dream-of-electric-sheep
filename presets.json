@@ -2,6 +2,7 @@
   "presets": [
     {
       "preset_name": "base",
+      "preset_version": "1.0",
       "preset_type": "single",
       "preset_description": "The base parameters for the model.",
       "fixed_parameters": {
@@ -27,6 +28,7 @@
     },
     {
       "preset_name": "k-dt-sweep-500-s_max-110",
+      "preset_version": "1.0",
       "preset_type": "sweep",
       "preset_description": "A sweep of k values, determining the effectiveness of the theta function at different values of k. We will use a starting sheep population of 17, since that is the best starting population for the base parameters of [1,0.1]",
       "sweep_variables": ["k", "dt"],
@@ -56,6 +58,7 @@
     },
     {
       "preset_name": "gpt-4o-mini-prompt-sweep-s0",
+      "preset_version": "1.0",
       "preset_type": "prompt-sweep",
       "preset_description": "A sweep of LLM prompt types upon descending values of s_start, in an attempt to validate stabilizing fitness.",
       "sweep_variables": ["s_start"],
@@ -85,6 +88,7 @@
     },
     {
       "preset_name": "test-gpt-4o-mini-prompt-sweep-s0",
+      "preset_version": "1.0",
       "preset_type": "prompt-sweep",
       "preset_description": "A TEST sweep of LLM prompt types upon descending values of s_start, in an attempt to validate stabilizing fitness.",
       "sweep_variables": ["s_start"],

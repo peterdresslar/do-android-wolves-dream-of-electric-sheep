@@ -816,6 +816,7 @@ def main():
     experiment_config = {
         "timestamp": timestamp,
         "preset_name": args.preset,
+        "preset_version": preset.get("preset_version", "1.0"),
         "preset_type": preset_type,
         "preset_description": preset.get("preset_description", ""),
         "num_configurations": len(configs),
