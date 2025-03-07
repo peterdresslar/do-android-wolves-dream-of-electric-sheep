@@ -1,0 +1,30 @@
+{
+    "wolf_id": 4,
+    "beta": 0.1,
+    "gamma": 1.5,
+    "delta": 0.75,
+    "alive": false,
+    "born_at_step": 0,
+    "died_at_step": 0,
+    "thetas": [
+        0.5,
+        0.0717303494808652
+    ],
+    "decision_history": {
+        "history_steps": [
+            0
+        ],
+        "new_thetas": [
+            0.0717303494808652
+        ],
+        "prompts": [
+            "N/A"
+        ],
+        "explanations": [
+            "Calculated theta: 0.0717 based on sheep population: 17.00"
+        ],
+        "vocalizations": [
+            "Calculated theta: 0.0717 based on sheep population: 17.00"
+        ]
+    }
+}

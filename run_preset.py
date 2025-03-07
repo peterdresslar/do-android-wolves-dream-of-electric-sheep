@@ -151,7 +151,7 @@ def generate_prompt_sweep_configs(preset):
     For each value in the sweep variable, creates configurations for:
     1. Each prompt_type (high, medium, low)
     2. A theta function run (no_ai: true)
-    3. A constant theta run (no_ai: true, k=0, using theta_star from preset)
+    3. A constant theta run (no_ai: true, k=0) - only if theta_star is specified in the preset
     
     Args:
         preset (dict): Preset configuration with sweep_variables, sweep_parameters, and fixed_parameters
@@ -163,8 +163,9 @@ def generate_prompt_sweep_configs(preset):
     sweep_params = preset.get("sweep_parameters", {})
     sweep_variables = preset.get("sweep_variables", [])
     
-    # Get theta_star from fixed parameters (default to 0.5 if not specified)
-    theta_star = fixed_params.get("theta_star", 0.5)
+    # Check if theta_star is specified in the preset
+    has_theta_star = "theta_star" in fixed_params
+    theta_star = fixed_params.get("theta_star") if has_theta_star else None
     
     # Validate sweep variables - prompt sweeps should have exactly one sweep variable
     if not sweep_variables:
@@ -225,17 +226,18 @@ def generate_prompt_sweep_configs(preset):
         
         configs.append(config)
         
-        # Add a constant theta run (no_ai: true, k=0, using theta_star from preset)
-        config = fixed_params.copy()
-        config[var] = value
-        config["no_ai"] = True
-        config["k"] = 0  # Set k=0 to ensure theta doesn't change
-        # theta_star is already in fixed_params, so we don't need to set it again
-        
-        # Create a unique path for this configuration
-        config["path"] = f"{base_path}/{var}_{value}_theta_constant_{theta_star}"
-        
-        configs.append(config)
+        # Add a constant theta run only if theta_star is specified in the preset
+        if has_theta_star:
+            config = fixed_params.copy()
+            config[var] = value
+            config["no_ai"] = True
+            config["k"] = 0  # Set k=0 to ensure theta doesn't change
+            # theta_star is already in fixed_params, so we don't need to set it again
+            
+            # Create a unique path for this configuration
+            config["path"] = f"{base_path}/{var}_{value}_theta_constant_{theta_star}"
+            
+            configs.append(config)
     
     print(f"Generated {len(configs)} configurations for prompt sweep")
     return configs
@@ -433,7 +435,8 @@ def create_prompt_sweep_visualization(sweep_stats, results, preset, output_dir):
     Create a grid visualization of simulation results for prompt sweeps.
     
     Arranges plots in a grid where:
-    - Columns are the different prompt types (high, medium, low), the theta function, and constant theta
+    - Columns are the different prompt types (high, medium, low), the theta function,
+      and constant theta (if specified in the preset)
     - Rows are the values of the sweep parameter
     
     Args:
@@ -456,8 +459,13 @@ def create_prompt_sweep_visualization(sweep_stats, results, preset, output_dir):
     # Extract unique values for the sweep variable
     unique_values = sorted(set(stat["config"].get(var) for stat in sweep_stats))
     
-    # Define the column order: prompt types (high, medium, low) + theta function + constant theta
-    column_types = ["high", "medium", "low", "theta", "constant"]
+    # Check if theta_star is specified in the preset
+    has_theta_star = "theta_star" in preset.get("fixed_parameters", {})
+    
+    # Define the column order: prompt types (high, medium, low) + theta function + constant theta (if applicable)
+    column_types = ["high", "medium", "low", "theta"]
+    if has_theta_star:
+        column_types.append("constant")
     
     # Determine grid dimensions
     n_rows = len(unique_values)
@@ -578,16 +586,14 @@ def create_prompt_sweep_visualization(sweep_stats, results, preset, output_dir):
         ax.axis('off')
     
     # Get theta_star from fixed parameters for labeling
-    theta_star = preset.get("fixed_parameters", {}).get("theta_star", 0.5)
+    theta_star = preset.get("fixed_parameters", {}).get("theta_star")
     
-    # Add column labels (prompt types, theta function, and constant theta)
-    column_labels = [
-        "Prompt: High", 
-        "Prompt: Medium", 
-        "Prompt: Low", 
-        "Theta Function", 
-        f"Constant θ={theta_star}"
-    ]
+    # Add column labels (prompt types, theta function, and constant theta if applicable)
+    this_k = preset.get("fixed_parameters", {}).get("k")
+    column_labels = ["Prompt: High", "Prompt: Medium", "Prompt: Low", f"Theta Function k={this_k}"]
+    if has_theta_star:
+        column_labels.append(f"Constant θ={theta_star}")
+    
     for j, label in enumerate(column_labels):
         ax = fig.add_subplot(gs[0, j + 1])
         ax.text(0.5, 0.5, label, ha='center', va='center')

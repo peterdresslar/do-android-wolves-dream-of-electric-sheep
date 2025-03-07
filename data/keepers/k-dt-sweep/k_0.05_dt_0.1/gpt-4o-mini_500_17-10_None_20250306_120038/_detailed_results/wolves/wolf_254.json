@@ -1,0 +1,78 @@
+{
+    "wolf_id": 254,
+    "beta": 0.1,
+    "gamma": 1.5,
+    "delta": 0.75,
+    "alive": false,
+    "born_at_step": 449,
+    "died_at_step": 458,
+    "thetas": [
+        0.7043360908150219,
+        0.920190295175319,
+        0.8904861583295057,
+        0.8322702250763777,
+        0.7384545120799578,
+        0.6367109819550444,
+        0.5536694350209148,
+        0.4966761584717328,
+        0.45894998113279994,
+        0.4351414390520323
+    ],
+    "decision_history": {
+        "history_steps": [
+            450,
+            451,
+            452,
+            453,
+            454,
+            455,
+            456,
+            457,
+            458
+        ],
+        "new_thetas": [
+            0.920190295175319,
+            0.8904861583295057,
+            0.8322702250763777,
+            0.7384545120799578,
+            0.6367109819550444,
+            0.5536694350209148,
+            0.4966761584717328,
+            0.45894998113279994,
+            0.4351414390520323
+        ],
+        "prompts": [
+            "N/A",
+            "N/A",
+            "N/A",
+            "N/A",
+            "N/A",
+            "N/A",
+            "N/A",
+            "N/A",
+            "N/A"
+        ],
+        "explanations": [
+            "Calculated theta: 0.9202 based on sheep population: 63.41",
+            "Calculated theta: 0.8905 based on sheep population: 44.72",
+            "Calculated theta: 0.8323 based on sheep population: 27.29",
+            "Calculated theta: 0.7385 based on sheep population: 15.53",
+            "Calculated theta: 0.6367 based on sheep population: 9.64",
+            "Calculated theta: 0.5537 based on sheep population: 6.82",
+            "Calculated theta: 0.4967 based on sheep population: 5.43",
+            "Calculated theta: 0.4589 based on sheep population: 4.67",
+            "Calculated theta: 0.4351 based on sheep population: 4.24"
+        ],
+        "vocalizations": [
+            "Calculated theta: 0.9202 based on sheep population: 63.41",
+            "Calculated theta: 0.8905 based on sheep population: 44.72",
+            "Calculated theta: 0.8323 based on sheep population: 27.29",
+            "Calculated theta: 0.7385 based on sheep population: 15.53",
+            "Calculated theta: 0.6367 based on sheep population: 9.64",
+            "Calculated theta: 0.5537 based on sheep population: 6.82",
+            "Calculated theta: 0.4967 based on sheep population: 5.43",
+            "Calculated theta: 0.4589 based on sheep population: 4.67",
+            "Calculated theta: 0.4351 based on sheep population: 4.24"
+        ]
+    }
+}

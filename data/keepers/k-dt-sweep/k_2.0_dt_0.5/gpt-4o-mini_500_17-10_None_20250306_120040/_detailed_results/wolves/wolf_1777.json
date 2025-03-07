@@ -1,0 +1,54 @@
+{
+    "wolf_id": 1777,
+    "beta": 0.1,
+    "gamma": 1.5,
+    "delta": 0.75,
+    "alive": false,
+    "born_at_step": 407,
+    "died_at_step": 412,
+    "thetas": [
+        0.20950029650394963,
+        0.33333353535347415,
+        0.33333353535347415,
+        0.33333353535347415,
+        0.26605516421688713,
+        0.15403471137335106
+    ],
+    "decision_history": {
+        "history_steps": [
+            408,
+            409,
+            410,
+            411,
+            412
+        ],
+        "new_thetas": [
+            0.33333353535347415,
+            0.33333353535347415,
+            0.33333353535347415,
+            0.26605516421688713,
+            0.15403471137335106
+        ],
+        "prompts": [
+            "N/A",
+            "N/A",
+            "N/A",
+            "N/A",
+            "N/A"
+        ],
+        "explanations": [
+            "Calculated theta: 0.3333 based on sheep population: 110.00",
+            "Calculated theta: 0.3333 based on sheep population: 110.00",
+            "Calculated theta: 0.3333 based on sheep population: 110.00",
+            "Calculated theta: 0.2661 based on sheep population: 79.75",
+            "Calculated theta: 0.1540 based on sheep population: 40.06"
+        ],
+        "vocalizations": [
+            "Calculated theta: 0.3333 based on sheep population: 110.00",
+            "Calculated theta: 0.3333 based on sheep population: 110.00",
+            "Calculated theta: 0.3333 based on sheep population: 110.00",
+            "Calculated theta: 0.2661 based on sheep population: 79.75",
+            "Calculated theta: 0.1540 based on sheep population: 40.06"
+        ]
+    }
+}

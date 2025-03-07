@@ -1,0 +1,78 @@
+{
+    "wolf_id": 121,
+    "beta": 0.1,
+    "gamma": 1.5,
+    "delta": 0.75,
+    "alive": false,
+    "born_at_step": 79,
+    "died_at_step": 88,
+    "thetas": [
+        0.7613614148114363,
+        4.545247943275306e-05,
+        4.545247943275306e-05,
+        4.545247943275306e-05,
+        4.545247943275306e-05,
+        4.545247943275306e-05,
+        4.545247943275306e-05,
+        4.545247943275306e-05,
+        4.545247943275306e-05,
+        4.545247943275306e-05
+    ],
+    "decision_history": {
+        "history_steps": [
+            80,
+            81,
+            82,
+            83,
+            84,
+            85,
+            86,
+            87,
+            88
+        ],
+        "new_thetas": [
+            4.545247943275306e-05,
+            4.545247943275306e-05,
+            4.545247943275306e-05,
+            4.545247943275306e-05,
+            4.545247943275306e-05,
+            4.545247943275306e-05,
+            4.545247943275306e-05,
+            4.545247943275306e-05,
+            4.545247943275306e-05
+        ],
+        "prompts": [
+            "N/A",
+            "N/A",
+            "N/A",
+            "N/A",
+            "N/A",
+            "N/A",
+            "N/A",
+            "N/A",
+            "N/A"
+        ],
+        "explanations": [
+            "Calculated theta: 0.0000 based on sheep population: 0.00",
+            "Calculated theta: 0.0000 based on sheep population: 0.00",
+            "Calculated theta: 0.0000 based on sheep population: 0.00",
+            "Calculated theta: 0.0000 based on sheep population: 0.00",
+            "Calculated theta: 0.0000 based on sheep population: 0.00",
+            "Calculated theta: 0.0000 based on sheep population: 0.00",
+            "Calculated theta: 0.0000 based on sheep population: 0.00",
+            "Calculated theta: 0.0000 based on sheep population: 0.00",
+            "Calculated theta: 0.0000 based on sheep population: 0.00"
+        ],
+        "vocalizations": [
+            "Calculated theta: 0.0000 based on sheep population: 0.00",
+            "Calculated theta: 0.0000 based on sheep population: 0.00",
+            "Calculated theta: 0.0000 based on sheep population: 0.00",
+            "Calculated theta: 0.0000 based on sheep population: 0.00",
+            "Calculated theta: 0.0000 based on sheep population: 0.00",
+            "Calculated theta: 0.0000 based on sheep population: 0.00",
+            "Calculated theta: 0.0000 based on sheep population: 0.00",
+            "Calculated theta: 0.0000 based on sheep population: 0.00",
+            "Calculated theta: 0.0000 based on sheep population: 0.00"
+        ]
+    }
+}
