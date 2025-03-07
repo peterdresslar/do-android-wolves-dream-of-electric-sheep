@@ -30,11 +30,33 @@
       "preset_name": "k-dt-sweep-500-s_max-110",
       "preset_version": "1.1",
       "preset_type": "sweep",
-      "preset_description": "A sweep of k values, determining the effectiveness of the theta function at different values of k. We will use a starting sheep population of 17, since that is the best starting population for the base parameters of [1,0.1]",
-      "sweep_variables": ["k", "dt"],
+      "preset_description": "A sweep of k values, determining the effectiveness of the theta function at different values of k. We will use a starting sheep population of 17, since that is the best starting population for the base parameters of [1,0.1]. Note that k=0 is effectively Lotka-Voltera.",
+      "sweep_variables": [
+        "k",
+        "dt"
+      ],
       "sweep_parameters": {
-        "k_values": [0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1.0, 2.0],
-        "dt_values": [0.001, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1.0]
+        "k_values": [
+          0.0,
+          0.01,
+          0.02,
+          0.05,
+          0.1,
+          0.2,
+          0.5,
+          1.0,
+          2.0
+        ],
+        "dt_values": [
+          0.001,
+          0.01,
+          0.02,
+          0.05,
+          0.1,
+          0.2,
+          0.5,
+          1.0
+        ]
       },
       "fixed_parameters": {
         "steps": 500,
@@ -57,9 +79,21 @@
       "preset_version": "1.0",
       "preset_type": "prompt-sweep",
       "preset_description": "A sweep of LLM prompt types upon descending values of s_start, in an attempt to validate stabilizing fitness.",
-      "sweep_variables": ["s_start"],
+      "sweep_variables": [
+        "s_start"
+      ],
       "sweep_parameters": {
-        "s_start_values": [25, 20, 18, 16, 14, 12, 10, 8, 5]
+        "s_start_values": [
+          25,
+          20,
+          18,
+          16,
+          14,
+          12,
+          10,
+          8,
+          5
+        ]
       },
       "fixed_parameters": {
         "model_name": "gpt-4o-mini",
@@ -87,9 +121,14 @@
       "preset_version": "1.0",
       "preset_type": "prompt-sweep",
       "preset_description": "A TEST sweep of LLM prompt types upon descending values of s_start, in an attempt to validate stabilizing fitness.",
-      "sweep_variables": ["s_start"],
+      "sweep_variables": [
+        "s_start"
+      ],
       "sweep_parameters": {
-        "s_start_values": [17, 2]
+        "s_start_values": [
+          17,
+          2
+        ]
       },
       "fixed_parameters": {
         "model_name": "gpt-4o-mini",
