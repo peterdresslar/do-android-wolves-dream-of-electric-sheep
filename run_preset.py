@@ -151,7 +151,7 @@ def generate_prompt_sweep_configs(preset):
     For each value in the sweep variable, creates configurations for:
     1. Each prompt_type (high, medium, low)
     2. A theta function run (no_ai: true)
-    3. A constant theta run (no_ai: true, k=0, theta_star=0.5)
+    3. A constant theta run (no_ai: true, k=0, using theta_star from preset)
     
     Args:
         preset (dict): Preset configuration with sweep_variables, sweep_parameters, and fixed_parameters
@@ -162,6 +162,9 @@ def generate_prompt_sweep_configs(preset):
     fixed_params = preset.get("fixed_parameters", {}).copy()
     sweep_params = preset.get("sweep_parameters", {})
     sweep_variables = preset.get("sweep_variables", [])
+    
+    # Get theta_star from fixed parameters (default to 0.5 if not specified)
+    theta_star = fixed_params.get("theta_star", 0.5)
     
     # Validate sweep variables - prompt sweeps should have exactly one sweep variable
     if not sweep_variables:
@@ -222,15 +225,15 @@ def generate_prompt_sweep_configs(preset):
         
         configs.append(config)
         
-        # Add a constant theta run (no_ai: true, k=0, theta_star=0.5)
+        # Add a constant theta run (no_ai: true, k=0, using theta_star from preset)
         config = fixed_params.copy()
         config[var] = value
         config["no_ai"] = True
         config["k"] = 0  # Set k=0 to ensure theta doesn't change
-        config["theta_star"] = 0.5  # Constant theta value
+        # theta_star is already in fixed_params, so we don't need to set it again
         
         # Create a unique path for this configuration
-        config["path"] = f"{base_path}/{var}_{value}_theta_constant_0.5"
+        config["path"] = f"{base_path}/{var}_{value}_theta_constant_{theta_star}"
         
         configs.append(config)
     
@@ -521,8 +524,7 @@ def create_prompt_sweep_visualization(sweep_stats, results, preset, output_dir):
             elif col_type == "constant":
                 if (entry_config.get(var) == sweep_val and 
                     entry_config.get("no_ai", True) and
-                    entry_config.get("k", 1) == 0 and
-                    entry_config.get("theta_star", 0) == 0.5):
+                    entry_config.get("k", 1) == 0):
                     matching_result = result_entry
                     break
         
@@ -575,8 +577,17 @@ def create_prompt_sweep_visualization(sweep_stats, results, preset, output_dir):
         ax.text(0.5, 0.5, f"{var}={val}", ha='center', va='center', rotation=90)
         ax.axis('off')
     
+    # Get theta_star from fixed parameters for labeling
+    theta_star = preset.get("fixed_parameters", {}).get("theta_star", 0.5)
+    
     # Add column labels (prompt types, theta function, and constant theta)
-    column_labels = ["Prompt: High", "Prompt: Medium", "Prompt: Low", "Theta Function", "Constant θ=0.5"]
+    column_labels = [
+        "Prompt: High", 
+        "Prompt: Medium", 
+        "Prompt: Low", 
+        "Theta Function", 
+        f"Constant θ={theta_star}"
+    ]
     for j, label in enumerate(column_labels):
         ax = fig.add_subplot(gs[0, j + 1])
         ax.text(0.5, 0.5, label, ha='center', va='center')

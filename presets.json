@@ -83,6 +83,36 @@
         "step_print": false,
         "save_results": true
       }
+    },
+    {
+      "preset_name": "test-gpt-4o-mini-prompt-sweep-s0",
+      "preset_type": "prompt-sweep",
+      "preset_description": "A sweep of LLM prompt types upon descending values of s_start, in an attempt to validate stabilizing fitness.",
+      "sweep_variables": ["s_start"],
+      "sweep_parameters": {
+        "s_start_values": [25, 10, 8, 5]
+      },
+      "fixed_parameters": {
+        "model_name": "gpt-4o-mini",
+        "temperature": 0.2,
+        "max_tokens": 4096,
+        "dt": 0.1,
+        "steps": 25,
+        "sheep_max": 110,
+        "eps": 0.0001,
+        "alpha": 1,
+        "beta": 0.1,
+        "gamma": 1.5,
+        "delta": 0.75,
+        "theta_star": 0.5,
+        "k": 1.0,
+        "w_start": 10,
+        "churn_rate": 1.0,
+        "no_ai": false,
+        "path": "data/results/gpt-4o-mini-prompt-sweep-s0",
+        "step_print": true,
+        "save_results": true
+      }
     }
   ]
 }
