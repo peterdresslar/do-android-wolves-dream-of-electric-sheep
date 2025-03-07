@@ -1,0 +1,30 @@
+{
+    "wolf_id": 269,
+    "beta": 0.1,
+    "gamma": 1.5,
+    "delta": 0.75,
+    "alive": true,
+    "born_at_step": 498,
+    "died_at_step": null,
+    "thetas": [
+        0.9694705613271303,
+        0.85
+    ],
+    "decision_history": {
+        "history_steps": [
+            499
+        ],
+        "new_thetas": [
+            0.85
+        ],
+        "prompts": [
+            null
+        ],
+        "explanations": [
+            "I chose this theta because with an increase in the wolf population, competition for food is higher. By reducing my hunting intensity slightly, I can conserve energy and avoid overexertion while still contributing to the pack's success. This balance helps ensure my survival in a crowded environment."
+        ],
+        "vocalizations": [
+            "Growwwwwl... the hunt is on, but I must be wise!"
+        ]
+    }
+}

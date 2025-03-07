@@ -499,10 +499,20 @@ def create_prompt_sweep_visualization(sweep_stats, results, preset, output_dir):
     # Create GridSpec for the main grid and labels
     gs = GridSpec(n_rows + 1, n_cols + 1, figure=fig)
     
+    # Add debug prints to see what configurations we have
+    print("\nDebugging configuration matching:")
+    for result_entry in results:
+        if result_entry["success"]:
+            config = result_entry["config"]
+            path = config.get("path", "")
+            print(f"Config: var={config.get(var)}, no_ai={config.get('no_ai')}, k={config.get('k')}, path={path}")
+    
     # Create the plots
     for (row, col), pos_config in grid_positions.items():
         sweep_val = pos_config["value"]
         col_type = pos_config["type"]
+        
+        print(f"\nLooking for match: row={row}, col={col}, sweep_val={sweep_val}, col_type={col_type}")
         
         # Find the matching result for this configuration
         matching_result = None
@@ -511,6 +521,7 @@ def create_prompt_sweep_visualization(sweep_stats, results, preset, output_dir):
                 continue
             
             entry_config = result_entry["config"]
+            entry_path = entry_config.get("path", "")
             
             # For prompt types (high, medium, low)
             if col_type in ["high", "medium", "low"]:
@@ -518,25 +529,31 @@ def create_prompt_sweep_visualization(sweep_stats, results, preset, output_dir):
                     entry_config.get("prompt_type") == col_type and
                     not entry_config.get("no_ai", False)):
                     matching_result = result_entry
+                    print(f"  Found prompt match: {entry_path}")
                     break
             
-            # For theta function
+            # For theta function (adaptive)
             elif col_type == "theta":
+                # Simplified matching logic - just check for no_ai=True and not constant theta
                 if (entry_config.get(var) == sweep_val and 
-                    entry_config.get("no_ai", True) and
-                    entry_config.get("k", 0) > 0):
+                    entry_config.get("no_ai", False) and
+                    "theta_constant_" not in entry_path and
+                    "prompt_" not in entry_path):
                     matching_result = result_entry
+                    print(f"  Found adaptive theta match: {entry_path}")
                     break
             
             # For constant theta
             elif col_type == "constant":
                 if (entry_config.get(var) == sweep_val and 
-                    entry_config.get("no_ai", True) and
-                    entry_config.get("k", 1) == 0):
+                    entry_config.get("no_ai", False) and
+                    "theta_constant_" in entry_path):
                     matching_result = result_entry
+                    print(f"  Found constant theta match: {entry_path}")
                     break
         
         if not matching_result:
+            print(f"  No match found for {col_type} at {sweep_val}")
             # Create an empty plot if no matching result
             ax = fig.add_subplot(gs[row + 1, col + 1])
             ax.text(0.5, 0.5, "No data", ha='center', va='center')
@@ -590,7 +607,7 @@ def create_prompt_sweep_visualization(sweep_stats, results, preset, output_dir):
     
     # Add column labels (prompt types, theta function, and constant theta if applicable)
     this_k = preset.get("fixed_parameters", {}).get("k")
-    column_labels = ["Prompt: High", "Prompt: Medium", "Prompt: Low", f"Theta Function k={this_k}"]
+    column_labels = ["Prompt: High Info", "Prompt: Medium Info", "Prompt: Low Info", f"Adaptive θ (k={this_k})"]
     if has_theta_star:
         column_labels.append(f"Constant θ={theta_star}")
     

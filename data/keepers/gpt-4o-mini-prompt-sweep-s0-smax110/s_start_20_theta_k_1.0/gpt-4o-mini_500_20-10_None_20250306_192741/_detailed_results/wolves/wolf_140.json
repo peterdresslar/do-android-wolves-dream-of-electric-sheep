@@ -1,0 +1,19 @@
+{
+    "wolf_id": 140,
+    "beta": 0.1,
+    "gamma": 1.5,
+    "delta": 0.75,
+    "alive": true,
+    "born_at_step": 499,
+    "died_at_step": null,
+    "thetas": [
+        0.677933709915418
+    ],
+    "decision_history": {
+        "history_steps": [],
+        "new_thetas": [],
+        "prompts": [],
+        "explanations": [],
+        "vocalizations": []
+    }
+}
