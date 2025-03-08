@@ -147,85 +147,89 @@ def generate_sweep_configs(preset):
 def generate_prompt_sweep_configs(preset):
     """
     Generate a list of configurations for a prompt sweep.
-    
+
     For each value in the sweep variable, creates configurations for:
     1. Each prompt_type (high, medium, low)
     2. A theta function run (no_ai: true)
     3. A constant theta run (no_ai: true, k=0) - only if theta_star is specified in the preset
-    
+
     Args:
         preset (dict): Preset configuration with sweep_variables, sweep_parameters, and fixed_parameters
-        
+
     Returns:
         list: List of configuration dictionaries for each combination
     """
     fixed_params = preset.get("fixed_parameters", {}).copy()
     sweep_params = preset.get("sweep_parameters", {})
     sweep_variables = preset.get("sweep_variables", [])
-    
+
     # Check if theta_star is specified in the preset
     has_theta_star = "theta_star" in fixed_params
     theta_star = fixed_params.get("theta_star") if has_theta_star else None
-    
+
     # Validate sweep variables - prompt sweeps should have exactly one sweep variable
     if not sweep_variables:
         print("Error: No sweep variables specified in preset")
         return []
-    
+
     if len(sweep_variables) > 1:
-        print("Warning: Prompt sweeps work best with one sweep variable. Using only the first one.")
+        print(
+            "Warning: Prompt sweeps work best with one sweep variable. Using only the first one."
+        )
         sweep_variables = sweep_variables[:1]
-    
+
     var = sweep_variables[0]
     values_key = f"{var}_values"
-    
+
     # Validate that we have values for the sweep variable
     if values_key not in sweep_params:
-        print(f"Error: No values found for sweep variable '{var}' (expected key '{values_key}')")
+        print(
+            f"Error: No values found for sweep variable '{var}' (expected key '{values_key}')"
+        )
         return []
-    
+
     values = sweep_params[values_key]
-    
+
     # Get the base path without "data/results" prefix to avoid doubling
     base_path = fixed_params.get("path", "")
     if base_path.startswith("data/results/"):
-        base_path = base_path[len("data/results/"):]
-    
+        base_path = base_path[len("data/results/") :]
+
     # Define prompt types to use
     prompt_types = ["high", "medium", "low"]
-    
+
     configs = []
-    
+
     # For each value in the sweep variable
     for value in values:
         # For each prompt type
         for prompt_type in prompt_types:
             # Start with fixed parameters
             config = fixed_params.copy()
-            
+
             # Add sweep parameter and prompt type
             config[var] = value
             config["prompt_type"] = prompt_type
             config["no_ai"] = False  # Ensure AI is enabled for prompt runs
-            
+
             # Create a unique path for this configuration
             config["path"] = f"{base_path}/{var}_{value}_prompt_{prompt_type}"
-            
+
             configs.append(config)
-        
+
         # Add a theta function run (no_ai: true) with the same parameters
         config = fixed_params.copy()
         config[var] = value
         config["no_ai"] = True
-        
+
         # Use the k value from fixed parameters if available
         k_value = fixed_params.get("k", 1.0)
-        
+
         # Create a unique path for this configuration
         config["path"] = f"{base_path}/{var}_{value}_theta_k_{k_value}"
-        
+
         configs.append(config)
-        
+
         # Add a constant theta run only if theta_star is specified in the preset
         if has_theta_star:
             config = fixed_params.copy()
@@ -233,12 +237,12 @@ def generate_prompt_sweep_configs(preset):
             config["no_ai"] = True
             config["k"] = 0  # Set k=0 to ensure theta doesn't change
             # theta_star is already in fixed_params, so we don't need to set it again
-            
+
             # Create a unique path for this configuration
             config["path"] = f"{base_path}/{var}_{value}_theta_constant_{theta_star}"
-            
+
             configs.append(config)
-    
+
     print(f"Generated {len(configs)} configurations for prompt sweep")
     return configs
 
@@ -268,17 +272,17 @@ def run_simulation(config):
 def create_sweep_visualization(sweep_stats, results, preset, output_dir):
     """
     Create a grid visualization of simulation results for parameter sweeps.
-    
+
     For each parameter combination, creates a small plot showing wolf population,
     sheep population, and average theta over time. Plots are arranged in a grid
     with rows and columns labeled by parameter values.
-    
+
     Args:
         sweep_stats (list): List of statistics for each sweep configuration
         results (list): List of detailed results for each simulation
         preset (dict): The preset configuration used for the sweep
         output_dir (str): Directory to save the visualization
-    
+
     Returns:
         str: Path to the saved visualization file
     """
@@ -286,12 +290,14 @@ def create_sweep_visualization(sweep_stats, results, preset, output_dir):
     if not sweep_variables or not sweep_stats:
         print("No sweep variables or results to visualize")
         return None
-    
+
     # Extract unique values for each sweep variable
     unique_values = {}
     for var in sweep_variables:
-        unique_values[var] = sorted(set(stat["config"].get(var) for stat in sweep_stats))
-    
+        unique_values[var] = sorted(
+            set(stat["config"].get(var) for stat in sweep_stats)
+        )
+
     # Determine grid dimensions
     if len(sweep_variables) == 1:
         # Single variable sweep - horizontal layout
@@ -299,8 +305,7 @@ def create_sweep_visualization(sweep_stats, results, preset, output_dir):
         n_cols = len(unique_values[var])
         n_rows = 1
         grid_positions = {
-            (0, i): {var: val} 
-            for i, val in enumerate(unique_values[var])
+            (0, i): {var: val} for i, val in enumerate(unique_values[var])
         }
     elif len(sweep_variables) == 2:
         # Two variable sweep - grid layout
@@ -315,7 +320,7 @@ def create_sweep_visualization(sweep_stats, results, preset, output_dir):
     else:
         print("Cannot visualize more than two sweep variables")
         return None
-    
+
     # Find the maximum sheep capacity across all simulations
     sheep_max = 0
     for result_entry in results:
@@ -325,16 +330,16 @@ def create_sweep_visualization(sweep_stats, results, preset, output_dir):
         sheep_history = sim_results.get("sheep_history", [])
         if sheep_history:
             sheep_max = max(sheep_max, max(sheep_history))
-    
+
     # Create the figure with appropriate size
     # Base size of 3 inches per plot, with extra space for labels
     fig_width = max(8, 2 + 2 * n_cols)
     fig_height = max(6, 2 + 2 * n_rows)
     fig = plt.figure(figsize=(fig_width, fig_height))
-    
+
     # Create GridSpec for the main grid and labels
     gs = GridSpec(n_rows + 1, n_cols + 1, figure=fig)
-    
+
     # Create the plots
     for (row, col), config in grid_positions.items():
         # Find the matching result for this configuration
@@ -342,109 +347,105 @@ def create_sweep_visualization(sweep_stats, results, preset, output_dir):
         for result_entry in results:
             if not result_entry["success"]:
                 continue
-            
+
             entry_config = result_entry["config"]
-            matches = all(
-                entry_config.get(var) == val 
-                for var, val in config.items()
-            )
-            
+            matches = all(entry_config.get(var) == val for var, val in config.items())
+
             if matches:
                 matching_result = result_entry
                 break
-        
+
         if not matching_result:
             continue
-        
+
         sim_results = matching_result["results"]
-        
+
         # Get history data
         sheep_history = sim_results.get("sheep_history", [])
         wolf_history = sim_results.get("wolf_history", [])
         theta_history = sim_results.get("average_theta_history", [])
-        
+
         # Create subplot
         ax = fig.add_subplot(gs[row + 1, col + 1])
-        
+
         # Plot data if available
         steps = range(len(sheep_history))
         if sheep_history:
-            ax.plot(steps, sheep_history, color='cadetblue', linewidth=1)
+            ax.plot(steps, sheep_history, color="cadetblue", linewidth=1)
         if wolf_history:
-            ax.plot(steps, wolf_history, color='darkred', linewidth=1)
-        
+            ax.plot(steps, wolf_history, color="darkred", linewidth=1)
+
         # Create a twin axis for theta
         if theta_history:
             ax2 = ax.twinx()
-            ax2.plot(steps, theta_history, color='darkgreen', linewidth=1)
+            ax2.plot(steps, theta_history, color="darkgreen", linewidth=1)
             ax2.set_ylim(0, 1)
-            ax2.axis('off')  # Hide the second y-axis
-        
+            ax2.axis("off")  # Hide the second y-axis
+
         # Set y-limit for sheep and wolves based on sheep_max
         ax.set_ylim(0, sheep_max * 1.1)  # Add 10% margin
-        
+
         # Remove ticks and labels for a cleaner look
         ax.set_xticks([])
         ax.set_yticks([])
-        ax.spines['top'].set_visible(False)
-        ax.spines['right'].set_visible(False)
-        ax.spines['bottom'].set_visible(False)
-        ax.spines['left'].set_visible(False)
-    
+        ax.spines["top"].set_visible(False)
+        ax.spines["right"].set_visible(False)
+        ax.spines["bottom"].set_visible(False)
+        ax.spines["left"].set_visible(False)
+
     # Add row labels (first sweep variable)
     if len(sweep_variables) >= 1 and n_rows > 1:
         var1 = sweep_variables[0]
         for i, val in enumerate(unique_values[var1]):
             ax = fig.add_subplot(gs[i + 1, 0])
-            ax.text(0.5, 0.5, f"{var1}={val}", 
-                    ha='center', va='center', rotation=90)
-            ax.axis('off')
-    
+            ax.text(0.5, 0.5, f"{var1}={val}", ha="center", va="center", rotation=90)
+            ax.axis("off")
+
     # Add column labels (second sweep variable or first if only one)
     label_var = sweep_variables[1] if len(sweep_variables) > 1 else sweep_variables[0]
     for j, val in enumerate(unique_values[label_var]):
         ax = fig.add_subplot(gs[0, j + 1])
-        ax.text(0.5, 0.5, f"{label_var}={val}", ha='center', va='center')
-        ax.axis('off')
-    
+        ax.text(0.5, 0.5, f"{label_var}={val}", ha="center", va="center")
+        ax.axis("off")
+
     # Add a title
     plt.suptitle(f"Parameter Sweep: {preset.get('preset_name', 'Unnamed')}")
-    
+
     # Add a small legend in the top-left corner
     legend_ax = fig.add_subplot(gs[0, 0])
-    legend_ax.plot([], [], color='cadetblue', label='Sheep')
-    legend_ax.plot([], [], color='darkred', label='Wolves')
-    legend_ax.plot([], [], color='darkgreen', label='Theta')
-    legend_ax.legend(loc='center', frameon=False, fontsize='small')
-    legend_ax.axis('off')
-    
+    legend_ax.plot([], [], color="cadetblue", label="Sheep")
+    legend_ax.plot([], [], color="darkred", label="Wolves")
+    legend_ax.plot([], [], color="darkgreen", label="Theta")
+    legend_ax.legend(loc="center", frameon=False, fontsize="small")
+    legend_ax.axis("off")
+
     # Adjust layout and save
     plt.tight_layout()
     plt.subplots_adjust(top=0.95)  # Make room for the title
-    
+
     # Save the figure
     output_path = os.path.join(output_dir, f"sweep_visualization.png")
-    plt.savefig(output_path, dpi=150, bbox_inches='tight')
+    plt.savefig(output_path, dpi=150, bbox_inches="tight")
     plt.close(fig)
-    
+
     return output_path
 
 
 def create_prompt_sweep_visualization(sweep_stats, results, preset, output_dir):
     """
     Create a grid visualization of simulation results for prompt sweeps.
-    
+
     Arranges plots in a grid where:
     - Columns are the different prompt types (high, medium, low), the theta function,
       and constant theta (if specified in the preset)
     - Rows are the values of the sweep parameter
-    
+
     Args:
         sweep_stats (list): List of statistics for each sweep configuration
         results (list): List of detailed results for each simulation
         preset (dict): The preset configuration used for the sweep
         output_dir (str): Directory to save the visualization
-        
+
     Returns:
         str: Path to the saved visualization file
     """
@@ -452,31 +453,31 @@ def create_prompt_sweep_visualization(sweep_stats, results, preset, output_dir):
     if not sweep_variables or not sweep_stats:
         print("No sweep variables or results to visualize")
         return None
-    
+
     # We expect exactly one sweep variable for prompt sweeps
     var = sweep_variables[0]
-    
+
     # Extract unique values for the sweep variable
     unique_values = sorted(set(stat["config"].get(var) for stat in sweep_stats))
-    
+
     # Check if theta_star is specified in the preset
     has_theta_star = "theta_star" in preset.get("fixed_parameters", {})
-    
+
     # Define the column order: prompt types (high, medium, low) + theta function + constant theta (if applicable)
     column_types = ["high", "medium", "low", "theta"]
     if has_theta_star:
         column_types.append("constant")
-    
+
     # Determine grid dimensions
     n_rows = len(unique_values)
     n_cols = len(column_types)
-    
+
     # Create a mapping of grid positions to configurations
     grid_positions = {}
     for i, val in enumerate(unique_values):
         for j, col_type in enumerate(column_types):
             grid_positions[(i, j)] = {"var": var, "value": val, "type": col_type}
-    
+
     # Find the maximum sheep capacity across all simulations
     sheep_max = 0
     for result_entry in results:
@@ -486,156 +487,171 @@ def create_prompt_sweep_visualization(sweep_stats, results, preset, output_dir):
         sheep_history = sim_results.get("sheep_history", [])
         if sheep_history:
             sheep_max = max(sheep_max, max(sheep_history))
-    
+
     # Override with a fixed limit for prettier visualization if needed
     # Uncomment and set this value if you want a fixed y-axis limit
     # fixed_y_limit = 200
-    
+
     # Create the figure with appropriate size
     fig_width = max(12, 2 + 2.5 * n_cols)
     fig_height = max(8, 2 + 1.5 * n_rows)
     fig = plt.figure(figsize=(fig_width, fig_height))
-    
+
     # Create GridSpec for the main grid and labels
     gs = GridSpec(n_rows + 1, n_cols + 1, figure=fig)
-    
+
     # Add debug prints to see what configurations we have
     print("\nDebugging configuration matching:")
     for result_entry in results:
         if result_entry["success"]:
             config = result_entry["config"]
             path = config.get("path", "")
-            print(f"Config: var={config.get(var)}, no_ai={config.get('no_ai')}, k={config.get('k')}, path={path}")
-    
+            print(
+                f"Config: var={config.get(var)}, no_ai={config.get('no_ai')}, k={config.get('k')}, path={path}"
+            )
+
     # Create the plots
     for (row, col), pos_config in grid_positions.items():
         sweep_val = pos_config["value"]
         col_type = pos_config["type"]
-        
-        print(f"\nLooking for match: row={row}, col={col}, sweep_val={sweep_val}, col_type={col_type}")
-        
+
+        print(
+            f"\nLooking for match: row={row}, col={col}, sweep_val={sweep_val}, col_type={col_type}"
+        )
+
         # Find the matching result for this configuration
         matching_result = None
         for result_entry in results:
             if not result_entry["success"]:
                 continue
-            
+
             entry_config = result_entry["config"]
             entry_path = entry_config.get("path", "")
-            
+
             # For prompt types (high, medium, low)
             if col_type in ["high", "medium", "low"]:
-                if (entry_config.get(var) == sweep_val and 
-                    entry_config.get("prompt_type") == col_type and
-                    not entry_config.get("no_ai", False)):
+                if (
+                    entry_config.get(var) == sweep_val
+                    and entry_config.get("prompt_type") == col_type
+                    and not entry_config.get("no_ai", False)
+                ):
                     matching_result = result_entry
                     print(f"  Found prompt match: {entry_path}")
                     break
-            
+
             # For theta function (adaptive)
             elif col_type == "theta":
                 # Simplified matching logic - just check for no_ai=True and not constant theta
-                if (entry_config.get(var) == sweep_val and 
-                    entry_config.get("no_ai", False) and
-                    "theta_constant_" not in entry_path and
-                    "prompt_" not in entry_path):
+                if (
+                    entry_config.get(var) == sweep_val
+                    and entry_config.get("no_ai", False)
+                    and "theta_constant_" not in entry_path
+                    and "prompt_" not in entry_path
+                ):
                     matching_result = result_entry
                     print(f"  Found adaptive theta match: {entry_path}")
                     break
-            
+
             # For constant theta
             elif col_type == "constant":
-                if (entry_config.get(var) == sweep_val and 
-                    entry_config.get("no_ai", False) and
-                    "theta_constant_" in entry_path):
+                if (
+                    entry_config.get(var) == sweep_val
+                    and entry_config.get("no_ai", False)
+                    and "theta_constant_" in entry_path
+                ):
                     matching_result = result_entry
                     print(f"  Found constant theta match: {entry_path}")
                     break
-        
+
         if not matching_result:
             print(f"  No match found for {col_type} at {sweep_val}")
             # Create an empty plot if no matching result
             ax = fig.add_subplot(gs[row + 1, col + 1])
-            ax.text(0.5, 0.5, "No data", ha='center', va='center')
-            ax.axis('off')
+            ax.text(0.5, 0.5, "No data", ha="center", va="center")
+            ax.axis("off")
             continue
-        
+
         sim_results = matching_result["results"]
-        
+
         # Get history data
         sheep_history = sim_results.get("sheep_history", [])
         wolf_history = sim_results.get("wolf_history", [])
         theta_history = sim_results.get("average_theta_history", [])
-        
+
         # Create subplot
         ax = fig.add_subplot(gs[row + 1, col + 1])
-        
+
         # Plot data if available
         steps = range(len(sheep_history))
         if sheep_history:
-            ax.plot(steps, sheep_history, color='cadetblue', linewidth=1)
+            ax.plot(steps, sheep_history, color="cadetblue", linewidth=1)
         if wolf_history:
-            ax.plot(steps, wolf_history, color='darkred', linewidth=1)
-        
+            ax.plot(steps, wolf_history, color="darkred", linewidth=1)
+
         # Create a twin axis for theta
         if theta_history:
             ax2 = ax.twinx()
-            ax2.plot(steps, theta_history, color='darkgreen', linewidth=1)
+            ax2.plot(steps, theta_history, color="darkgreen", linewidth=1)
             ax2.set_ylim(0, 1)
-            ax2.axis('off')  # Hide the second y-axis
-        
+            ax2.axis("off")  # Hide the second y-axis
+
         # Set y-limit for sheep and wolves
         # If you want a fixed limit, use fixed_y_limit instead of sheep_max
         ax.set_ylim(0, sheep_max * 1.1)  # Add 10% margin
-        
+
         # Remove ticks and labels for a cleaner look
         ax.set_xticks([])
         ax.set_yticks([])
-        ax.spines['top'].set_visible(False)
-        ax.spines['right'].set_visible(False)
-        ax.spines['bottom'].set_visible(False)
-        ax.spines['left'].set_visible(False)
-    
+        ax.spines["top"].set_visible(False)
+        ax.spines["right"].set_visible(False)
+        ax.spines["bottom"].set_visible(False)
+        ax.spines["left"].set_visible(False)
+
     # Add row labels (sweep variable values)
     for i, val in enumerate(unique_values):
         ax = fig.add_subplot(gs[i + 1, 0])
-        ax.text(0.5, 0.5, f"{var}={val}", ha='center', va='center', rotation=90)
-        ax.axis('off')
-    
+        ax.text(0.5, 0.5, f"{var}={val}", ha="center", va="center", rotation=90)
+        ax.axis("off")
+
     # Get theta_star from fixed parameters for labeling
     theta_star = preset.get("fixed_parameters", {}).get("theta_star")
-    
+
     # Add column labels (prompt types, theta function, and constant theta if applicable)
     this_k = preset.get("fixed_parameters", {}).get("k")
-    column_labels = ["Prompt: High Info", "Prompt: Medium Info", "Prompt: Low Info", f"Adaptive θ (k={this_k})"]
+    column_labels = [
+        "Prompt: High Info",
+        "Prompt: Medium Info",
+        "Prompt: Low Info",
+        f"Adaptive θ (k={this_k})",
+    ]
     if has_theta_star:
         column_labels.append(f"Constant θ={theta_star}")
-    
+
     for j, label in enumerate(column_labels):
         ax = fig.add_subplot(gs[0, j + 1])
-        ax.text(0.5, 0.5, label, ha='center', va='center')
-        ax.axis('off')
-    
+        ax.text(0.5, 0.5, label, ha="center", va="center")
+        ax.axis("off")
+
     # Add a title
     plt.suptitle(f"Prompt Sweep: {preset.get('preset_name', 'Unnamed')}")
-    
+
     # Add a small legend in the top-left corner
     legend_ax = fig.add_subplot(gs[0, 0])
-    legend_ax.plot([], [], color='cadetblue', label='Sheep')
-    legend_ax.plot([], [], color='darkred', label='Wolves')
-    legend_ax.plot([], [], color='darkgreen', label='Theta')
-    legend_ax.legend(loc='center', frameon=False, fontsize='small')
-    legend_ax.axis('off')
-    
+    legend_ax.plot([], [], color="cadetblue", label="Sheep")
+    legend_ax.plot([], [], color="darkred", label="Wolves")
+    legend_ax.plot([], [], color="darkgreen", label="Theta")
+    legend_ax.legend(loc="center", frameon=False, fontsize="small")
+    legend_ax.axis("off")
+
     # Adjust layout and save
     plt.tight_layout()
     plt.subplots_adjust(top=0.95)  # Make room for the title
-    
+
     # Save the figure
     output_path = os.path.join(output_dir, f"prompt_sweep_visualization.png")
-    plt.savefig(output_path, dpi=150, bbox_inches='tight')
+    plt.savefig(output_path, dpi=150, bbox_inches="tight")
     plt.close(fig)
-    
+
     return output_path
 
 
@@ -691,7 +707,7 @@ def main():
         print(
             f"Running parameter sweep with preset '{args.preset}' ({len(configs)} configurations)"
         )
-    
+
     elif preset_type == "prompt-sweep":
         # Generate configurations for prompt sweep
         configs = generate_prompt_sweep_configs(preset)
@@ -833,10 +849,12 @@ def main():
             print(f"Visualization saved to {viz_path}")
             # Add the visualization path to the experiment config
             experiment_config["visualization_path"] = str(viz_path)
-    
+
     elif preset_type == "prompt-sweep" and successful > 0:
         print("Creating prompt sweep visualization...")
-        viz_path = create_prompt_sweep_visualization(sweep_stats, results, preset, output_dir)
+        viz_path = create_prompt_sweep_visualization(
+            sweep_stats, results, preset, output_dir
+        )
         if viz_path:
             print(f"Visualization saved to {viz_path}")
             # Add the visualization path to the experiment config
