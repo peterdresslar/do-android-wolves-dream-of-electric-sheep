@@ -1,4 +1,5 @@
 import openai
+import json
 
 # Import shared data types
 from model.utils.data_types import Usage, WolfResponse, current_usage
@@ -10,10 +11,10 @@ load_environment()
 
 def call_gpt_4o_mini(
     prompt: str,
-    model: str = None,
-    temperature: float = None,
-    max_tokens: int = None,
-    usage: Usage = None,
+    model: str,
+    temperature: float,
+    max_tokens: int,
+    usage: Usage,
 ) -> str:
     """
     Call the OpenAI ChatCompletion endpoint with the given prompt.
@@ -27,12 +28,16 @@ def call_gpt_4o_mini(
     # Get model from params if not explicitly provided
     if model is None:
         raise ValueError("Model is not provided")
+    
+    # Do not proceed without a temperature
+    if temperature is None:
+        raise ValueError("Temperature is not provided")
 
     response = client.chat.completions.create(
         messages=[{"role": "user", "content": prompt}],
         model=model,
-        max_tokens=max_tokens if max_tokens is not None else 4096,
-        temperature=temperature if temperature is not None else 0.2,
+        max_tokens=max_tokens if max_tokens is not None else 512,
+        temperature=temperature,
     )
 
     # Update usage if available
@@ -55,6 +60,7 @@ async def call_gpt_4o_async(
     Async version of call_llm that calls the OpenAI ChatCompletion endpoint.
     """
     # Use the global usage object if none is provided
+    from model.utils.data_types import current_usage
     usage_to_update = usage if usage is not None else current_usage
 
     # Ensure your environment has OPENAI_API_KEY set
@@ -64,20 +70,29 @@ async def call_gpt_4o_async(
     if model is None:
         raise ValueError("Model is not provided")
 
-    response = await client.chat.completions.create(
-        messages=[{"role": "user", "content": prompt}],
-        model=model,
-        max_tokens=max_tokens if max_tokens is not None else 4096,
-        temperature=temperature if temperature is not None else 0.2,
-    )
-
-    # Update usage if available
-    if usage_to_update is not None:
-        usage_to_update.add(
-            response.usage.prompt_tokens, response.usage.completion_tokens, model
+    try:
+        response = await client.chat.completions.create(
+            messages=[{"role": "user", "content": prompt}],
+            model=model,
+            max_tokens=max_tokens if max_tokens is not None else 4096,
+            temperature=temperature if temperature is not None else 0.2,
         )
 
-    return response.choices[0].message.content
+        # Update usage if available
+        if usage_to_update is not None and hasattr(response, 'usage'):
+            usage_to_update.add(
+                response.usage.prompt_tokens, 
+                response.usage.completion_tokens, 
+                model
+            )
+            print(f"Updated usage: {usage_to_update.to_dict()}")  # Debug print
+
+        return response.choices[0].message.content
+    
+    except Exception as e:
+        print(f"Error in API call: {str(e)}")
+        # Still return something so the simulation can continue
+        return json.dumps({"theta": 0.5, "explanation": "API error occurred"})
 
 
 def get_gpt_4o_response(

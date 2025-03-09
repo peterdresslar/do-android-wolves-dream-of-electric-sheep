@@ -8,7 +8,7 @@
       "fixed_parameters": {
         "model_name": "gpt-4o-mini",
         "temperature": 0.2,
-        "max_tokens": 4096,
+        "max_tokens": 512,
         "dt": 0.1,
         "steps": 250,
         "sheep_max": 1000,
@@ -76,7 +76,7 @@
     },
     {
       "preset_name": "gpt-4o-mini-prompt-sweep-s0",
-      "preset_version": "1.0",
+      "preset_version": "1.1",
       "preset_type": "prompt-sweep",
       "preset_description": "A sweep of LLM prompt types upon descending values of s_start, in an attempt to validate stabilizing fitness.",
       "sweep_variables": [
@@ -85,23 +85,21 @@
       "sweep_parameters": {
         "s_start_values": [
           25,
-          20,
-          18,
-          16,
+          17,
           14,
-          12,
-          10,
+          11,
           8,
-          5
+          5,
+          2
         ]
       },
       "fixed_parameters": {
         "model_name": "gpt-4o-mini",
         "temperature": 0.2,
-        "max_tokens": 4096,
+        "max_tokens": 512,
         "dt": 0.1,
         "steps": 500,
-        "sheep_max": 110,
+        "sheep_max": 200,
         "eps": 0.0001,
         "alpha": 1,
         "beta": 0.1,
@@ -126,17 +124,22 @@
       ],
       "sweep_parameters": {
         "s_start_values": [
+          25,
           17,
+          14,
+          11,
+          8,
+          5,
           2
         ]
       },
       "fixed_parameters": {
         "model_name": "gpt-4o-mini",
         "temperature": 0.2,
-        "max_tokens": 4096,
+        "max_tokens": 512,
         "dt": 0.1,
-        "steps": 5,
-        "sheep_max": 110,
+        "steps": 4,
+        "sheep_max": 250,
         "eps": 0.0001,
         "alpha": 1,
         "beta": 0.1,

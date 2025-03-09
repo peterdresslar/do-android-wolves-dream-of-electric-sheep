@@ -15,13 +15,11 @@ load_environment()
 
 # Import OpenAI after environment is loaded
 
-DEFAULT_MODEL = None
 VALID_MODELS = [
     {"alias": "gpt-4o-mini", "realname": "gpt-4o-mini-2024-07-18"},
     {"alias": "claude-3-5-haiku", "realname": "claude-3-5-haiku-20241022"},
 ]
-MAX_TOKENS = None
-TEMPERATURE = None
+MAX_TOKENS = 512 # This is an opt, not a model param
 
 
 def calculate_cost(prompt_tokens: int, completion_tokens: int, model: str) -> float:
@@ -332,10 +330,10 @@ def get_real_model_name(model_alias: str) -> str:
 
 def call_llm(
     prompt: str,
-    model: str = DEFAULT_MODEL,
-    temperature: float = TEMPERATURE,
-    max_tokens: int = MAX_TOKENS,
-    usage: Usage = None,
+    model: str,
+    temperature: float,
+    max_tokens: int,
+    usage: Usage,
 ) -> str:
     """
     Call the appropriate LLM based on the model name.
@@ -425,11 +423,11 @@ def get_wolf_response(
     sheep_max: float,
     old_theta: float,
     step: int,
-    respond_verbosely: bool = True,
-    delta_s: float = 0,
-    delta_w: float = 0,
-    prompt_type: str = "high",
-    model: str = None,
+    respond_verbosely: bool,
+    delta_s: float,
+    delta_w: float,
+    prompt_type: str,
+    model: str,
 ) -> WolfResponse:
     """
     Build a prompt, call the LLM, parse the result into a WolfResponse,
@@ -505,10 +503,10 @@ def get_wolf_response(
 
 async def call_llm_async(
     prompt: str,
-    model: str = DEFAULT_MODEL,
-    temperature: float = TEMPERATURE,
-    max_tokens: int = MAX_TOKENS,
-    usage: Usage = None,
+    model: str,
+    temperature: float,
+    max_tokens: int,
+    usage: Usage,
 ) -> str:
     """
     Async version of call_llm that routes to the appropriate model implementation.
@@ -561,6 +559,9 @@ async def get_wolf_response_async(
     Async version of get_wolf_response.
     Build a prompt, call the LLM, parse the result into a WolfResponse.
     """
+    # Use the current global usage object
+    from model.utils.data_types import current_usage
+    
     # Convert alias to real model name if needed
     real_model = get_real_model_name(model)
 
@@ -580,8 +581,8 @@ async def get_wolf_response_async(
             delta_w=delta_w,
             prompt_type=prompt_type,
             model=real_model,
+            usage=current_usage,  # Pass the current usage object
         )
-    # Check if we're using a Claude model
     elif real_model and real_model.startswith("claude-"):
         # Import here to avoid circular imports
         from model.utils.llms.claude import get_claude_response_async
