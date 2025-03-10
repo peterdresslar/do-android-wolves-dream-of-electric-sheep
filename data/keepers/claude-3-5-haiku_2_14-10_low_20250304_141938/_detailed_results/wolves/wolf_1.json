@@ -1,0 +1,31 @@
+{
+    "wolf_id": 1,
+    "beta": 0.1,
+    "gamma": 1.5,
+    "delta": 0.75,
+    "alive": true,
+    "born_at_step": 0,
+    "died_at_step": null,
+    "thetas": [
+        0.5,
+        0.5,
+        0.75
+    ],
+    "decision_history": {
+        "history_steps": [
+            1
+        ],
+        "new_thetas": [
+            0.75
+        ],
+        "prompts": [
+            null
+        ],
+        "explanations": [
+            "With wolf population decreasing and sheep population increasing, I'll hunt more intensely than before but not at maximum. This balanced approach helps conserve energy while still securing food, potentially allowing more wolves to survive by not depleting prey too quickly."
+        ],
+        "vocalizations": [
+            "Awoooooo! (a cautious, strategic howl signaling calculated hunting intent)"
+        ]
+    }
+}

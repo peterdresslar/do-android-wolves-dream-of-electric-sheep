@@ -128,12 +128,7 @@
       ],
       "sweep_parameters": {
         "s_start_values": [
-          25,
           17,
-          14,
-          11,
-          8,
-          5,
           2
         ]
       },

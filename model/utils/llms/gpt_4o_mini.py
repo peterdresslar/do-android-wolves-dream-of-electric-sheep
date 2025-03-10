@@ -85,7 +85,7 @@ async def call_gpt_4o_async(
                 response.usage.completion_tokens, 
                 model
             )
-            print(f"Updated usage: {usage_to_update.to_dict()}")  # Debug print
+            # print(f"Updated usage: {usage_to_update.to_dict()}")  # Debug print
 
         return response.choices[0].message.content
     

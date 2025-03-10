@@ -108,7 +108,6 @@ class Wolf:
 
         Args:
             step: Current simulation step
-            decision_mode: "constant" or "adaptive"
             domain: Domain object containing sheep state and capacity
             params: Parameters dictionary for theta function configuration
 
@@ -117,29 +116,33 @@ class Wolf:
         """
         decision_mode = params.get("decision_mode")
 
-        # Check if theta_star is provided in params (not None)
+        # Check if we're using constant theta
         if decision_mode == "constant":
-            # Use theta_star as a constant value
+            # Use theta_start as a constant value
             constant_theta = params["theta_start"]
             self.thetas.append(constant_theta)
             self.decision_history["history_steps"].append(step)
             self.decision_history["new_thetas"].append(constant_theta)
             self.decision_history["prompts"].append("N/A")  # No prompt generated
             self.decision_history["explanations"].append(
-                f"Using constant theta_star: {constant_theta}"
+                f"Using constant theta_start: {constant_theta}"
             )
             self.decision_history["vocalizations"].append(
-                f"Using constant theta_star: {constant_theta}"
+                f"Using constant theta_start: {constant_theta}"
             )
             return constant_theta
 
-        else:
+        elif decision_mode == "adaptive":
             # Calculate theta using the function: θ(s) = 1/(1 + k*s0/(s + ε))
-            k = params.get("k")  # Sensitivity parameter
-            s0 = params.get("sheep_max")  # Reference sheep population
+            k = params.get("k")
+            if k is None:
+                # This is a critical error - k must be provided for adaptive mode
+                raise ValueError("Parameter 'k' is required for adaptive mode but was not provided")
+            
+            s0 = domain.sheep_capacity  # Reference sheep population
             epsilon = params.get("eps")  # Small constant to avoid division by zero
             sheep_state = domain.sheep_state
-
+            
             # Calculate theta using the function from the methods notebook
             calculated_theta = 1.0 / (1.0 + k * s0 / (sheep_state + epsilon))
 
@@ -154,6 +157,9 @@ class Wolf:
                 f"Calculated theta: {calculated_theta:.4f} based on sheep population: {sheep_state:.2f}"
             )
             return calculated_theta
+        else:
+            # This shouldn't happen if decision_mode validation is done properly
+            raise ValueError(f"Invalid decision_mode: {decision_mode}")
 
     async def decide_theta_async(
         self,
@@ -296,6 +302,8 @@ class Agents:
             "churn_rate": churn_rate,
             "threads": threads,
         }
+
+        # print("Creating agents with params:", params)
 
         agents = Agents(params, initial_step)
 

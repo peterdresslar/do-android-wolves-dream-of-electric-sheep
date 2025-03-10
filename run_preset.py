@@ -150,8 +150,9 @@ def generate_prompt_sweep_configs(preset):
 
     For each value in the sweep variable, creates configurations for:
     1. Each prompt_type (high, medium, low) with decision_mode="ai"
-    2. An adaptive theta run (decision_mode="adaptive")
-    3. A constant theta run (decision_mode="constant") - only if theta_start is specified in the preset
+    2. An adaptive theta run (decision_mode="adaptive") with k parameter
+    
+    The constant theta mode is no longer included.
 
     Args:
         preset (dict): Preset configuration with sweep_variables, sweep_parameters, and fixed_parameters
@@ -217,10 +218,7 @@ def generate_prompt_sweep_configs(preset):
         config = fixed_params.copy()
         config[var] = value
         config["decision_mode"] = "adaptive"
-        k_value = fixed_params.get("k")
-        config["k"] = k_value
-
-        # Create a unique path for this configuration
+        k_value = config.get("k")
         config["path"] = f"{base_path}/{var}_{value}_theta_k_{k_value}"
 
         configs.append(config)
@@ -418,8 +416,7 @@ def create_prompt_sweep_visualization(sweep_stats, results, preset, output_dir):
     Create a grid visualization of simulation results for prompt sweeps.
 
     Arranges plots in a grid where:
-    - Columns are the different prompt types (high, medium, low), the adaptive theta function,
-      and constant theta (if specified in the preset)
+    - Columns are the different prompt types (high, medium, low) and the adaptive theta function
     - Rows are the values of the sweep parameter
 
     Args:
@@ -442,13 +439,8 @@ def create_prompt_sweep_visualization(sweep_stats, results, preset, output_dir):
     # Extract unique values for the sweep variable
     unique_values = sorted(set(stat["config"].get(var) for stat in sweep_stats))
 
-    # Check if theta_start is specified in the preset
-    has_theta_start = "theta_start" in preset.get("fixed_parameters", {})
-
-    # Define the column order: prompt types (high, medium, low) + adaptive theta + constant theta (if applicable)
+    # Define the column order: prompt types (high, medium, low) + adaptive theta
     column_types = ["high", "medium", "low", "adaptive"]
-    if has_theta_start:
-        column_types.append("constant")
 
     # Determine grid dimensions
     n_rows = len(unique_values)
@@ -522,21 +514,10 @@ def create_prompt_sweep_visualization(sweep_stats, results, preset, output_dir):
                 if (
                     entry_config.get(var) == sweep_val
                     and entry_config.get("decision_mode") == "adaptive"
-                    and "theta_k_" in entry_path
+                    and ("theta_k_" in entry_path or "adaptive_k-" in entry_path)
                 ):
                     matching_result = result_entry
                     print(f"  Found adaptive theta match: {entry_path}")
-                    break
-
-            # For constant theta
-            elif col_type == "constant":
-                if (
-                    entry_config.get(var) == sweep_val
-                    and entry_config.get("decision_mode") == "constant"
-                    and "theta_constant_" in entry_path
-                ):
-                    matching_result = result_entry
-                    print(f"  Found constant theta match: {entry_path}")
                     break
 
         if not matching_result:
@@ -588,10 +569,7 @@ def create_prompt_sweep_visualization(sweep_stats, results, preset, output_dir):
         ax.text(0.5, 0.5, f"{var}={val}", ha="center", va="center", rotation=90)
         ax.axis("off")
 
-    # Get theta_star from fixed parameters for labeling
-    theta_star = preset.get("fixed_parameters", {}).get("theta_start")
-
-    # Add column labels (prompt types, adaptive theta, and constant theta if applicable)
+    # Add column labels (prompt types and adaptive theta)
     this_k = preset.get("fixed_parameters", {}).get("k")
     column_labels = [
         "Prompt: High Info",
@@ -599,8 +577,6 @@ def create_prompt_sweep_visualization(sweep_stats, results, preset, output_dir):
         "Prompt: Low Info",
         f"Adaptive θ (k={this_k})",
     ]
-    if has_theta_star:
-        column_labels.append(f"Constant θ={theta_star}")
 
     for j, label in enumerate(column_labels):
         ax = fig.add_subplot(gs[0, j + 1])
