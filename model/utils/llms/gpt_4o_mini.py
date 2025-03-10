@@ -1,5 +1,6 @@
-import openai
 import json
+
+import openai
 
 # Import shared data types
 from model.utils.data_types import Usage, WolfResponse, current_usage
@@ -28,7 +29,7 @@ def call_gpt_4o_mini(
     # Get model from params if not explicitly provided
     if model is None:
         raise ValueError("Model is not provided")
-    
+
     # Do not proceed without a temperature
     if temperature is None:
         raise ValueError("Temperature is not provided")
@@ -61,6 +62,7 @@ async def call_gpt_4o_async(
     """
     # Use the global usage object if none is provided
     from model.utils.data_types import current_usage
+
     usage_to_update = usage if usage is not None else current_usage
 
     # Ensure your environment has OPENAI_API_KEY set
@@ -79,16 +81,14 @@ async def call_gpt_4o_async(
         )
 
         # Update usage if available
-        if usage_to_update is not None and hasattr(response, 'usage'):
+        if usage_to_update is not None and hasattr(response, "usage"):
             usage_to_update.add(
-                response.usage.prompt_tokens, 
-                response.usage.completion_tokens, 
-                model
+                response.usage.prompt_tokens, response.usage.completion_tokens, model
             )
             # print(f"Updated usage: {usage_to_update.to_dict()}")  # Debug print
 
         return response.choices[0].message.content
-    
+
     except Exception as e:
         print(f"Error in API call: {str(e)}")
         # Still return something so the simulation can continue

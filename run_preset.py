@@ -7,8 +7,8 @@ import json
 import os
 import time
 from pathlib import Path
+
 import matplotlib.pyplot as plt
-import numpy as np
 from matplotlib.gridspec import GridSpec
 
 # Import the run function directly from model.py
@@ -151,7 +151,7 @@ def generate_prompt_sweep_configs(preset):
     For each value in the sweep variable, creates configurations for:
     1. Each prompt_type (high, medium, low) with decision_mode="ai"
     2. An adaptive theta run (decision_mode="adaptive") with k parameter
-    
+
     The constant theta mode is no longer included.
 
     Args:
@@ -404,7 +404,7 @@ def create_sweep_visualization(sweep_stats, results, preset, output_dir):
     plt.subplots_adjust(top=0.95)  # Make room for the title
 
     # Save the figure
-    output_path = os.path.join(output_dir, f"sweep_visualization.png")
+    output_path = os.path.join(output_dir, "sweep_visualization.png")
     plt.savefig(output_path, dpi=150, bbox_inches="tight")
     plt.close(fig)
 
@@ -599,7 +599,7 @@ def create_prompt_sweep_visualization(sweep_stats, results, preset, output_dir):
     plt.subplots_adjust(top=0.95)  # Make room for the title
 
     # Save the figure
-    output_path = os.path.join(output_dir, f"prompt_sweep_visualization.png")
+    output_path = os.path.join(output_dir, "prompt_sweep_visualization.png")
     plt.savefig(output_path, dpi=150, bbox_inches="tight")
     plt.close(fig)
 

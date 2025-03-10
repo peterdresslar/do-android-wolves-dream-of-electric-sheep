@@ -6,6 +6,7 @@ from typing import Any
 
 THREADS_DEFAULT = 10
 
+
 @dataclass
 class Wolf:
     wolf_id: int
@@ -137,12 +138,14 @@ class Wolf:
             k = params.get("k")
             if k is None:
                 # This is a critical error - k must be provided for adaptive mode
-                raise ValueError("Parameter 'k' is required for adaptive mode but was not provided")
-            
+                raise ValueError(
+                    "Parameter 'k' is required for adaptive mode but was not provided"
+                )
+
             s0 = domain.sheep_capacity  # Reference sheep population
             epsilon = params.get("eps")  # Small constant to avoid division by zero
             sheep_state = domain.sheep_state
-            
+
             # Calculate theta using the function from the methods notebook
             calculated_theta = 1.0 / (1.0 + k * s0 / (sheep_state + epsilon))
 
@@ -316,7 +319,7 @@ class Agents:
             else:
                 # Use the configured theta_start
                 starting_theta_value = theta_start
-                
+
             wolf = Wolf(
                 wolf_id=i,
                 beta=beta,
@@ -325,14 +328,16 @@ class Agents:
                 alive=True,
                 starting_theta=starting_theta_value,
                 last_sheep_state=None,
-                last_wolves_count=None
+                last_wolves_count=None,
             )
             wolf.handle_birth(initial_step, starting_theta_value)
             agents.wolves.append(wolf)
 
         # Initialize average theta history with the initial average theta
         # (which might vary if randomize_theta is True)
-        initial_avg_theta = sum(wolf.starting_theta for wolf in agents.wolves) / n_wolves
+        initial_avg_theta = (
+            sum(wolf.starting_theta for wolf in agents.wolves) / n_wolves
+        )
         agents.average_thetas = [initial_avg_theta]
 
         return agents
@@ -423,7 +428,7 @@ class Agents:
             else:
                 # Use the configured theta_start
                 starting_theta = self.params.get("theta_start")
-                
+
             # Create a complete Wolf object with all required parameters
             new_wolf = Wolf(
                 wolf_id=len(self.wolves),
@@ -435,9 +440,9 @@ class Agents:
                 last_sheep_state=None,  # Initialize with None
                 last_wolves_count=None,  # Initialize with None
                 born_at_step=step,  # (added comma)
-                died_at_step=None
+                died_at_step=None,
             )
-            
+
             # Now handle_birth can properly initialize the wolf's state
             new_wolf.handle_birth(step, starting_theta)
             self.wolves.append(new_wolf)

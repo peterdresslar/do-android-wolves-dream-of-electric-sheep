@@ -19,7 +19,7 @@ VALID_MODELS = [
     {"alias": "gpt-4o-mini", "realname": "gpt-4o-mini-2024-07-18"},
     {"alias": "claude-3-5-haiku", "realname": "claude-3-5-haiku-20241022"},
 ]
-MAX_TOKENS = 512 # This is an opt, not a model param
+MAX_TOKENS = 512  # This is an opt, not a model param
 
 
 def calculate_cost(prompt_tokens: int, completion_tokens: int, model: str) -> float:
@@ -561,7 +561,7 @@ async def get_wolf_response_async(
     """
     # Use the current global usage object
     from model.utils.data_types import current_usage
-    
+
     # Convert alias to real model name if needed
     real_model = get_real_model_name(model)
 

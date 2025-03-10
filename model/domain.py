@@ -7,7 +7,9 @@ class Domain:
     Domain class to manage the state of the simulation.
     """
 
-    def __init__(self, sheep_capacity: int, starting_sheep: int, alpha: float, dt: float):
+    def __init__(
+        self, sheep_capacity: int, starting_sheep: int, alpha: float, dt: float
+    ):
         # Configuration parameters
         self.sheep_capacity = sheep_capacity
         self.starting_sheep = starting_sheep
