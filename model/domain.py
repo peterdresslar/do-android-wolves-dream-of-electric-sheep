@@ -7,11 +7,12 @@ class Domain:
     Domain class to manage the state of the simulation.
     """
 
-    def __init__(self, sheep_capacity: int, starting_sheep: int):
+    def __init__(self, sheep_capacity: int, starting_sheep: int, alpha: float, dt: float):
         # Configuration parameters
         self.sheep_capacity = sheep_capacity
         self.starting_sheep = starting_sheep
-
+        self.alpha = alpha
+        self.dt = dt
         # State variables
         self.sheep_state = starting_sheep
 
@@ -31,6 +32,7 @@ class Domain:
     def get_state_dict(self, step: int):
         """Return the current state as a dictionary for agents to use."""
         return {
+            "alpha": self.alpha,
             "sheep_state": self.sheep_state,
             "step_accumulated_ds": self.step_accumulated_ds,
             "step_accumulated_dw": self.step_accumulated_dw,
@@ -40,6 +42,7 @@ class Domain:
 
     def update_from_state_dict(self, state_dict: dict, step: int):
         """Update domain state from a state dictionary."""
+        self.alpha = state_dict.get("alpha", self.alpha)
         self.sheep_state = state_dict.get("sheep_state", self.sheep_state)
         self.step_accumulated_ds = state_dict.get(
             "step_accumulated_ds", self.step_accumulated_ds
@@ -86,12 +89,13 @@ class Domain:
     # This function is here because our sheep are not agentized and still behave as domain
     def process_sheep_growth(self, params):
         """Process sheep growth according to the model parameters."""
-        alpha = params["alpha"]
+        alpha = self.alpha
+        dt = self.dt
         s = self.sheep_state
 
         ds_dt = alpha * s
 
-        new_s = max(0, s + ds_dt * params["dt"])
+        new_s = max(0, s + ds_dt * dt)
         self.sheep_state = new_s
 
         # Apply sheep capacity limit

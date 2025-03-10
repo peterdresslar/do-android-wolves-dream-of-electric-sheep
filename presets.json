@@ -2,7 +2,7 @@
   "presets": [
     {
       "preset_name": "base",
-      "preset_version": "1.0",
+      "preset_version": "1.2",
       "preset_type": "single",
       "preset_description": "The base parameters for the model.",
       "fixed_parameters": {
@@ -17,18 +17,18 @@
         "beta": 0.1,
         "gamma": 1.5,
         "delta": 0.75,
-        "theta_star": 0.25,
+        "theta_start": 0.25,
+        "randomize_theta": false,
         "s_start": 100,
         "w_start": 10,
         "churn_rate": 0.1,
-        "no_ai": false,
-        "prompt_type": "high",
+        "decision_mode": "ai",
         "path": "data/results/base"
       }
     },
     {
       "preset_name": "k-dt-sweep-500-s_max-110",
-      "preset_version": "1.1",
+      "preset_version": "1.2",
       "preset_type": "sweep",
       "preset_description": "A sweep of k values, determining the effectiveness of the theta function at different values of k. We will use a starting sheep population of 17, since that is the best starting population for the base parameters of [1,0.1]. Note that k=0 is effectively Lotka-Voltera.",
       "sweep_variables": [
@@ -66,9 +66,11 @@
         "beta": 0.1,
         "gamma": 1.5,
         "delta": 0.75,
+        "theta_start": 0.5,
+        "randomize_theta": false,
         "s_start": 17,
         "w_start": 10,
-        "no_ai": true,
+        "decision_mode": "adaptive",
         "path": "data/results/k-dt-sweep",
         "step_print": false,
         "save_results": true
@@ -76,7 +78,7 @@
     },
     {
       "preset_name": "gpt-4o-mini-prompt-sweep-s0",
-      "preset_version": "1.1",
+      "preset_version": "1.2",
       "preset_type": "prompt-sweep",
       "preset_description": "A sweep of LLM prompt types upon descending values of s_start, in an attempt to validate stabilizing fitness.",
       "sweep_variables": [
@@ -105,10 +107,12 @@
         "beta": 0.1,
         "gamma": 1.5,
         "delta": 0.75,
+        "theta_start": 0.5,
+        "randomize_theta": true,
         "k": 1.0,
         "w_start": 10,
         "churn_rate": 1.0,
-        "no_ai": false,
+        "decision_mode": "ai",
         "path": "data/results/gpt-4o-mini-prompt-sweep-s0",
         "step_print": false,
         "save_results": true
@@ -116,7 +120,7 @@
     },
     {
       "preset_name": "test-gpt-4o-mini-prompt-sweep-s0",
-      "preset_version": "1.0",
+      "preset_version": "1.2",
       "preset_type": "prompt-sweep",
       "preset_description": "A TEST sweep of LLM prompt types upon descending values of s_start, in an attempt to validate stabilizing fitness.",
       "sweep_variables": [
@@ -145,10 +149,12 @@
         "beta": 0.1,
         "gamma": 1.5,
         "delta": 0.75,
+        "theta_start": 0.5,
+        "randomize_theta": true,
         "k": 1.0,
         "w_start": 10,
         "churn_rate": 1.0,
-        "no_ai": false,
+        "decision_mode": "ai",
         "path": "data/results/gpt-4o-mini-prompt-sweep-s0",
         "step_print": true,
         "save_results": true

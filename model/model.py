@@ -12,18 +12,24 @@ from model.utils.data_types import Usage, set_current_usage
 from model.utils.init_utils import initialize_utils
 from model.utils.simulation_utils import save_simulation_results
 
-MODEL_PARAMS = {
-    "alpha": None,
-    "beta": None,
-    "gamma": None,
-    "delta": None,
-    "theta_star": None,
-    "s_start": None,
-    "w_start": None,
-    "dt": None,
-    "sheep_max": None,
-    "eps": None,
-    "steps": None,
+MODEL_PARAMS = { # Model parameters have an effect on the outcome of the simulation, and thus should NEVER have default values.
+    "decision_mode", # "ai", "adaptive", "constant"
+    "alpha",
+    "beta",
+    "gamma",
+    "delta",
+    "theta_start", # Used in all decision modes.
+    "randomize_theta_start", # True or False
+    "s_start",
+    "w_start",
+    "dt",
+    "sheep_max",
+    "eps",
+    "churn_rate",
+    "steps",
+    "model_name",
+    "temperature",
+    "prompt_type",
 }
 
 
@@ -54,15 +60,13 @@ class Model:
             int(self.steps * self.dt)
             if self.steps is not None and self.dt is not None
             else None
-        )
-        self.opts["no_ai"] = None
-        self.opts["model_name"] = None
-        self.opts["models"] = []
-        self.opts["churn_rate"] = None
+        ) 
+        # Note that Model Opts can have default values
         self.opts["save_results"] = None
         self.opts["path"] = None
         self.opts["prompt_type"] = None
         self.opts["step_print"] = None
+        self.opts["threads"] = None
 
     def create_run(self) -> ModelRun:
         """
@@ -75,77 +79,115 @@ def initialize_model(**kwargs) -> Model:
     """
     Initialize the model with the given domain and agents.
     Additional keyword arguments become model parameters.
-
-    This function merges defaults from config.py with any overrides
-    provided in kwargs so that keyword arguments can override the config.
+    
+    IMPORTANT: All scientific parameters must be explicitly provided.
+    No defaults are used for parameters that affect simulation outcomes.
+    
+    Decision modes:
+    - "ai": Wolves make decisions using LLMs
+    - "adaptive": Wolves use the adaptive theta formula
+    - "constant": Wolves use a constant theta value
     """
-    defaults = MODEL_PARAMS.copy()
-    defaults.update(kwargs)
-
-    # Extract domain and agent parameters
-    sheep_capacity = defaults.get("sheep_max")
-    starting_sheep = defaults.get("s_start")
-    starting_wolves = defaults.get(
-        "w_start", 10
-    )  # Add default value for starting_wolves
-
-    # Create domain and agents
-    model_domain = defaults.pop(
-        "domain",
-        Domain(
-            sheep_capacity=sheep_capacity,
-            starting_sheep=starting_sheep,
-        ),
-    )
-
-    # Extract agent parameters
-    beta = defaults.get("beta")
-    gamma = defaults.get("gamma")
-    delta = defaults.get("delta")
-
-    # Set initial theta value based on theta_star or default
-    if defaults.get("no_ai") and defaults.get("theta_star") is not None:
-        # If no_ai is True and theta_star is provided, use it as initial theta
-        theta = defaults.get("theta_star")
-    else:
-        # Otherwise, use 0.5 as a default initial theta
-        theta = 0.5
-
-    # Create opts dictionary
-    opts = {
-        "no_ai": defaults.get("no_ai"),
-        "churn_rate": defaults.get("churn_rate"),
-        "save_results": defaults.get("save_results"),
-        "path": defaults.get("path"),
-        "prompt_type": defaults.get("prompt_type"),
-        "model_name": defaults.get("model_name"),
-        "step_print": defaults.get("step_print"),
+    # First, check for required parameters common to all modes
+    common_required = {
+        "decision_mode", "alpha", "beta", "gamma", "delta", "theta_start", "randomize_theta", "eps",
+        "s_start", "w_start", "dt", "sheep_max", "steps"
     }
+    
+    missing_common = [param for param in common_required if param not in kwargs]
+    if missing_common:
+        raise ValueError(f"Missing required parameters: {', '.join(missing_common)}")
+    
+    # Check for decision mode-specific required parameters
+    decision_mode = kwargs["decision_mode"]
+    if decision_mode == "ai":
+        if "model_name" not in kwargs:
+            raise ValueError("'model_name' parameter is required for decision_mode='ai'")
+        model_name = kwargs["model_name"] # shouldn't be empty since we have the raise
+        if "temperature" not in kwargs:
+            raise ValueError("'temperature' parameter is required for decision_mode='ai'")
+        temperature = kwargs["temperature"]
+        if "prompt_type" not in kwargs:
+            raise ValueError("'prompt_type' parameter is required for decision_mode='ai'")
+        prompt_type = kwargs["prompt_type"]
+        if "churn_rate" not in kwargs:
+            raise ValueError("'churn_rate' parameter is required for decision_mode='ai'")
+        churn_rate = kwargs["churn_rate"]
 
-    # Create agents with cleaner parameter passing
+    elif decision_mode == "adaptive":
+        if "k" not in kwargs:
+            raise ValueError("'k' parameter is required for decision_mode='adaptive'")
+        k = kwargs["k"]
+
+    if decision_mode not in ["ai", "adaptive", "constant"]:
+        raise ValueError(f"Invalid decision_mode: {decision_mode}. Must be 'ai', 'adaptive', or 'constant'")
+    
+    # Extract domain parameters
+    sheep_capacity = kwargs["sheep_max"]
+    starting_sheep = kwargs["s_start"]
+    starting_wolves = kwargs["w_start"]
+    alpha = kwargs["alpha"]
+    dt = kwargs["dt"]
+    
+    # Create domain
+    model_domain = kwargs.pop("domain", Domain(
+        sheep_capacity=sheep_capacity,
+        starting_sheep=starting_sheep,
+        alpha=alpha,
+        dt=dt,
+    ))
+    
+    # Extract agent parameters
+    beta = kwargs["beta"]
+    gamma = kwargs["gamma"]
+    delta = kwargs["delta"]
+    
+    theta_start = kwargs["theta_start"]
+    randomize_theta = kwargs["randomize_theta"]
+    eps = kwargs["eps"]
+    
+    # Separate options from parameters
+    opts = {
+        # Options can have defaults
+        "save_results": kwargs.pop("save_results", True),
+        "path": kwargs.pop("path", "../data/results"),
+        "step_print": kwargs.pop("step_print", False),
+        "max_tokens": kwargs.pop("max_tokens", 512),  # Reasonable default for token limit
+        "threads": kwargs.pop("threads", None),
+    }
+    
+    # Create agents
     model_agents = Agents.create_agents(
         n_wolves=starting_wolves,
+        decision_mode=decision_mode,
+        # Wolves do not use alpha!
         beta=beta,
         gamma=gamma,
         delta=delta,
-        theta=theta,
-        opts=opts,
-        initial_step=0,  # Start at step 0
+        theta_start=theta_start,
+        randomize_theta=randomize_theta,
+        eps=eps,
+        k=kwargs.get("k"),  # This will be None when not in adaptive mode
+        model_name=kwargs.get("model_name"),  # Will be None when not in AI mode
+        temperature=kwargs.get("temperature"),  # Will be None when not in AI mode
+        prompt_type=kwargs.get("prompt_type"),  # Will be None when not in AI mode
+        churn_rate=kwargs.get("churn_rate"),  # Will be None when not in AI mode
+        initial_step=0,
     )
-
+    
     # Extract model parameters
-    steps = defaults.get("steps")
-    dt = defaults.get("dt")
-
+    steps = kwargs["steps"]
+    dt = kwargs["dt"]
+    
     # Create the model
     model = Model(domain=model_domain, agents=model_agents, steps=steps, dt=dt)
-
-    # Set options on the model too
+    
+    # Set options on the model
     model.opts.update(opts)
-
-    # Add remaining parameters to model.params
-    model.params.update(defaults)
-
+    
+    # Add all parameters to model.params
+    model.params.update(kwargs)
+    
     return model
 
 
@@ -178,7 +220,7 @@ class ModelRun:
         domain.reset_accumulators()
 
         # 2. Process wolves
-        agents.process_step_sync(params, domain, self.current_step)
+        agents.process_step_sync(domain, self.current_step)
 
         # 3. Process wolf effects on the domain (apply accumulated changes)
         # Note that in the next two steps
@@ -324,6 +366,7 @@ class ModelRun:
             },
             "agents": self.model.agents.get_agents_summary(),
             "usage": self.usage.to_dict(),
+            "threads": self.model.opts.get("threads", None),
         }
 
         return detailed_results

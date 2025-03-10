@@ -149,9 +149,9 @@ def generate_prompt_sweep_configs(preset):
     Generate a list of configurations for a prompt sweep.
 
     For each value in the sweep variable, creates configurations for:
-    1. Each prompt_type (high, medium, low)
-    2. A theta function run (no_ai: true)
-    3. A constant theta run (no_ai: true, k=0) - only if theta_star is specified in the preset
+    1. Each prompt_type (high, medium, low) with decision_mode="ai"
+    2. An adaptive theta run (decision_mode="adaptive")
+    3. A constant theta run (decision_mode="constant") - only if theta_start is specified in the preset
 
     Args:
         preset (dict): Preset configuration with sweep_variables, sweep_parameters, and fixed_parameters
@@ -162,10 +162,6 @@ def generate_prompt_sweep_configs(preset):
     fixed_params = preset.get("fixed_parameters", {}).copy()
     sweep_params = preset.get("sweep_parameters", {})
     sweep_variables = preset.get("sweep_variables", [])
-
-    # Check if theta_star is specified in the preset
-    has_theta_star = "theta_star" in fixed_params
-    theta_star = fixed_params.get("theta_star") if has_theta_star else None
 
     # Validate sweep variables - prompt sweeps should have exactly one sweep variable
     if not sweep_variables:
@@ -210,38 +206,24 @@ def generate_prompt_sweep_configs(preset):
             # Add sweep parameter and prompt type
             config[var] = value
             config["prompt_type"] = prompt_type
-            config["no_ai"] = False  # Ensure AI is enabled for prompt runs
+            config["decision_mode"] = "ai"  # Ensure AI is enabled for prompt runs
 
             # Create a unique path for this configuration
             config["path"] = f"{base_path}/{var}_{value}_prompt_{prompt_type}"
 
             configs.append(config)
 
-        # Add a theta function run (no_ai: true) with the same parameters
+        # Add an adaptive theta run with the same parameters
         config = fixed_params.copy()
         config[var] = value
-        config["no_ai"] = True
-
-        # Use the k value from fixed parameters if available
-        k_value = fixed_params.get("k", 1.0)
+        config["decision_mode"] = "adaptive"
+        k_value = fixed_params.get("k")
+        config["k"] = k_value
 
         # Create a unique path for this configuration
         config["path"] = f"{base_path}/{var}_{value}_theta_k_{k_value}"
 
         configs.append(config)
-
-        # Add a constant theta run only if theta_star is specified in the preset
-        if has_theta_star:
-            config = fixed_params.copy()
-            config[var] = value
-            config["no_ai"] = True
-            config["k"] = 0  # Set k=0 to ensure theta doesn't change
-            # theta_star is already in fixed_params, so we don't need to set it again
-
-            # Create a unique path for this configuration
-            config["path"] = f"{base_path}/{var}_{value}_theta_constant_{theta_star}"
-
-            configs.append(config)
 
     print(f"Generated {len(configs)} configurations for prompt sweep")
     return configs
@@ -436,7 +418,7 @@ def create_prompt_sweep_visualization(sweep_stats, results, preset, output_dir):
     Create a grid visualization of simulation results for prompt sweeps.
 
     Arranges plots in a grid where:
-    - Columns are the different prompt types (high, medium, low), the theta function,
+    - Columns are the different prompt types (high, medium, low), the adaptive theta function,
       and constant theta (if specified in the preset)
     - Rows are the values of the sweep parameter
 
@@ -460,12 +442,12 @@ def create_prompt_sweep_visualization(sweep_stats, results, preset, output_dir):
     # Extract unique values for the sweep variable
     unique_values = sorted(set(stat["config"].get(var) for stat in sweep_stats))
 
-    # Check if theta_star is specified in the preset
-    has_theta_star = "theta_star" in preset.get("fixed_parameters", {})
+    # Check if theta_start is specified in the preset
+    has_theta_start = "theta_start" in preset.get("fixed_parameters", {})
 
-    # Define the column order: prompt types (high, medium, low) + theta function + constant theta (if applicable)
-    column_types = ["high", "medium", "low", "theta"]
-    if has_theta_star:
+    # Define the column order: prompt types (high, medium, low) + adaptive theta + constant theta (if applicable)
+    column_types = ["high", "medium", "low", "adaptive"]
+    if has_theta_start:
         column_types.append("constant")
 
     # Determine grid dimensions
@@ -488,10 +470,6 @@ def create_prompt_sweep_visualization(sweep_stats, results, preset, output_dir):
         if sheep_history:
             sheep_max = max(sheep_max, max(sheep_history))
 
-    # Override with a fixed limit for prettier visualization if needed
-    # Uncomment and set this value if you want a fixed y-axis limit
-    # fixed_y_limit = 200
-
     # Create the figure with appropriate size
     fig_width = max(12, 2 + 2.5 * n_cols)
     fig_height = max(8, 2 + 1.5 * n_rows)
@@ -507,7 +485,7 @@ def create_prompt_sweep_visualization(sweep_stats, results, preset, output_dir):
             config = result_entry["config"]
             path = config.get("path", "")
             print(
-                f"Config: var={config.get(var)}, no_ai={config.get('no_ai')}, k={config.get('k')}, path={path}"
+                f"Config: var={config.get(var)}, decision_mode={config.get('decision_mode')}, path={path}"
             )
 
     # Create the plots
@@ -533,20 +511,18 @@ def create_prompt_sweep_visualization(sweep_stats, results, preset, output_dir):
                 if (
                     entry_config.get(var) == sweep_val
                     and entry_config.get("prompt_type") == col_type
-                    and not entry_config.get("no_ai", False)
+                    and entry_config.get("decision_mode") == "ai"
                 ):
                     matching_result = result_entry
                     print(f"  Found prompt match: {entry_path}")
                     break
 
-            # For theta function (adaptive)
-            elif col_type == "theta":
-                # Simplified matching logic - just check for no_ai=True and not constant theta
+            # For adaptive theta function
+            elif col_type == "adaptive":
                 if (
                     entry_config.get(var) == sweep_val
-                    and entry_config.get("no_ai", False)
-                    and "theta_constant_" not in entry_path
-                    and "prompt_" not in entry_path
+                    and entry_config.get("decision_mode") == "adaptive"
+                    and "theta_k_" in entry_path
                 ):
                     matching_result = result_entry
                     print(f"  Found adaptive theta match: {entry_path}")
@@ -556,7 +532,7 @@ def create_prompt_sweep_visualization(sweep_stats, results, preset, output_dir):
             elif col_type == "constant":
                 if (
                     entry_config.get(var) == sweep_val
-                    and entry_config.get("no_ai", False)
+                    and entry_config.get("decision_mode") == "constant"
                     and "theta_constant_" in entry_path
                 ):
                     matching_result = result_entry
@@ -596,7 +572,6 @@ def create_prompt_sweep_visualization(sweep_stats, results, preset, output_dir):
             ax2.axis("off")  # Hide the second y-axis
 
         # Set y-limit for sheep and wolves
-        # If you want a fixed limit, use fixed_y_limit instead of sheep_max
         ax.set_ylim(0, sheep_max * 1.1)  # Add 10% margin
 
         # Remove ticks and labels for a cleaner look
@@ -614,9 +589,9 @@ def create_prompt_sweep_visualization(sweep_stats, results, preset, output_dir):
         ax.axis("off")
 
     # Get theta_star from fixed parameters for labeling
-    theta_star = preset.get("fixed_parameters", {}).get("theta_star")
+    theta_star = preset.get("fixed_parameters", {}).get("theta_start")
 
-    # Add column labels (prompt types, theta function, and constant theta if applicable)
+    # Add column labels (prompt types, adaptive theta, and constant theta if applicable)
     this_k = preset.get("fixed_parameters", {}).get("k")
     column_labels = [
         "Prompt: High Info",
@@ -832,9 +807,9 @@ def main():
     experiment_config = {
         "timestamp": timestamp,
         "preset_name": args.preset,
-        "preset_version": preset.get("preset_version", "1.0"),
+        "preset_version": preset.get("preset_version"),
         "preset_type": preset_type,
-        "preset_description": preset.get("preset_description", ""),
+        "preset_description": preset.get("preset_description"),
         "num_configurations": len(configs),
         "successful_runs": successful,
         "sweep_statistics": sweep_stats,

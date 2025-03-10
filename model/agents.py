@@ -1,5 +1,4 @@
 # agents.py
-
 import asyncio
 import random
 from dataclasses import dataclass, field
@@ -7,18 +6,17 @@ from typing import Any
 
 THREADS_DEFAULT = 10
 
-
 @dataclass
 class Wolf:
     wolf_id: int
-    beta: float = None
-    gamma: float = None
-    delta: float = None
-    alive: bool = True
+    beta: float
+    gamma: float
+    delta: float
+    alive: bool
+    starting_theta: float
     born_at_step: int = field(default=None)
     died_at_step: int = field(default=None)
-    starting_theta: float = None
-    # All thetas for every step (always populated)
+    # All thetas for every step (always populated regardless of churn rate)
     thetas: list[float] = field(default_factory=list)
     # Decision history (only populated when a decision is made)
     decision_history: dict = field(
@@ -30,8 +28,8 @@ class Wolf:
             "prompts": [],  # prompts used for those decisions
         }
     )
-    last_sheep_state: float = None  # Add this field
-    last_wolves_count: int = None  # Add this field
+    last_sheep_state: float = field(default=None)
+    last_wolves_count: int = field(default=None)
 
     def to_dict(self) -> dict:
         """
@@ -76,9 +74,7 @@ class Wolf:
         else:
             self.starting_theta = random.uniform(0, 1)
 
-    def handle_birth(self, step: int, theta: float | None = None):
-        self.born_at_step = step
-        self.alive = True
+    def handle_birth(self, step: int, theta: float):
         self.thetas = []
         self.decision_history = {
             "history_steps": [],
@@ -88,13 +84,7 @@ class Wolf:
             "prompts": [],
         }
 
-        # Set the starting theta
-        if theta is not None:
-            self.handle_starting_theta(theta)
-        else:
-            self.handle_starting_theta(None)
-
-        self.thetas.append(self.starting_theta)
+        self.thetas.append(theta)
 
     def handle_death(self, step: int):
         self.alive = False
@@ -108,27 +98,29 @@ class Wolf:
             # If no previous theta exists, use the starting theta
             self.thetas.append(self.starting_theta)
 
-    def set_theta(self, step: int, theta: float, domain, params: dict):  # no ai
+    def set_theta(self, step: int, domain, params: dict):  # no ai
         """
         Set theta value for this wolf (used in no_ai mode).
 
         Logic:
-        1. If theta_star is provided in params, use it as a constant
-        2. Otherwise, calculate theta using the function that responds to prey scarcity
+        1. If decision_mode is constant, use the theta_start provided in params
+        2. If decision_mode is adaptive, calculate theta using the function that responds to prey scarcity
 
         Args:
             step: Current simulation step
-            theta: Fixed theta value if provided
+            decision_mode: "constant" or "adaptive"
             domain: Domain object containing sheep state and capacity
             params: Parameters dictionary for theta function configuration
 
         Returns:
             The set theta value
         """
+        decision_mode = params.get("decision_mode")
+
         # Check if theta_star is provided in params (not None)
-        if "theta_star" in params and params["theta_star"] is not None:
+        if decision_mode == "constant":
             # Use theta_star as a constant value
-            constant_theta = params["theta_star"]
+            constant_theta = params["theta_start"]
             self.thetas.append(constant_theta)
             self.decision_history["history_steps"].append(step)
             self.decision_history["new_thetas"].append(constant_theta)
@@ -143,13 +135,9 @@ class Wolf:
 
         else:
             # Calculate theta using the function: θ(s) = 1/(1 + k*s0/(s + ε))
-            k = params.get("k", 1.0)  # Sensitivity parameter
-            s0 = params.get(
-                "sheep_max", domain.sheep_capacity
-            )  # Reference sheep population
-            epsilon = params.get(
-                "eps", 0.0001
-            )  # Small constant to avoid division by zero
+            k = params.get("k")  # Sensitivity parameter
+            s0 = params.get("sheep_max")  # Reference sheep population
+            epsilon = params.get("eps")  # Small constant to avoid division by zero
             sheep_state = domain.sheep_state
 
             # Calculate theta using the function from the methods notebook
@@ -211,7 +199,7 @@ class Wolf:
 
         return wolf_resp.theta
 
-    def process_step(self, params, domain, step):
+    def process_step(self, step, domain, params):
         """
         Process a single step for this wolf, calculating its contribution to the
         population dynamics.
@@ -254,68 +242,92 @@ class Wolf:
 class Agents:
     def __init__(
         self,
-        beta: float = None,
-        gamma: float = None,
-        delta: float = None,
-        opts: dict[str, Any] = field(default_factory=dict),
+        params: dict[str, Any],
+        initial_step: int,
+        threads: int = THREADS_DEFAULT,
     ):
         """
         Minimal initialization for Agents class.
         Most initialization logic is handled by the create_agents factory method
         since this class will be instantiated once per model run.
         """
-        self.beta = beta
-        self.gamma = gamma
-        self.delta = delta
-        self.wolves: list[Wolf] = []
-        self.opts = opts
-        self.churn_rate = opts.get("churn_rate")
-        self.average_thetas: list[float] = []
-        self.last_wolf_death_step: int = None
+        self.params = params
+        self.initial_step = initial_step
+        self.threads = threads
+        self.wolves = []
+        self.average_thetas = []
+        self.last_wolf_death_step = None
 
     @staticmethod
     def create_agents(
-        n_wolves: int = None,
-        beta: float = None,
-        gamma: float = None,
-        delta: float = None,
-        theta: float = None,
-        opts: dict[str, Any] = None,
-        initial_step: int = None,
+        n_wolves: int,
+        decision_mode: str,
+        beta: float,
+        gamma: float,
+        delta: float,
+        theta_start: float,
+        randomize_theta: bool,
+        eps: float,
+        k: float | None,
+        model_name: str | None,
+        temperature: float | None,
+        prompt_type: str | None,
+        churn_rate: float | None,
+        initial_step: int,
+        threads: int = THREADS_DEFAULT,
     ) -> "Agents":
         """
         Create a new Agents instance with n_wolves.
         """
-        if opts is None:
-            opts = {}
 
-        agents = Agents(beta=beta, gamma=gamma, delta=delta, opts=opts)
+        params = {
+            "n_wolves": n_wolves,
+            "decision_mode": decision_mode,
+            "beta": beta,
+            "gamma": gamma,
+            "delta": delta,
+            "theta_start": theta_start,
+            "randomize_theta": randomize_theta,
+            "eps": eps,
+            "k": k,
+            "model_name": model_name,
+            "temperature": temperature,
+            "prompt_type": prompt_type,
+            "churn_rate": churn_rate,
+            "threads": threads,
+        }
 
-        # Initialize with proper theta values
-        default_theta = (
-            theta if theta is not None else 0.5
-        )  # Ensure default_theta is never None
+        agents = Agents(params, initial_step)
 
+        # Initialize wolves with either random or fixed theta
         for i in range(n_wolves):
+            # Determine starting theta based on randomization setting
+            if randomize_theta:
+                # Generate random theta
+                starting_theta_value = random.uniform(0, 1)
+            else:
+                # Use the configured theta_start
+                starting_theta_value = theta_start
+                
             wolf = Wolf(
                 wolf_id=i,
                 beta=beta,
                 gamma=gamma,
                 delta=delta,
+                alive=True,
+                starting_theta=starting_theta_value,
+                last_sheep_state=None,
+                last_wolves_count=None
             )
-            wolf.handle_birth(
-                initial_step, default_theta
-            )  # Pass default_theta directly
+            wolf.handle_birth(initial_step, starting_theta_value)
             agents.wolves.append(wolf)
 
-        # Initialize average theta history with the initial theta
-        agents.average_thetas = [default_theta]
+        # Initialize average theta history with the initial average theta
+        # (which might vary if randomize_theta is True)
+        initial_avg_theta = sum(wolf.starting_theta for wolf in agents.wolves) / n_wolves
+        agents.average_thetas = [initial_avg_theta]
 
         return agents
-
-    @property
-    def wolves_count(self) -> int:
-        return len(self.wolves)
 
     @property
     def living_wolves_count(self) -> int:
@@ -351,13 +363,6 @@ class Agents:
     # History methods for convenience, working with data from
     # our attached collection of wolves.
 
-    def get_wolves_count_step(self, step: int) -> int:
-        """
-        Get the number of wolves at a given step.
-        """
-        # born before or on step
-        return sum(1 for wolf in self.wolves if wolf.born_at_step <= step)
-
     def get_living_wolves_count_step(self, step: int) -> int:
         """
         Get the number of living wolves at a given step.
@@ -381,22 +386,6 @@ class Agents:
 
         return [self.get_living_wolves_count_step(step) for step in range(max_step + 1)]
 
-    def get_living_wolves_step(self, step: int) -> list[Wolf]:
-        """
-        Get the living wolves at a given step.
-        """
-        # for alive and born before or on step, return wolf_id
-        return [
-            wolf for wolf in self.wolves if wolf.alive and wolf.born_at_step <= step
-        ]
-
-    def get_living_wolves_history(self) -> list[list[Wolf]]:
-        """
-        Get the history of living wolves.
-        This is a list of lists of wolves, one list per step.
-        """
-        return [self.get_living_wolves_step(step) for step in range(len(self.wolves))]
-
     def get_average_theta_history(self) -> list[float]:
         """
         Get the history of average theta values.
@@ -405,50 +394,6 @@ class Agents:
             A list of average theta values, one per step
         """
         return self.average_thetas
-
-    def get_decision_makers_at_step(self, step: int) -> list[int]:
-        """
-        Get IDs of wolves that made decisions at a specific step.
-        """
-        decision_makers = []
-        for wolf in self.wolves:
-            if step in wolf.decision_history["history_steps"]:
-                decision_makers.append(wolf.wolf_id)
-        return decision_makers
-
-    def get_decision_makers_history(self) -> list[list[int]]:
-        """
-        Get the history of decision makers.
-        """
-        return [
-            self.get_decision_makers_at_step(step) for step in range(len(self.wolves))
-        ]
-
-    def get_wolf_history_data(self) -> dict:
-        """
-        Get the history of wolf data.
-        """
-        return {
-            "wolves_count": self.get_wolves_count_history(),
-            "living_wolves_count": self.get_living_wolves_count_history(),
-            "living_wolves_history": self.get_living_wolves_history(),
-        }
-
-    def get_current_state(self) -> dict:
-        """
-        Get the current state of all wolves for snapshot creation.
-
-        Returns:
-            A dictionary containing:
-            - wolves_count: Number of living wolves
-            - current_thetas: List of current theta values for living wolves
-            - mean_theta: Average theta value across all living wolves
-        """
-        return {
-            "wolves_count": self.get_living_wolves_count(),
-            "current_thetas": self.get_current_thetas(),
-            "mean_theta": self.get_mean_theta(),
-        }
 
     def get_agents_summary(self) -> list[dict]:
         """
@@ -460,16 +405,33 @@ class Agents:
         return [wolf.to_dict() for wolf in self.wolves]
 
     # Note that heterogenous wolves would need additional logic
-    def birth_wolves(self, step: int, n_wolves: int, theta: float = None) -> None:
+    def birth_wolves(self, step: int, net_wolves_change: int) -> None:
         # Use the parameters stored at the Agents level
-        for _ in range(n_wolves):
+        for _ in range(net_wolves_change):
+            # Determine starting theta based on randomization setting
+            if self.params.get("randomize_theta", False):
+                # Generate random theta
+                starting_theta = random.uniform(0, 1)
+            else:
+                # Use the configured theta_start
+                starting_theta = self.params.get("theta_start")
+                
+            # Create a complete Wolf object with all required parameters
             new_wolf = Wolf(
                 wolf_id=len(self.wolves),
-                beta=self.beta,
-                gamma=self.gamma,
-                delta=self.delta,
+                beta=self.params.get("beta"),
+                gamma=self.params.get("gamma"),
+                delta=self.params.get("delta"),
+                alive=True,  # Wolf is born alive
+                starting_theta=starting_theta,  # Set the starting theta
+                last_sheep_state=None,  # Initialize with None
+                last_wolves_count=None,  # Initialize with None
+                born_at_step=step,  # (added comma)
+                died_at_step=None
             )
-            new_wolf.handle_birth(step, theta)
+            
+            # Now handle_birth can properly initialize the wolf's state
+            new_wolf.handle_birth(step, starting_theta)
             self.wolves.append(new_wolf)
 
     def kill_wolves(self, step: int, n_wolves: int) -> None:
@@ -539,14 +501,17 @@ class Agents:
             print(f"Wolves went extinct at step {step}")
             self.last_wolf_death_step = step
 
-    async def process_step_async(self, params, domain, step) -> None:
+    async def process_step_async(self, domain, step) -> None:
         """
         Process the step for all wolves, updating the domain directly.
-        With asynchronous churn: only a percentage of wolves update their theta each step,
-        but these updates are processed in parallel batches.
+        With churn: only a percentage of wolves update their theta each step,
+        These updates are processed in parallel batches, and any wolf is not
+        guaranteed to update in any specific order.
         """
         # Reset accumulators in the domain
         domain.reset_accumulators()
+
+        decision_mode = self.params.get("decision_mode")
 
         # Get current state values needed for decisions
         sheep_state = domain.sheep_state
@@ -569,22 +534,16 @@ class Agents:
         self.last_sheep_state = sheep_state
         self.last_wolves_count = living_wolves_count
 
-        if self.opts.get("no_ai", True):
-            # No AI mode - use set_theta with domain and params to calculate theta
-            # Make sure we're passing the sheep_max parameter
-            if "sheep_max" not in params:
-                params = params.copy()  # Create a copy to avoid modifying the original
-                params["sheep_max"] = sheep_max
-
+        if decision_mode == "constant" or decision_mode == "adaptive":
             for wolf in living_wolves:
                 # Don't pass theta parameter at all to force using the function
-                wolf.set_theta(step, None, domain, params)
-                domain_changes = wolf.process_step(params, domain, step)
+                wolf.set_theta(step, domain, self.params)
+                domain_changes = wolf.process_step(step, domain, self.params)
                 domain.step_accumulated_dw += domain_changes["dw"]
                 domain.step_accumulated_ds += domain_changes["ds"]
         else:
             # Simple adaptive churn with a minimum number of wolves updating
-            initial_wolf_count = params.get(
+            initial_wolf_count = self.params.get(
                 "initial_wolves", 10
             )  # Get initial wolf count from params
             min_wolves_to_update = max(
@@ -595,7 +554,7 @@ class Agents:
             churn_count = max(
                 min_wolves_to_update,  # Minimum number of wolves to update
                 int(
-                    self.living_wolves_count * self.churn_rate
+                    self.living_wolves_count * self.params.get("churn_rate")
                 ),  # Standard churn calculation
             )
 
@@ -610,11 +569,11 @@ class Agents:
                     wolf.copy_theta()
 
             # Process wolves in batches to respect thread limit
-            max_threads = params.get("threads", THREADS_DEFAULT)
-            prompt_type = self.opts.get("prompt_type", "high")
+            max_threads = self.params.get("threads")
+            prompt_type = self.params.get("prompt_type")
 
             # Get the model_name from params or model_names
-            model = self.opts.get("model_name")
+            model = self.params.get("model_name")
             # Process wolves in batches
             for i in range(0, len(wolves_to_update), max_threads):
                 batch = wolves_to_update[i : i + max_threads]
@@ -641,14 +600,14 @@ class Agents:
 
             # After all decisions are made, process the step for each wolf
             for wolf in living_wolves:
-                domain_changes = wolf.process_step(params, domain, step)
+                domain_changes = wolf.process_step(step, domain, self.params)
                 domain.step_accumulated_dw += domain_changes["dw"]
                 domain.step_accumulated_ds += domain_changes["ds"]
 
         # Calculate and store the average theta after all wolves have decided
         self.update_average_theta(append=True)
 
-    def process_step_sync(self, params, domain, step) -> None:
+    def process_step_sync(self, domain, step) -> None:
         """
         Synchronous wrapper around process_step_async.
         Process the step for all wolves, updating the domain directly.
@@ -663,11 +622,11 @@ class Agents:
                 import nest_asyncio
 
                 nest_asyncio.apply()
-                loop.run_until_complete(self.process_step_async(params, domain, step))
+                loop.run_until_complete(self.process_step_async(domain, step))
             else:
                 # Normal case - no running event loop
-                loop.run_until_complete(self.process_step_async(params, domain, step))
+                loop.run_until_complete(self.process_step_async(domain, step))
         except RuntimeError:
             # If we can't get a running event loop, create a new one
             # This is the safest approach for most environments
-            asyncio.run(self.process_step_async(params, domain, step))
+            asyncio.run(self.process_step_async(domain, step))
