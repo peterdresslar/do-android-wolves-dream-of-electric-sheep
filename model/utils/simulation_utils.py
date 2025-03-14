@@ -6,6 +6,7 @@ Mostly reference ODE functions
 import datetime
 import json
 import os
+import re
 
 import matplotlib.pyplot as plt  # type: ignore
 import numpy as np
@@ -263,28 +264,38 @@ def create_replot(path, width=12, dpi=100):
             prompt_type = parts[3] if parts[3] not in ["20", "19", "18"] else "None"
 
             if prompt_type == "None":
-                # Check if there's a theta_star value in the summary file
+                # Check if there's a decision_mode and theta_start value in the summary file
                 summary_path = os.path.join(
                     os.path.dirname(census_path), "..", "summary.md"
                 )
                 if os.path.exists(summary_path):
                     with open(summary_path) as f:
                         summary_text = f.read()
-                        if "theta_star" in summary_text:
-                            import re
-
+                        # Look for decision_mode
+                        decision_mode_match = re.search(
+                            r"decision_mode['\"]?: ?['\"]?([a-z]+)['\"]?", summary_text
+                        )
+                        decision_mode = decision_mode_match.group(1) if decision_mode_match else "ai"
+                        
+                        if decision_mode == "constant":
+                            # Look for theta_start
                             theta_match = re.search(
-                                r"theta_star['\"]?: ?([0-9.]+)", summary_text
+                                r"theta_start['\"]?: ?([0-9.]+)", summary_text
                             )
                             if theta_match:
-                                theta_star = float(theta_match.group(1))
-                                title = f"Population Dynamics with Constant Theta Value. Theta* = {theta_star}"
+                                theta_start = float(theta_match.group(1))
+                                title = f"Population Dynamics with Constant Theta Value. Theta = {theta_start}"
                             else:
-                                title = "Population Dynamics with Algorithmic Theta Function"
-                        else:
-                            title = (
-                                "Population Dynamics with Algorithmic Theta Function"
+                                title = "Population Dynamics with Constant Theta"
+                        elif decision_mode == "adaptive":
+                            # Look for k value
+                            k_match = re.search(
+                                r"k['\"]?: ?([0-9.]+)", summary_text
                             )
+                            k_value = float(k_match.group(1)) if k_match else 1.0
+                            title = f"Population Dynamics with Adaptive Theta Function. Sensitivity = {k_value}"
+                        else:
+                            title = "Population Dynamics with AI-determined theta values"
                 else:
                     title = "Population Dynamics with Algorithmic Theta Function"
             else:
@@ -326,6 +337,12 @@ def save_replot(path, output_path=None, width=12):
     plt.close(fig)
 
     return output_path
+
+def format_text(text):
+    """
+    Format text to be saved in a JSON file. Get rid of any problem characters.
+    """
+    return text.replace("\n", "<br>")
 
 
 #################################################################
@@ -371,6 +388,9 @@ def save_simulation_results(results, results_path=None):
     model_params = results.get("model_params", {})
     model_opts = results.get("model_opts", {})
 
+    print("model_opts", model_opts)
+    print("model_params", model_params)
+
     # Use model_names[0] if available, otherwise fall back to model_name
     if (
         "model_names" in model_params
@@ -381,7 +401,7 @@ def save_simulation_results(results, results_path=None):
     else:
         model_name = model_opts.get("model_name", "Model")
 
-    prompt_type = model_opts.get("prompt_type", "high")
+    prompt_type = model_params.get("prompt_type", "high")
     steps = model_params.get("steps", "steps")
     starting_sheep = model_params.get("s_start", "S0")
     starting_wolves = model_params.get("w_start", "W0")
@@ -618,12 +638,12 @@ def save_simulation_results(results, results_path=None):
             "born_at_step": wolf.get("born_at_step"),
             "died_at_step": wolf.get("died_at_step"),
             "thetas": wolf.get("thetas", []),
-            "decision_history": {
+            "decision_history": { # format prompts, explanations, and vocalizations in case they have problem characters
                 "history_steps": history_steps,
                 "new_thetas": new_thetas,
-                "prompts": prompts,
-                "explanations": explanations,
-                "vocalizations": vocalizations,
+                "prompts": [format_text(prompt) for prompt in prompts],
+                "explanations": [format_text(explanation) for explanation in explanations],
+                "vocalizations": [format_text(vocalization) for vocalization in vocalizations],
             },
         }
 
@@ -633,13 +653,12 @@ def save_simulation_results(results, results_path=None):
     # finally, write a plot and save it to the run_dir
     # donʻt display it.
 
-    if model_opts.get("no_ai", False):
-        if model_opts.get("theta_star", None):
-            title = f"Population Dynamics with Algorthmic Theta Function. Sensitivity = {model_params.get('k')}"
-
-        else:
-            title = f"Population Dynamics with Constant Theta Value. Theta* = {model_params.get('theta_star')}"
-    else:
+    decision_mode = model_params.get("decision_mode")
+    if decision_mode == "adaptive":
+        title = f"Population Dynamics with Adaptive Theta Function. Sensitivity = {model_params.get('k')}"
+    elif decision_mode == "constant":
+        title = f"Population Dynamics with Constant Theta Value. Theta = {model_params.get('theta_start')}"
+    else:  # AI mode
         title = f"Population Dynamics with AI-determined theta values. Model: {model_name}, Prompt Type: {prompt_type} information."
 
     fig = create_population_plot(results, title=title)

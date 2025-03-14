@@ -76,6 +76,7 @@ class Wolf:
             self.starting_theta = random.uniform(0, 1)
 
     def handle_birth(self, step: int, theta: float):
+        self.born_at_step = step  # Set the born_at_step attribute
         self.thetas = []
         self.decision_history = {
             "history_steps": [],
