@@ -238,15 +238,42 @@ def run_simulation(config):
         end_time = time.time()
 
         print(
-            f"Simulation completed in {end_time - start_time:.2f} seconds: {config.get('path', 'unknown')}"
+            f"Simulation completed in {round4(end_time - start_time)} seconds: {config.get('path', 'unknown')}"
         )
 
         # Add runtime to results
         results["runtime"] = end_time - start_time
+
+        # Check if we have wolf history data
+        if not results.get("wolf_history"):
+            return False, config, {"error": "No wolf history data generated"}
+
+        # Check if initial wolf count matches expected
+        initial_wolves = results.get("wolf_history", [0])[0]
+        expected_wolves = config.get("initial_wolves", 10)
+        if initial_wolves != expected_wolves:
+            return (
+                False,
+                config,
+                {
+                    "error": f"Initial wolf count mismatch. Expected {expected_wolves}, got {initial_wolves}",
+                    "partial_results": results,
+                },
+            )
+
         return True, config, results
     except Exception as e:
-        print(f"Error running simulation: {str(e)}")
-        return False, config, {"error": str(e)}
+        import traceback
+
+        error_details = {
+            "error": str(e),
+            "traceback": traceback.format_exc(),
+            "config": {
+                k: v for k, v in config.items() if k != "path"
+            },  # Include config except path
+        }
+        print(f"Error running simulation: {str(e)}\n{traceback.format_exc()}")
+        return False, config, error_details
 
 
 def create_sweep_visualization(sweep_stats, results, preset, output_dir):

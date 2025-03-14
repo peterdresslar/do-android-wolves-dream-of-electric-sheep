@@ -377,6 +377,10 @@ def parse_wolf_response(
     """
     # First try to parse as JSON
     try:
+        # Strip any potential whitespace or non-JSON characters
+        response = response.strip()
+        # Handle potential single quotes by replacing with double quotes
+        response = re.sub(r"(?<!\\)'([^']*)'", r'"\1"', response)
         parsed = json.loads(response)
         theta_val = float(parsed.get("theta", default))
         explanation = parsed.get("explanation")

@@ -390,9 +390,18 @@ class Agents:
         """
         # Determine the maximum step from theta history length
         # This ensures we cover all simulation steps, not just birth/death events
-        max_step = (
-            max(len(wolf.thetas) for wolf in self.wolves) - 1 if self.wolves else 0
-        )
+        max_step = 0
+
+        # Check theta histories
+        if self.wolves:
+            max_step = max(len(wolf.thetas) for wolf in self.wolves) - 1
+
+        # Check birth/death steps
+        for wolf in self.wolves:
+            if wolf.born_at_step is not None:
+                max_step = max(max_step, wolf.born_at_step)
+            if wolf.died_at_step is not None:
+                max_step = max(max_step, wolf.died_at_step)
 
         # Ensure we have at least as many steps as average_thetas
         if hasattr(self, "average_thetas") and self.average_thetas:

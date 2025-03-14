@@ -23,7 +23,39 @@
         "w_start": 10,
         "churn_rate": 0.1,
         "decision_mode": "ai",
+        "prompt_type": "high",
+        "step_print": true,
+        "save_results": true,
         "path": "data/results/base"
+      }
+    },
+    {
+      "preset_name": "debug-single",
+      "preset_version": "1.2",
+      "preset_type": "single",
+      "preset_description": "A simple test run",
+      "fixed_parameters": {
+          "model_name": "gpt-4o-mini",
+          "temperature": 0.6,
+          "max_tokens": 512,
+          "dt": 0.1,
+          "steps": 10,
+          "sheep_max": 200,
+          "eps": 0.0001,
+          "alpha": 1.0,
+          "beta": 1.0,
+          "gamma": 1.0,
+          "delta": 1.0,
+          "theta_start": 0.5,
+          "randomize_theta": false,
+          "s_start": 10,
+          "w_start": 10,
+          "decision_mode": "ai",
+          "prompt_type": "high",
+          "churn_rate": 0.5,
+          "path": "debug_test",
+          "step_print": true,
+          "save_results": true
       }
     },
     {
@@ -129,16 +161,17 @@
       "sweep_parameters": {
         "s_start_values": [
           17,
+          8,
           2
         ]
       },
       "fixed_parameters": {
         "model_name": "gpt-4o-mini",
-        "temperature": 0.2,
+        "temperature": 0.6,
         "max_tokens": 512,
         "dt": 0.1,
-        "steps": 25,
-        "sheep_max": 250,
+        "steps": 100,
+        "sheep_max": 200,
         "eps": 0.0001,
         "alpha": 1,
         "beta": 0.1,

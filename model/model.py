@@ -10,7 +10,7 @@ from model.agents import Agents
 from model.domain import Domain
 from model.utils.data_types import Usage, set_current_usage
 from model.utils.init_utils import initialize_utils
-from model.utils.simulation_utils import save_simulation_results
+from model.utils.simulation_utils import round4, save_simulation_results
 
 MODEL_PARAMS = {  # Model parameters have an effect on the outcome of the simulation, and thus should NEVER have default values.
     "decision_mode",  # "ai", "adaptive", "constant"
@@ -328,7 +328,7 @@ class ModelRun:
             self._save_simulation_results(runtime)
 
         if opts.get("step_print"):
-            print(f"Simulation completed in {runtime} seconds.")
+            print(f"Simulation completed in {round4(runtime)} seconds.")
             print(f"Usage: {self.usage.to_dict()}")
 
         return results

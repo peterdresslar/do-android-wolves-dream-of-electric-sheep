@@ -275,8 +275,12 @@ def create_replot(path, width=12, dpi=100):
                         decision_mode_match = re.search(
                             r"decision_mode['\"]?: ?['\"]?([a-z]+)['\"]?", summary_text
                         )
-                        decision_mode = decision_mode_match.group(1) if decision_mode_match else "ai"
-                        
+                        decision_mode = (
+                            decision_mode_match.group(1)
+                            if decision_mode_match
+                            else "ai"
+                        )
+
                         if decision_mode == "constant":
                             # Look for theta_start
                             theta_match = re.search(
@@ -289,13 +293,13 @@ def create_replot(path, width=12, dpi=100):
                                 title = "Population Dynamics with Constant Theta"
                         elif decision_mode == "adaptive":
                             # Look for k value
-                            k_match = re.search(
-                                r"k['\"]?: ?([0-9.]+)", summary_text
-                            )
+                            k_match = re.search(r"k['\"]?: ?([0-9.]+)", summary_text)
                             k_value = float(k_match.group(1)) if k_match else 1.0
                             title = f"Population Dynamics with Adaptive Theta Function. Sensitivity = {k_value}"
                         else:
-                            title = "Population Dynamics with AI-determined theta values"
+                            title = (
+                                "Population Dynamics with AI-determined theta values"
+                            )
                 else:
                     title = "Population Dynamics with Algorithmic Theta Function"
             else:
@@ -338,11 +342,19 @@ def save_replot(path, output_path=None, width=12):
 
     return output_path
 
-def format_text(text):
+
+def format_output(text):
     """
     Format text to be saved in a JSON file. Get rid of any problem characters.
     """
-    return text.replace("\n", "<br>")
+    if text is None:
+        return ""
+    if isinstance(text, list):
+        return [format_output(item) for item in text]
+    elif isinstance(text, dict):
+        return {key: format_output(value) for key, value in text.items()}
+    else:
+        return text.replace("\n", "<br>")
 
 
 #################################################################
@@ -497,6 +509,8 @@ def save_simulation_results(results, results_path=None):
     prompt_type = results.get("prompt_type", "high")
 
     usage = results.get("usage", {})  # sent with to_dict()
+    # format usage.cost to 4 decimal places
+    usage["cost"] = round(usage.get("cost", 0), 4)
 
     summary_lines = [
         "# Simulation Summary",
@@ -638,12 +652,16 @@ def save_simulation_results(results, results_path=None):
             "born_at_step": wolf.get("born_at_step"),
             "died_at_step": wolf.get("died_at_step"),
             "thetas": wolf.get("thetas", []),
-            "decision_history": { # format prompts, explanations, and vocalizations in case they have problem characters
+            "decision_history": {  # format prompts, explanations, and vocalizations in case they have problem characters
                 "history_steps": history_steps,
                 "new_thetas": new_thetas,
-                "prompts": [format_text(prompt) for prompt in prompts],
-                "explanations": [format_text(explanation) for explanation in explanations],
-                "vocalizations": [format_text(vocalization) for vocalization in vocalizations],
+                "prompts": [format_output(prompt) for prompt in prompts],
+                "explanations": [
+                    format_output(explanation) for explanation in explanations
+                ],
+                "vocalizations": [
+                    format_output(vocalization) for vocalization in vocalizations
+                ],
             },
         }
 
