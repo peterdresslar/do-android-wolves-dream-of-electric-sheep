@@ -213,9 +213,9 @@ class Wolf:
             A dictionary with the wolf's contributions to population changes
         """
         if not self.alive:
-            return {"dw": 0, "ds": 0}
-
-        dt = params.get("dt", 0.02)
+            return {"dw": 0, "ds": 0}  # dead wolves don't contribute to population change
+        
+        dt = params.get("dt")
         s = domain.sheep_state  # Get sheep state from domain
 
         # Get the current theta (hunting intensity)
@@ -270,6 +270,7 @@ class Agents:
         beta: float,
         gamma: float,
         delta: float,
+        dt: float,
         theta_start: float,
         randomize_theta: bool,
         eps: float,
@@ -291,6 +292,7 @@ class Agents:
             "beta": beta,
             "gamma": gamma,
             "delta": delta,
+            "dt": dt,
             "theta_start": theta_start,
             "randomize_theta": randomize_theta,
             "eps": eps,

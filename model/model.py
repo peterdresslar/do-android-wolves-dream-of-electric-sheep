@@ -190,6 +190,7 @@ def initialize_model(**kwargs) -> Model:
         beta=beta,
         gamma=gamma,
         delta=delta,
+        dt=dt,
         theta_start=theta_start,
         randomize_theta=randomize_theta,
         eps=eps,
