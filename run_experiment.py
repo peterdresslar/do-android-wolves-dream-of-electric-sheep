@@ -372,6 +372,14 @@ def create_sweep_visualization(sweep_stats, results, preset, output_dir):
         wolf_history = sim_results.get("wolf_history", [])
         theta_history = sim_results.get("average_theta_history", [])
 
+        # If wolves go extinct, pad the remainder of theta history with the most recent value
+        if wolf_history and wolf_history[-1] == 0:
+            last_non_zero_idx = next((i for i, w in enumerate(wolf_history) if w > 0), 0)
+            modified_theta_history = theta_history[:last_non_zero_idx]
+            modified_theta_history.extend([theta_history[-1]] * (len(sheep_history) - last_non_zero_idx))
+        else:
+            modified_theta_history = theta_history
+
         # Create subplot
         ax = fig.add_subplot(gs[row + 1, col + 1])
 
@@ -383,9 +391,9 @@ def create_sweep_visualization(sweep_stats, results, preset, output_dir):
             ax.plot(steps, wolf_history, color="darkred", linewidth=1)
 
         # Create a twin axis for theta
-        if theta_history:
+        if modified_theta_history:
             ax2 = ax.twinx()
-            ax2.plot(steps, theta_history, color="darkgreen", linewidth=1)
+            ax2.plot(steps, modified_theta_history, color="darkgreen", linewidth=1)
             ax2.set_ylim(0, 1)
             ax2.axis("off")  # Hide the second y-axis
 
@@ -415,8 +423,9 @@ def create_sweep_visualization(sweep_stats, results, preset, output_dir):
         ax.text(0.5, 0.5, f"{label_var}={val}", ha="center", va="center")
         ax.axis("off")
 
-    # Add a title
-    plt.suptitle(f"Parameter Sweep: {preset.get('preset_name', 'Unnamed')}")
+    # Add a title + \n + subtitle
+    plot_title = f"{preset.get('preset_name', 'Parameter Sweep')}\n{preset.get('preset_description', '')}"
+    plt.suptitle(plot_title)
 
     # Add a small legend in the top-left corner
     legend_ax = fig.add_subplot(gs[0, 0])
