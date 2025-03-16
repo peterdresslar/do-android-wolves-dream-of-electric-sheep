@@ -265,7 +265,7 @@ class Agents:
 
     @staticmethod
     def create_agents(
-        n_wolves: int,
+        w_start: int,
         decision_mode: str,
         beta: float,
         gamma: float,
@@ -282,11 +282,11 @@ class Agents:
         threads: int = THREADS_DEFAULT,
     ) -> "Agents":
         """
-        Create a new Agents instance with n_wolves.
+        Create a new Agents instance with w_start wolves.
         """
 
         params = {
-            "n_wolves": n_wolves,
+            "w_start": w_start,
             "decision_mode": decision_mode,
             "beta": beta,
             "gamma": gamma,
@@ -307,7 +307,7 @@ class Agents:
         agents = Agents(params, initial_step)
 
         # Initialize wolves with either random or fixed theta
-        for i in range(n_wolves):
+        for i in range(w_start):
             # Determine starting theta based on randomization setting
             if randomize_theta:
                 # Generate random theta
@@ -332,7 +332,7 @@ class Agents:
         # Initialize average theta history with the initial average theta
         # (which might vary if randomize_theta is True)
         initial_avg_theta = (
-            sum(wolf.starting_theta for wolf in agents.wolves) / n_wolves
+            sum(wolf.starting_theta for wolf in agents.wolves) / w_start
         )
         agents.average_thetas = [initial_avg_theta]
 
@@ -452,12 +452,12 @@ class Agents:
             new_wolf.handle_birth(step, starting_theta)
             self.wolves.append(new_wolf)
 
-    def kill_wolves(self, step: int, n_wolves: int) -> None:
+    def kill_wolves(self, step: int, net_wolves_change: int) -> None:
         """
         For now we pick the oldest wolves, but this would not be a good strategy
         for heterogenous wolves.
         """
-        num_wolves = min(n_wolves, self.living_wolves_count)
+        num_wolves = min(net_wolves_change, self.living_wolves_count)
 
         # Sort wolves by ID (oldest first)
         wolves_by_oldest = sorted(

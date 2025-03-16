@@ -184,7 +184,7 @@ def initialize_model(**kwargs) -> Model:
 
     # Create agents
     model_agents = Agents.create_agents(
-        n_wolves=starting_wolves,
+        w_start=starting_wolves,
         decision_mode=decision_mode,
         # Wolves do not use alpha!
         beta=beta,
