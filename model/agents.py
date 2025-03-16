@@ -135,20 +135,15 @@ class Wolf:
             return constant_theta
 
         elif decision_mode == "adaptive":
-            # Calculate theta using the function: θ(s) = 1/(1 + k*s0/(s + ε))
             k = params.get("k")
             if k is None:
-                # This is a critical error - k must be provided for adaptive mode
-                raise ValueError(
-                    "Parameter 'k' is required for adaptive mode but was not provided"
-                )
+                raise ValueError("Parameter 'k' is required for adaptive mode but was not provided")
 
-            s0 = domain.sheep_capacity  # Reference sheep population
-            epsilon = params.get("eps")  # Small constant to avoid division by zero
+            sheep_max = domain.sheep_capacity
+            epsilon = params.get("eps")
             sheep_state = domain.sheep_state
 
-            # Calculate theta using the function from the methods notebook
-            calculated_theta = 1.0 / (1.0 + k * s0 / (sheep_state + epsilon))
+            calculated_theta = 1.0 / (1.0 + k * sheep_max / (sheep_state + epsilon))
 
             self.thetas.append(calculated_theta)
             self.decision_history["history_steps"].append(step)
@@ -566,11 +561,9 @@ class Agents:
                 domain.step_accumulated_ds += domain_changes["ds"]
         else:
             # Simple adaptive churn with a minimum number of wolves updating
-            initial_wolf_count = self.params.get(
-                "initial_wolves", 10
-            )  # Get initial wolf count from params
+            w_start = self.params.get("w_start")  # Get initial wolf count from params
             min_wolves_to_update = max(
-                1, initial_wolf_count // 2
+                1, w_start // 2
             )  # At least half the initial wolves
 
             # Calculate churn count with a minimum floor

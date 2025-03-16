@@ -250,7 +250,7 @@ def run_simulation(config):
 
         # Check if initial wolf count matches expected
         initial_wolves = results.get("wolf_history", [0])[0]
-        expected_wolves = config.get("initial_wolves", 10)
+        expected_wolves = config.get("w_start")
         if initial_wolves != expected_wolves:
             return (
                 False,
