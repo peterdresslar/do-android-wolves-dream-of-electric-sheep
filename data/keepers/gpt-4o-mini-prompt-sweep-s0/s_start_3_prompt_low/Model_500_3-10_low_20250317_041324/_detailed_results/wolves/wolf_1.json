@@ -1,0 +1,36 @@
+{
+    "wolf_id": 1,
+    "beta": 0.1,
+    "gamma": 1.5,
+    "delta": 0.75,
+    "alive": false,
+    "born_at_step": 0,
+    "died_at_step": 1,
+    "thetas": [
+        0.14846078902325233,
+        0.25,
+        0.5
+    ],
+    "decision_history": {
+        "history_steps": [
+            0,
+            1
+        ],
+        "new_thetas": [
+            0.25,
+            0.5
+        ],
+        "prompts": [
+            "",
+            ""
+        ],
+        "explanations": [
+            "I chose this theta because with a low number of sheep and a stable wolf population, hunting at maximum intensity could lead to competition and scarcity of food. By choosing a moderate intensity, I can conserve energy while still contributing to the pack's success without overexerting myself.",
+            "I chose this theta because the number of sheep has increased slightly, and the number of wolves has decreased. This suggests that there may be more opportunities for hunting without overwhelming competition from other wolves. A moderate intensity allows me to balance between conserving energy and taking advantage of the current situation."
+        ],
+        "vocalizations": [
+            "Growwllllllll...",
+            "Growwllllllll... I sense the shift in the pack and the prey!"
+        ]
+    }
+}

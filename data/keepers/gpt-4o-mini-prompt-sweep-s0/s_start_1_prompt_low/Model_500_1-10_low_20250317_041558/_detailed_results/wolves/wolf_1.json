@@ -1,0 +1,36 @@
+{
+    "wolf_id": 1,
+    "beta": 0.1,
+    "gamma": 1.5,
+    "delta": 0.75,
+    "alive": false,
+    "born_at_step": 0,
+    "died_at_step": 1,
+    "thetas": [
+        0.9360411629186702,
+        0.8,
+        0.6
+    ],
+    "decision_history": {
+        "history_steps": [
+            0,
+            1
+        ],
+        "new_thetas": [
+            0.8,
+            0.6
+        ],
+        "prompts": [
+            "",
+            "You are a wolf who can adjust hunting intensity (theta) between 0 and 1.<br>Normal wolves always hunt at maximum intensity (theta=1), but you can choose differently.<br><br>Current situation:<br>- Sheep: 1.04 (increased by 0.04)<br>- Wolves: 9.00 (decreased by 1.00)<br>- Your previous theta: 0.80<br>- The trend is that wolves (decreased) recently.<br>Choose your new theta (0-1) to help ensure your survival.<br>Remember: Other wolves are also trying to survive, but you don't control their choices.<br>Please provide a short explanation of your reasoning for choosing theta.<br>Please also provide a short vocalization expressing your wolf's attitude about the current situation.<br>Please respond with a JSON object in this format, where [your new theta] is a float between 0 and 1 with your new theta (up to 2 decimal places):<br><br>            {<br>                \"theta\": [your new theta],<br>                \"explanation\": \"I chose this theta because...\",<br>                \"vocalization\": \"Growwllllllll...\"<br>            }<br>            "
+        ],
+        "explanations": [
+            "I chose this theta because with 10 wolves and only 1 sheep, the competition is high. By reducing my hunting intensity, I can conserve energy and avoid drawing too much attention while still being ready to hunt if an opportunity arises. This balance helps ensure my survival in a challenging environment.",
+            "I chose this theta because the number of sheep has increased slightly, but the wolf population has decreased. This suggests that while there is a good opportunity for hunting, I need to be cautious to ensure my survival. A lower intensity allows me to conserve energy and avoid competition with other wolves, while still taking advantage of the available prey."
+        ],
+        "vocalizations": [
+            "Growwllllllll...",
+            "Growwllllllll..."
+        ]
+    }
+}

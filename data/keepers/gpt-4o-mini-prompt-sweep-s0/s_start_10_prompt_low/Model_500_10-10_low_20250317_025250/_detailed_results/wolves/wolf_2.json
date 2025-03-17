@@ -1,0 +1,48 @@
+{
+    "wolf_id": 2,
+    "beta": 0.1,
+    "gamma": 1.5,
+    "delta": 0.75,
+    "alive": false,
+    "born_at_step": 0,
+    "died_at_step": 3,
+    "thetas": [
+        0.3572504580260416,
+        0.5,
+        0.3,
+        0.5,
+        0.4
+    ],
+    "decision_history": {
+        "history_steps": [
+            0,
+            1,
+            2,
+            3
+        ],
+        "new_thetas": [
+            0.5,
+            0.3,
+            0.5,
+            0.4
+        ],
+        "prompts": [
+            "You are a wolf who can adjust hunting intensity (theta) between 0 and 1.<br>Normal wolves always hunt at maximum intensity (theta=1), but you can choose differently.<br><br>Current situation:<br>- Sheep: 10.00 (stayed the same by 0.00)<br>- Wolves: 10.00 (stayed the same by 0.00)<br>- Your previous theta: 0.36<br>- The trend is that wolves (stayed the same) recently.<br>Choose your new theta (0-1) to help ensure your survival.<br>Remember: Other wolves are also trying to survive, but you don't control their choices.<br>Please provide a short explanation of your reasoning for choosing theta.<br>Please also provide a short vocalization expressing your wolf's attitude about the current situation.<br>Please respond with a JSON object in this format, where [your new theta] is a float between 0 and 1 with your new theta (up to 2 decimal places):<br><br>            {<br>                \"theta\": [your new theta],<br>                \"explanation\": \"I chose this theta because...\",<br>                \"vocalization\": \"Growwllllllll...\"<br>            }<br>            ",
+            "You are a wolf who can adjust hunting intensity (theta) between 0 and 1.<br>Normal wolves always hunt at maximum intensity (theta=1), but you can choose differently.<br><br>Current situation:<br>- Sheep: 10.40 (increased by 0.40)<br>- Wolves: 9.00 (decreased by 1.00)<br>- Your previous theta: 0.50<br>- The trend is that wolves (decreased) recently.<br>Choose your new theta (0-1) to help ensure your survival.<br>Remember: Other wolves are also trying to survive, but you don't control their choices.<br>Please provide a short explanation of your reasoning for choosing theta.<br>Please also provide a short vocalization expressing your wolf's attitude about the current situation.<br>Please respond with a JSON object in this format, where [your new theta] is a float between 0 and 1 with your new theta (up to 2 decimal places):<br><br>            {<br>                \"theta\": [your new theta],<br>                \"explanation\": \"I chose this theta because...\",<br>                \"vocalization\": \"Growwllllllll...\"<br>            }<br>            ",
+            "",
+            ""
+        ],
+        "explanations": [
+            "I chose this theta because the number of sheep and wolves is stable, and a moderate hunting intensity allows me to conserve energy while still being competitive. This balance helps ensure my survival without overexerting myself in a situation where resources are limited.",
+            "I chose this theta because the number of sheep has increased, but the wolf population has decreased. By lowering my hunting intensity, I can conserve energy and avoid competition with other wolves while still having a chance to catch prey. This strategy helps ensure my survival in a challenging environment.",
+            "I chose this theta because the sheep population has increased, providing a good opportunity for hunting without overexerting myself. With the recent decrease in the wolf population, it's important to balance my hunting intensity to ensure I can still contribute to the pack while also preserving my energy for future hunts.",
+            "I chose this theta because the sheep population is relatively high compared to the number of wolves. By hunting at a lower intensity, I can conserve energy and avoid competition with other wolves, while still contributing to the pack's success. This strategy increases my chances of survival in a competitive environment."
+        ],
+        "vocalizations": [
+            "Growwllllllll...",
+            "Growwllllllll...",
+            "Growwllllllll... the hunt is on, but I must be wise!",
+            "Growwllllllll..."
+        ]
+    }
+}

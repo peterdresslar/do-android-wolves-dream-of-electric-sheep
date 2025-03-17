@@ -553,7 +553,7 @@
         "s_start": 1,
         "w_start": 1,
         "decision_mode": "adaptive",
-        "path": "data/results/k-dt-ones-unit-start-low-carrying",
+        "path": "data/results/k-dt-ones-unit-start-low-carrying-long",
         "step_print": false,
         "save_results": true
       }
@@ -568,13 +568,13 @@
       ],
       "sweep_parameters": {
         "s_start_values": [
-          25,
-          17,
-          14,
-          11,
+          20,
+          13,
+          10,
           8,
           5,
-          2
+          3,
+          1
         ]
       },
       "fixed_parameters": {
@@ -583,7 +583,7 @@
         "max_tokens": 512,
         "dt": 0.1,
         "steps": 500,
-        "sheep_max": 200,
+        "sheep_max": 250,
         "eps": 0.0001,
         "alpha": 1,
         "beta": 0.1,
@@ -620,7 +620,7 @@
         "temperature": 0.6,
         "max_tokens": 512,
         "dt": 0.1,
-        "steps": 100,
+        "steps": 4,
         "sheep_max": 200,
         "eps": 0.0001,
         "alpha": 1,
@@ -633,7 +633,7 @@
         "w_start": 10,
         "churn_rate": 1.0,
         "decision_mode": "ai",
-        "path": "data/results/gpt-4o-mini-prompt-sweep-s0",
+        "path": "data/results/test",
         "step_print": true,
         "save_results": true
       }
