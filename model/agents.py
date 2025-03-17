@@ -137,7 +137,9 @@ class Wolf:
         elif decision_mode == "adaptive":
             k = params.get("k")
             if k is None:
-                raise ValueError("Parameter 'k' is required for adaptive mode but was not provided")
+                raise ValueError(
+                    "Parameter 'k' is required for adaptive mode but was not provided"
+                )
 
             sheep_max = domain.sheep_capacity
             epsilon = params.get("eps")
@@ -213,8 +215,11 @@ class Wolf:
             A dictionary with the wolf's contributions to population changes
         """
         if not self.alive:
-            return {"dw": 0, "ds": 0}  # dead wolves don't contribute to population change
-        
+            return {
+                "dw": 0,
+                "ds": 0,
+            }  # dead wolves don't contribute to population change
+
         dt = params.get("dt")
         s = domain.sheep_state  # Get sheep state from domain
 
@@ -333,9 +338,7 @@ class Agents:
 
         # Initialize average theta history with the initial average theta
         # (which might vary if randomize_theta is True)
-        initial_avg_theta = (
-            sum(wolf.starting_theta for wolf in agents.wolves) / w_start
-        )
+        initial_avg_theta = sum(wolf.starting_theta for wolf in agents.wolves) / w_start
         agents.average_thetas = [initial_avg_theta]
 
         return agents

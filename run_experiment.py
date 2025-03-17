@@ -246,7 +246,9 @@ def run_simulation(config):
 
         # Check if we have wolf history data
         if not results.get("wolf_history"):
-            print(f"ERROR: No wolf history data generated for {config.get('path', 'unknown')}")
+            print(
+                f"ERROR: No wolf history data generated for {config.get('path', 'unknown')}"
+            )
             return False, config, {"error": "No wolf history data generated"}
 
         # REMOVE OR MODIFY the initial wolf count check, as wolves might die in the first step
@@ -255,19 +257,19 @@ def run_simulation(config):
         initial_wolves = results.get("wolf_history", [0])[0]
         expected_wolves = config.get("w_start")
         if initial_wolves != expected_wolves:
-            print(f"WARNING: Initial wolf count mismatch in {config.get('path', 'unknown')}. Expected {expected_wolves}, got {initial_wolves}. This is normal for some parameter combinations where wolves die immediately.")
+            print(
+                f"WARNING: Initial wolf count mismatch in {config.get('path', 'unknown')}. Expected {expected_wolves}, got {initial_wolves}. This is normal for some parameter combinations where wolves die immediately."
+            )
             # Continue with the simulation instead of failing
-            
+
         return True, config, results
     except Exception as e:
         import traceback
-        
+
         error_details = {
             "error": str(e),
             "traceback": traceback.format_exc(),
-            "config": {
-                k: v for k, v in config.items() if k != "path"
-            },
+            "config": {k: v for k, v in config.items() if k != "path"},
         }
         print(f"Error running simulation: {str(e)}\n{traceback.format_exc()}")
         return False, config, error_details
@@ -382,7 +384,7 @@ def create_sweep_visualization(sweep_stats, results, preset, output_dir):
         # Create a twin axis for theta
         if theta_history:
             ax2 = ax.twinx()
-            
+
             # Create a list of x/y points where wolves exist
             valid_x = []
             valid_theta = []
@@ -390,7 +392,7 @@ def create_sweep_visualization(sweep_stats, results, preset, output_dir):
                 if i < len(theta_history) and wolves > 0:
                     valid_x.append(i)
                     valid_theta.append(theta_history[i])
-            
+
             # Only plot theta where wolves exist
             if valid_x and valid_theta:
                 ax2.plot(valid_x, valid_theta, color="darkgreen", linewidth=1)
@@ -584,7 +586,7 @@ def create_prompt_sweep_visualization(sweep_stats, results, preset, output_dir):
         # Create a twin axis for theta
         if theta_history:
             ax2 = ax.twinx()
-            
+
             # Create a list of x/y points where wolves exist
             valid_x = []
             valid_theta = []
@@ -592,7 +594,7 @@ def create_prompt_sweep_visualization(sweep_stats, results, preset, output_dir):
                 if i < len(theta_history) and wolves > 0:
                     valid_x.append(i)
                     valid_theta.append(theta_history[i])
-            
+
             # Only plot theta where wolves exist
             if valid_x and valid_theta:
                 ax2.plot(valid_x, valid_theta, color="darkgreen", linewidth=1)
