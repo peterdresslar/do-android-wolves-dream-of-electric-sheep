@@ -300,9 +300,7 @@ def create_sweep_visualization(sweep_stats, results, preset, output_dir):
     # Extract unique values for each sweep variable
     unique_values = {}
     for var in sweep_variables:
-        unique_values[var] = sorted(
-            {stat["config"].get(var) for stat in sweep_stats}
-        )
+        unique_values[var] = sorted({stat["config"].get(var) for stat in sweep_stats})
 
     # Determine grid dimensions
     if len(sweep_variables) == 1:

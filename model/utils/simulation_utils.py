@@ -147,10 +147,10 @@ def create_population_plot(results, sheep_max, title=None) -> plt.Figure:
         palette=["cadetblue", "darkred"],
         ax=ax1,
     )
-    
+
     # Set the left y-axis limit to include a small margin
     ax1.set_ylim(0, sheep_max * 1.1)
-    
+
     # Plot average theta on right y-axis
     ax2 = ax1.twinx()
     sns.lineplot(
@@ -163,7 +163,7 @@ def create_population_plot(results, sheep_max, title=None) -> plt.Figure:
     )
 
     # Set the y-axis limits for the right axis to align with the left axis
-    
+
     ax2.set_ylim(0, 1.1)
 
     # Add labels and legend
@@ -234,10 +234,10 @@ def create_replot(path, width=12, dpi=100):
 
     # Find the maximum population value to align axes properly
     max_pop_value = max(df["sheep"].max(), df["wolves"].max())
-    
+
     # Set the left y-axis limit to include a small margin
     ax1.set_ylim(0, max_pop_value * 1.1)
-    
+
     # Plot average theta on right y-axis
     ax2 = ax1.twinx()
     sns.lineplot(
@@ -252,10 +252,10 @@ def create_replot(path, width=12, dpi=100):
     # Set the y-axis limits for the right axis to always be 0-1 for theta
     # but scale it to align with the population axis
     ax2.set_ylim(0, 1)
-    
+
     # This makes theta y-axis visually match the population y-axis
     ax2.set_ylim(0, 1 * (max_pop_value * 1.1))
-    
+
     # Add labels and legend
     ax1.set_xlabel("Time Steps")
     ax1.set_ylabel("Population")
