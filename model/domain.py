@@ -21,7 +21,7 @@ class Domain:
         self.sheep_state = starting_sheep
 
         # History tracking (missing)
-        self.sheep_history = [starting_sheep]
+        self.sheep_history = []
 
         # Accumulators for changes in each step
         self.step_accumulated_ds = 0

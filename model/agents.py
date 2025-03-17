@@ -263,6 +263,7 @@ class Agents:
         """
         self.params = params
         self.initial_step = initial_step
+        self.current_step = initial_step  # Add step counter
         self.threads = threads
         self.wolves = []
         self.average_thetas = []
@@ -336,9 +337,6 @@ class Agents:
             wolf.handle_birth(initial_step, starting_theta_value)
             agents.wolves.append(wolf)
 
-        # Initialize average theta history with the initial average theta
-        # (which might vary if randomize_theta is True)
-        initial_avg_theta = sum(wolf.starting_theta for wolf in agents.wolves) / w_start
         agents.average_thetas = []
 
         return agents
@@ -388,26 +386,11 @@ class Agents:
         """
         Get the history of living wolf counts for all steps in the simulation.
         """
-        # Determine the maximum step from theta history length
-        # This ensures we cover all simulation steps, not just birth/death events
-        max_step = 0
-
-        # Check theta histories
-        if self.wolves:
-            max_step = max(len(wolf.thetas) for wolf in self.wolves) - 1
-
-        # Check birth/death steps
-        for wolf in self.wolves:
-            if wolf.born_at_step is not None:
-                max_step = max(max_step, wolf.born_at_step)
-            if wolf.died_at_step is not None:
-                max_step = max(max_step, wolf.died_at_step)
-
-        # Ensure we have at least as many steps as average_thetas
-        if hasattr(self, "average_thetas") and self.average_thetas:
-            max_step = max(max_step, len(self.average_thetas) - 1)
-
-        return [self.get_living_wolves_count_step(step) for step in range(max_step + 1)]
+        # Use our step counter to determine the correct length
+        # Include the initial step through current step (inclusive)
+        num_steps = self.current_step - self.initial_step + 1
+        
+        return [self.get_living_wolves_count_step(step) for step in range(self.initial_step, self.initial_step + num_steps)]
 
     def get_average_theta_history(self) -> list[float]:
         """
@@ -634,6 +617,9 @@ class Agents:
         Process the step for all wolves, updating the domain directly.
         Works in both regular Python environments and Jupyter notebooks.
         """
+        # Update the current step
+        self.current_step = step
+        
         try:
             # Check if we're in an existing event loop
             loop = asyncio.get_event_loop()
