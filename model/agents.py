@@ -389,8 +389,11 @@ class Agents:
         # Use our step counter to determine the correct length
         # Include the initial step through current step (inclusive)
         num_steps = self.current_step - self.initial_step + 1
-        
-        return [self.get_living_wolves_count_step(step) for step in range(self.initial_step, self.initial_step + num_steps)]
+
+        return [
+            self.get_living_wolves_count_step(step)
+            for step in range(self.initial_step, self.initial_step + num_steps)
+        ]
 
     def get_average_theta_history(self) -> list[float]:
         """
@@ -619,7 +622,7 @@ class Agents:
         """
         # Update the current step
         self.current_step = step
-        
+
         try:
             # Check if we're in an existing event loop
             loop = asyncio.get_event_loop()
