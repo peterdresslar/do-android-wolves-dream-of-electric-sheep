@@ -301,7 +301,7 @@ def create_sweep_visualization(sweep_stats, results, preset, output_dir):
     unique_values = {}
     for var in sweep_variables:
         unique_values[var] = sorted(
-            set(stat["config"].get(var) for stat in sweep_stats)
+            {stat["config"].get(var) for stat in sweep_stats}
         )
 
     # Determine grid dimensions
@@ -475,7 +475,7 @@ def create_prompt_sweep_visualization(sweep_stats, results, preset, output_dir):
     var = sweep_variables[0]
 
     # Extract unique values for the sweep variable
-    unique_values = sorted(set(stat["config"].get(var) for stat in sweep_stats))
+    unique_values = sorted({stat["config"].get(var) for stat in sweep_stats})
 
     # Define the column order: prompt types (high, medium, low) + adaptive theta
     column_types = ["high", "medium", "low", "adaptive"]

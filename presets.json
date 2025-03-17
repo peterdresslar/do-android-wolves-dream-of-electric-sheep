@@ -212,7 +212,7 @@
       "preset_name": "k-dt-ones",
       "preset_version": "1.3",
       "preset_type": "sweep",
-      "preset_description": "Parameters k and dt with S=1000, s=1, w=1, alpha=1, beta=1, gamma=1, delta=1",
+      "preset_description": "Parameters k and dt with S=1000, s=10, w=10, alpha=1, beta=1, gamma=1, delta=1",
       "sweep_variables": [
         "k",
         "dt"
@@ -262,7 +262,7 @@
       "preset_name": "k-dt-ones-low-carrying",
       "preset_version": "1.3",
       "preset_type": "sweep",
-      "preset_description": "Parameters k and dt with S=200, s=10, w=10, alpha=1, beta=1, gamma=1, delta=1",
+      "preset_description": "Parameters k and dt with S=110, s=10, w=10, alpha=1, beta=1, gamma=1, delta=1",
       "sweep_variables": [
         "k",
         "dt"
