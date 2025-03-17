@@ -4,13 +4,14 @@
 echo "Running parameter sweeps with 6 workers..."
 
 # Run classic sweeps
-# python run_experiment.py k-dt-original --max-workers 6
-# python run_experiment.py k-dt-base --max-workers 6
-# python run_experiment.py k-dt-high-carrying --max-workers 6
-# python run_experiment.py k-dt-ones --max-workers 6
-# python run_experiment.py k-dt-ones-low-carrying --max-workers 6
-# python run_experiment.py k-dt-unit-start-low-carrying --max-workers 6
-# python run_experiment.py k-dt-unit-start-high-carrying --max-workers 6
+python run_experiment.py k-dt-original --max-workers 6
+python run_experiment.py k-dt-base --max-workers 6
+python run_experiment.py k-dt-high-carrying --max-workers 6
+python run_experiment.py k-dt-ones --max-workers 6
+python run_experiment.py k-dt-ones-low-carrying --max-workers 6
+python run_experiment.py k-dt-unit-start-low-carrying --max-workers 6
+python run_experiment.py k-dt-unit-start-high-carrying --max-workers 6
+python run_experiment.py k-dt-ones-unit-start-low-carrying --max-workers 6
 
 echo "All parameter sweeps complete!"
 

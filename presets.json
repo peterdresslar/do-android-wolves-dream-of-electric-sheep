@@ -312,7 +312,7 @@
       "preset_name": "k-dt-unit-start-low-carrying",
       "preset_version": "1.3",
       "preset_type": "sweep",
-      "preset_description": "Parameters k and dt with S=200, s=1, w=1, alpha=1, beta=0.1, gamma=1.5, delta=0.75",
+      "preset_description": "Parameters k and dt with S=110, s=1, w=1, alpha=1, beta=0.1, gamma=1.5, delta=0.75",
       "sweep_variables": [
         "k",
         "dt"
@@ -342,7 +342,7 @@
       },
       "fixed_parameters": {
         "steps": 500,
-        "sheep_max": 200,
+        "sheep_max": 110,
         "eps": 0.0001,
         "alpha": 1,
         "beta": 0.1,
@@ -404,6 +404,156 @@
         "w_start": 1,
         "decision_mode": "adaptive",
         "path": "data/results/k-dt-unit-start-high-carrying",
+        "step_print": false,
+        "save_results": true
+      }
+    },
+    {
+      "preset_name": "k-dt-ones-unit-start-low-carrying",
+      "preset_version": "1.3",
+      "preset_type": "sweep",
+      "preset_description": "Parameters k and dt with S=110, s=1, w=1, alpha=1, beta=1, gamma=1, delta=1",
+      "sweep_variables": [
+        "k",
+        "dt"
+      ],
+      "sweep_parameters": {
+        "k_values": [
+          0.0,
+          0.01,
+          0.02,
+          0.05,
+          0.1,
+          0.2,
+          0.5,
+          1.0,
+          2.0
+        ],
+        "dt_values": [
+          0.001,
+          0.01,
+          0.02,
+          0.05,
+          0.1,
+          0.2,
+          0.5,
+          1.0
+        ]
+      },
+      "fixed_parameters": {
+        "steps": 500,
+        "sheep_max": 110,
+        "eps": 0.0001,
+        "alpha": 1,
+        "beta": 1,
+        "gamma": 1,
+        "delta": 1,
+        "theta_start": 0.5,
+        "randomize_theta": false,
+        "s_start": 1,
+        "w_start": 1,
+        "decision_mode": "adaptive",
+        "path": "data/results/k-dt-ones-unit-start-low-carrying",
+        "step_print": false,
+        "save_results": true
+      }
+    },
+    {
+      "preset_name": "k-dt-ones-unit-start-very-low-carrying",
+      "preset_version": "1.3",
+      "preset_type": "sweep",
+      "preset_description": "Parameters k and dt with S=25, s=1, w=1, alpha=1, beta=1, gamma=1, delta=1",
+      "sweep_variables": [
+        "k",
+        "dt"
+      ],
+      "sweep_parameters": {
+        "k_values": [
+          0.0,
+          0.01,
+          0.02,
+          0.05,
+          0.1,
+          0.2,
+          0.5,
+          1.0,
+          2.0
+        ],
+        "dt_values": [
+          0.001,
+          0.01,
+          0.02,
+          0.05,
+          0.1,
+          0.2,
+          0.5,
+          1.0
+        ]
+      },
+      "fixed_parameters": {
+        "steps": 500,
+        "sheep_max": 25,
+        "eps": 0.0001,
+        "alpha": 1,
+        "beta": 1,
+        "gamma": 1,
+        "delta": 1,
+        "theta_start": 0.5,
+        "randomize_theta": false,
+        "s_start": 1,
+        "w_start": 1,
+        "decision_mode": "adaptive",
+        "path": "data/results/k-dt-ones-unit-start-very-low-carrying",
+        "step_print": false,
+        "save_results": true
+      }
+    },
+    {
+      "preset_name": "k-dt-ones-unit-start-low-carrying-long",
+      "preset_version": "1.3",
+      "preset_type": "sweep",
+      "preset_description": "5000 steps. Parameters k and dt with S=110, s=1, w=1, alpha=1, beta=1, gamma=1, delta=1",
+      "sweep_variables": [
+        "k",
+        "dt"
+      ],
+      "sweep_parameters": {
+        "k_values": [
+          0.0,
+          0.01,
+          0.02,
+          0.05,
+          0.1,
+          0.2,
+          0.5,
+          1.0,
+          2.0
+        ],
+        "dt_values": [
+          0.001,
+          0.01,
+          0.02,
+          0.05,
+          0.1,
+          0.2,
+          0.5,
+          1.0
+        ]
+      },
+      "fixed_parameters": {
+        "steps": 5000,
+        "sheep_max": 110,
+        "eps": 0.0001,
+        "alpha": 1,
+        "beta": 1,
+        "gamma": 1,
+        "delta": 1,
+        "theta_start": 0.5,
+        "randomize_theta": false,
+        "s_start": 1,
+        "w_start": 1,
+        "decision_mode": "adaptive",
+        "path": "data/results/k-dt-ones-unit-start-low-carrying",
         "step_print": false,
         "save_results": true
       }
