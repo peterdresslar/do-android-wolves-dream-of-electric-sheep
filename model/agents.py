@@ -339,7 +339,7 @@ class Agents:
         # Initialize average theta history with the initial average theta
         # (which might vary if randomize_theta is True)
         initial_avg_theta = sum(wolf.starting_theta for wolf in agents.wolves) / w_start
-        agents.average_thetas = [initial_avg_theta]
+        agents.average_thetas = []
 
         return agents
 
