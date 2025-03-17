@@ -101,7 +101,7 @@ def get_reference_ODE(model_params, model_time):
 #################################################################
 # Plotting
 #################################################################
-def create_population_plot(results, title=None) -> plt.Figure:
+def create_population_plot(results, sheep_max, title=None) -> plt.Figure:
     """Create a plot of the population over time."""
     # Create a proper time steps array
     sheep_history = results.get("sheep_history", [])
@@ -147,7 +147,10 @@ def create_population_plot(results, title=None) -> plt.Figure:
         palette=["cadetblue", "darkred"],
         ax=ax1,
     )
-
+    
+    # Set the left y-axis limit to include a small margin
+    ax1.set_ylim(0, sheep_max * 1.1)
+    
     # Plot average theta on right y-axis
     ax2 = ax1.twinx()
     sns.lineplot(
@@ -159,8 +162,9 @@ def create_population_plot(results, title=None) -> plt.Figure:
         linewidth=2,
     )
 
-    # Set the y-axis limits for the right axis to always be 0-1 for theta
-    ax2.set_ylim(0, 1)
+    # Set the y-axis limits for the right axis to align with the left axis
+    
+    ax2.set_ylim(0, 1.1)
 
     # Add labels and legend
     ax1.set_xlabel("Time Steps")
@@ -228,6 +232,12 @@ def create_replot(path, width=12, dpi=100):
         ax=ax1,
     )
 
+    # Find the maximum population value to align axes properly
+    max_pop_value = max(df["sheep"].max(), df["wolves"].max())
+    
+    # Set the left y-axis limit to include a small margin
+    ax1.set_ylim(0, max_pop_value * 1.1)
+    
     # Plot average theta on right y-axis
     ax2 = ax1.twinx()
     sns.lineplot(
@@ -240,8 +250,12 @@ def create_replot(path, width=12, dpi=100):
     )
 
     # Set the y-axis limits for the right axis to always be 0-1 for theta
+    # but scale it to align with the population axis
     ax2.set_ylim(0, 1)
-
+    
+    # This makes theta y-axis visually match the population y-axis
+    ax2.set_ylim(0, 1 * (max_pop_value * 1.1))
+    
     # Add labels and legend
     ax1.set_xlabel("Time Steps")
     ax1.set_ylabel("Population")
@@ -679,7 +693,7 @@ def save_simulation_results(results, results_path=None):
     else:  # AI mode
         title = f"Population Dynamics with AI-determined theta values. Model: {model_name}, Prompt Type: {prompt_type} information."
 
-    fig = create_population_plot(results, title=title)
+    fig = create_population_plot(results, model_params.get("sheep_max"), title=title)
     fig.savefig(os.path.join(run_dir, "population_plot.png"))
 
     if model_opts.get("step_print", False):
