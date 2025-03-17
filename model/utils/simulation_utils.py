@@ -320,11 +320,9 @@ def create_replot(path, width=12, dpi=100):
                 title = f"Population Dynamics with AI-determined theta values. Model: {model_name}, Prompt Type: {prompt_type} information."
         else:
             title = "Population Dynamics"
-    except:
-        title = "Population Dynamics"
-
-    plt.title(title)
-    plt.tight_layout()
+    finally:
+        plt.title(title)
+        plt.tight_layout()
 
     return fig
 

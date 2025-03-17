@@ -369,6 +369,8 @@ def create_sweep_visualization(sweep_stats, results, preset, output_dir):
         wolf_history = sim_results.get("wolf_history", [])
         theta_history = sim_results.get("average_theta_history", [])
 
+        print(f"lengths: sheep_history: {len(sheep_history)}, wolf_history: {len(wolf_history)}, theta_history: {len(theta_history)}")
+
         # Create subplot
         ax = fig.add_subplot(gs[row + 1, col + 1])
 
