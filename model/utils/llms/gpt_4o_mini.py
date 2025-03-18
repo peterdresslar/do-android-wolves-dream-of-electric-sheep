@@ -52,10 +52,10 @@ def call_gpt_4o_mini(
 
 async def call_gpt_4o_async(
     prompt: str,
-    model: str = None,
-    temperature: float = None,
-    max_tokens: int = None,
-    usage: Usage = None,
+    model: str,
+    temperature: float,
+    max_tokens: int,
+    usage: Usage,
 ) -> str:
     """
     Async version of call_llm that calls the OpenAI ChatCompletion endpoint.
@@ -72,12 +72,15 @@ async def call_gpt_4o_async(
     if model is None:
         raise ValueError("Model is not provided")
 
+    if temperature is None:
+        raise ValueError("Temperature is not provided")
+
     try:
         response = await client.chat.completions.create(
             messages=[{"role": "user", "content": prompt}],
             model=model,
-            max_tokens=max_tokens if max_tokens is not None else 4096,
-            temperature=temperature if temperature is not None else 0.2,
+            max_tokens=max_tokens,
+            temperature=temperature,
         )
 
         # Update usage if available
@@ -92,7 +95,7 @@ async def call_gpt_4o_async(
     except Exception as e:
         print(f"Error in API call: {str(e)}")
         # Still return something so the simulation can continue
-        return json.dumps({"theta": 0.5, "explanation": "API error occurred"})
+        return json.dumps({"theta": 0.0, "explanation": "API error occurred"})
 
 
 def get_gpt_4o_response(
@@ -167,14 +170,14 @@ async def get_gpt_4o_response_async(
     sheep_max: float,
     old_theta: float,
     step: int,
-    respond_verbosely: bool = True,
-    delta_s: float = 0,
-    delta_w: float = 0,
-    prompt_type: str = "high",
-    model: str = None,
-    temperature: float = None,
-    max_tokens: int = None,
-    usage: Usage = None,
+    respond_verbosely: bool,
+    delta_s: float,
+    delta_w: float,
+    prompt_type: str,
+    model: str,
+    temperature: float,
+    max_tokens: int,
+    usage: Usage,
 ) -> WolfResponse:
     """
     Async version of get_gpt_4o_response.

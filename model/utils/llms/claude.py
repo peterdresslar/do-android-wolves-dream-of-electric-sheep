@@ -143,13 +143,31 @@ def get_claude_response(
             respond_verbosely=respond_verbosely,
         )
 
-    # 2. Get a raw string response from Claude
-    response_str = call_claude(
-        prompt, model=model, temperature=temperature, max_tokens=max_tokens, usage=usage
-    )
+    try:
+        if temperature is None:
+            raise ValueError("Temperature is not provided")
 
-    # 3. Parse that string into a WolfResponse
-    wolf_resp = parse_wolf_response(response_str, prompt, default=old_theta)
+        if model is None:
+            raise ValueError("Model is not provided")
+
+        if max_tokens is None:
+            raise ValueError("Max tokens is not provided")
+
+        # 2. Get a raw string response from Claude
+        response_str = call_claude(
+            prompt,
+            model=model,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            usage=usage,
+        )
+
+        # 3. Parse that string into a WolfResponse
+        wolf_resp = parse_wolf_response(response_str, prompt, default=old_theta)
+
+    except Exception as e:
+        print(f"Error parsing response: {e}")
+        wolf_resp = WolfResponse(theta=old_theta, explanation="Error parsing response")
 
     return wolf_resp
 
@@ -160,14 +178,14 @@ async def get_claude_response_async(
     sheep_max: float,
     old_theta: float,
     step: int,
-    respond_verbosely: bool = True,
-    delta_s: float = 0,
-    delta_w: float = 0,
-    prompt_type: str = "high",
-    model: str = None,
-    temperature: float = None,
-    max_tokens: int = None,
-    usage: Usage = None,
+    respond_verbosely: bool,
+    delta_s: float,
+    delta_w: float,
+    prompt_type: str,
+    model: str,
+    temperature: float,
+    max_tokens: int,
+    usage: Usage,
 ) -> WolfResponse:
     """
     Async version of get_claude_response.

@@ -336,7 +336,9 @@ def create_sweep_visualization(sweep_stats, results, preset, output_dir):
             sheep_max = max(sheep_max, max(sheep_history))
 
     # Check if we should fit y-axis to sheep_max for each subplot
-    fit_sheep_max_axis = preset.get("fixed_parameters", {}).get("fit-sheep-max-axis", False)
+    fit_sheep_max_axis = preset.get("fixed_parameters", {}).get(
+        "fit-sheep-max-axis", False
+    )
 
     # Create the figure with appropriate size
     # Base size of 3 inches per plot, with extra space for labels
@@ -509,7 +511,9 @@ def create_prompt_sweep_visualization(sweep_stats, results, preset, output_dir):
             sheep_max = max(sheep_max, max(sheep_history))
 
     # Check if we should fit y-axis to sheep_max for each subplot
-    fit_sheep_max_axis = preset.get("fixed_parameters", {}).get("fit-sheep-max-axis", False)
+    fit_sheep_max_axis = preset.get("fixed_parameters", {}).get(
+        "fit-sheep-max-axis", False
+    )
 
     # Create the figure with appropriate size
     fig_width = max(12, 2 + 2.5 * n_cols)

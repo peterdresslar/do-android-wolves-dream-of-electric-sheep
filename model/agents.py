@@ -4,6 +4,9 @@ import random
 from dataclasses import dataclass, field
 from typing import Any
 
+# Call LLM to decide theta asynchronously
+from .utils.llm_utils import get_wolf_response_async
+
 THREADS_DEFAULT = 10
 
 
@@ -168,11 +171,13 @@ class Wolf:
         w: float,
         sheep_max: float,
         step: int,
-        respond_verbosely: bool = True,
-        delta_s: float = 0,
-        delta_w: float = 0,
-        prompt_type: str = "high",
-        model: str = None,  # Add model parameter
+        respond_verbosely: bool,
+        delta_s: float,
+        delta_w: float,
+        prompt_type: str,
+        model: str,
+        temperature: float,
+        max_tokens: int,
     ) -> float:
         """
         Async version of decide_theta.
@@ -180,9 +185,6 @@ class Wolf:
         """
         if not self.alive:
             return self.thetas[-1] if self.thetas else self.starting_theta
-
-        # Call LLM to decide theta asynchronously
-        from .utils.llm_utils import get_wolf_response_async
 
         wolf_resp = await get_wolf_response_async(
             s=s,
@@ -195,6 +197,8 @@ class Wolf:
             delta_w=delta_w,
             prompt_type=prompt_type,
             model=model,  # Pass model parameter
+            temperature=temperature,
+            max_tokens=max_tokens,
         )
 
         self.thetas.append(wolf_resp.theta)
@@ -581,6 +585,8 @@ class Agents:
 
             # Get the model_name from params or model_names
             model = self.params.get("model_name")
+            temperature = self.params.get("temperature")
+            max_tokens = self.params.get("max_tokens")
             # Process wolves in batches
             for i in range(0, len(wolves_to_update), max_threads):
                 batch = wolves_to_update[i : i + max_threads]
@@ -598,7 +604,9 @@ class Agents:
                             delta_s,
                             delta_w,
                             prompt_type,
-                            model,  # Pass model parameter
+                            model,
+                            temperature,
+                            max_tokens,
                         )
                     )
 

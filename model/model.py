@@ -25,11 +25,15 @@ MODEL_PARAMS = {  # Model parameters have an effect on the outcome of the simula
     "dt",
     "sheep_max",
     "eps",
-    "churn_rate",
     "steps",
+    # AI mode parameters
     "model_name",
     "temperature",
     "prompt_type",
+    "churn_rate",
+    "max_tokens",
+    # Adaptive mode parameters
+    "k",
 }
 
 
@@ -64,7 +68,6 @@ class Model:
         # Note that Model Opts can have default values
         self.opts["save_results"] = None
         self.opts["path"] = None
-        self.opts["prompt_type"] = None
         self.opts["step_print"] = None
         self.opts["threads"] = None
 
@@ -112,32 +115,29 @@ def initialize_model(**kwargs) -> Model:
     # Check for decision mode-specific required parameters
     decision_mode = kwargs["decision_mode"]
     if decision_mode == "ai":
-        if "model_name" not in kwargs:
+        # Check for required AI-specific parameters
+        ai_required_params = [
+            "model_name",
+            "temperature",
+            "prompt_type",
+            "churn_rate",
+            "max_tokens",
+        ]
+        missing_ai_params = [
+            param for param in ai_required_params if param not in kwargs
+        ]
+        if missing_ai_params:
             raise ValueError(
-                "'model_name' parameter is required for decision_mode='ai'"
+                f"Missing required parameters for decision_mode='ai': {', '.join(missing_ai_params)}"
             )
-        model_name = kwargs["model_name"]  # shouldn't be empty since we have the raise
-        if "temperature" not in kwargs:
-            raise ValueError(
-                "'temperature' parameter is required for decision_mode='ai'"
-            )
-        temperature = kwargs["temperature"]
-        if "prompt_type" not in kwargs:
-            raise ValueError(
-                "'prompt_type' parameter is required for decision_mode='ai'"
-            )
-        prompt_type = kwargs["prompt_type"]
-        if "churn_rate" not in kwargs:
-            raise ValueError(
-                "'churn_rate' parameter is required for decision_mode='ai'"
-            )
-        churn_rate = kwargs["churn_rate"]
+        # Don't need to assign these to variables here since they're in kwargs
+        # and will be passed to model.params later
 
     elif decision_mode == "adaptive":
         if "k" not in kwargs:
             raise ValueError("'k' parameter is required for decision_mode='adaptive'")
-        k = kwargs["k"]
 
+    # Validate decision mode
     if decision_mode not in ["ai", "adaptive", "constant"]:
         raise ValueError(
             f"Invalid decision_mode: {decision_mode}. Must be 'ai', 'adaptive', or 'constant'"
@@ -366,18 +366,12 @@ class ModelRun:
             )
 
         # Get the model_name from model_names if available
-        model_name = self.model.params.get("model_name", "Model")
-        if (
-            "model_names" in self.model.params
-            and isinstance(self.model.params["model_names"], list)
-            and self.model.params["model_names"]
-        ):
-            model_name = self.model.params["model_names"][0]
+        model_name = self.model.params.get("model_name")
 
         detailed_results = {
             "runtime": runtime,
             "model_name": model_name,
-            "prompt_type": self.model.opts.get("prompt_type", "high"),
+            "prompt_type": self.model.opts.get("prompt_type"),
             "steps": self.current_step,
             "sheep_history": sheep_history,
             "wolf_history": wolf_history,

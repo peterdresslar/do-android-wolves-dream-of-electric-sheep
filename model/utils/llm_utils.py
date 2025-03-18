@@ -19,8 +19,8 @@ VALID_MODELS = [
     {"alias": "gpt-4o-mini", "realname": "gpt-4o-mini-2024-07-18"},
     {"alias": "claude-3-5-haiku", "realname": "claude-3-5-haiku-20241022"},
 ]
-MAX_TOKENS = 512  # This is an opt, not a model param
-
+MAX_TOKENS_GPT4 = 512  # This is an option, not a model param
+MAX_TOKENS_CLAUDE = 1024  # This is an option, not a model param
 
 def calculate_cost(prompt_tokens: int, completion_tokens: int, model: str) -> float:
     """
@@ -553,11 +553,13 @@ async def get_wolf_response_async(
     sheep_max: float,
     old_theta: float,
     step: int,
-    respond_verbosely: bool = True,
-    delta_s: float = 0,
-    delta_w: float = 0,
-    prompt_type: str = "high",
-    model: str = None,
+    respond_verbosely: bool,
+    delta_s: float,
+    delta_w: float,
+    prompt_type: str,
+    model: str,
+    temperature: float,
+    max_tokens: int,
 ) -> WolfResponse:
     """
     Async version of get_wolf_response.
@@ -585,6 +587,8 @@ async def get_wolf_response_async(
             delta_w=delta_w,
             prompt_type=prompt_type,
             model=real_model,
+            temperature=temperature,
+            max_tokens=MAX_TOKENS_GPT4,
             usage=current_usage,  # Pass the current usage object
         )
     elif real_model and real_model.startswith("claude-"):
@@ -602,6 +606,9 @@ async def get_wolf_response_async(
             delta_w=delta_w,
             prompt_type=prompt_type,
             model=real_model,
+            temperature=temperature,
+            max_tokens=MAX_TOKENS_CLAUDE,
+            usage=current_usage,  # Pass the current usage object
         )
 
     # For other models or fallback

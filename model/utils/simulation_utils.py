@@ -408,30 +408,52 @@ def save_simulation_results(results, results_path=None):
         path = fallback_path
 
     # Construct a summary filename based on simulation parameters and current timestamp
-    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    timestamp = datetime.datetime.now().strftime(
+        "%Y%m%d_%H%M"
+    )  # Shortened timestamp (removed seconds)
     model_params = results.get("model_params", {})
     model_opts = results.get("model_opts", {})
 
     print("model_opts", model_opts)
     print("model_params", model_params)
 
-    # Use model_names[0] if available, otherwise fall back to model_name
-    if (
-        "model_names" in model_params
-        and isinstance(model_params["model_names"], list)
-        and model_params["model_names"]
-    ):
-        model_name = model_params["model_names"][0]
-    else:
-        model_name = model_opts.get("model_name", "Model")
+    model_name = model_params.get("model_name")
 
-    prompt_type = model_params.get("prompt_type", "high")
+    prompt_type = model_params.get("prompt_type")
+    temperature = model_params.get("temperature")  # Default to 0.2 if not specified
     steps = model_params.get("steps", "steps")
-    starting_sheep = model_params.get("s_start", "S0")
-    starting_wolves = model_params.get("w_start", "W0")
+    starting_sheep = model_params.get("s_start")
+    starting_wolves = model_params.get("w_start")
+
+    print("model_name", model_name)
+    print("prompt_type", prompt_type)
+    print("temperature", temperature)
+
 
     # Create a unique run directory name
-    run_dir_name = f"{model_name}_{steps}_{starting_sheep}-{starting_wolves}_{prompt_type}_{timestamp}"
+    # Include temperature in directory name only for AI mode
+    decision_mode = model_params.get("decision_mode")
+
+    if decision_mode in ("adaptive", "constant"):
+        # For non-AI modes, simplify naming
+
+        print("steps", steps)
+        print("starting_sheep", starting_sheep)
+        print("starting_wolves", starting_wolves)
+        print("decision_mode", decision_mode)
+        print("timestamp", timestamp)
+        run_dir_name = (
+            f"{steps}_{starting_sheep}-{starting_wolves}_{decision_mode}_{timestamp}"
+        )
+    else:  # AI mode
+        # Format temperature with only one decimal place and keep model name shorter
+        model_short = model_name.split("/")[-1] if "/" in model_name else model_name
+        model_short = model_short[:8]  # Limit to first 8 chars of model name
+        temp_str = f"{temperature:.1f}".replace(".0", "")
+        # Use shorter prompt identifier
+        prompt_short = prompt_type[:4] if prompt_type else "none"
+        run_dir_name = f"{model_short}_{steps}_{starting_sheep}-{starting_wolves}_{prompt_short}_t{temp_str}_{timestamp}"
+
     run_dir = os.path.join(path, run_dir_name)
 
     # Create the run directory
@@ -518,11 +540,13 @@ def save_simulation_results(results, results_path=None):
     # Use runtime from results if available
     real_time_elapsed = f"{results.get('runtime', 'not measured')} seconds"
     tokens_cost = "not computed"
-    prompt_type = results.get("prompt_type", "high")
 
     usage = results.get("usage", {})  # sent with to_dict()
     # format usage.cost to 4 decimal places
-    usage["cost"] = round(usage.get("cost", 0), 4)
+    if usage.get("cost"):
+        usage["cost"] = round4(usage.get("cost"))
+    else:
+        usage["cost"] = "not computed"
 
     summary_lines = [
         "# Simulation Summary",
@@ -534,6 +558,7 @@ def save_simulation_results(results, results_path=None):
         f"Runtime: {real_time_elapsed}",
         f"Usage: {usage}",
         f"Prompt Type: {prompt_type}",
+        f"Temperature: {temperature}",
         "",
         "**Final Counts:**",
         f"Sheep: {results.get('final_sheep')}",
@@ -689,7 +714,7 @@ def save_simulation_results(results, results_path=None):
     elif decision_mode == "constant":
         title = f"Population Dynamics with Constant Theta Value. Theta = {model_params.get('theta_start')}"
     else:  # AI mode
-        title = f"Population Dynamics with AI-determined theta values. Model: {model_name}, Prompt Type: {prompt_type} information."
+        title = f"Population Dynamics with AI-determined theta values. Model: {model_name}, Prompt Type: {prompt_type}, Temperature: {temperature}."
 
     fig = create_population_plot(results, model_params.get("sheep_max"), title=title)
     fig.savefig(os.path.join(run_dir, "population_plot.png"))
