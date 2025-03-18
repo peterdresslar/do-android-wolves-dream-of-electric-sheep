@@ -559,7 +559,7 @@ async def get_wolf_response_async(
     prompt_type: str,
     model: str,
     temperature: float,
-    max_tokens: int,
+    max_tokens: int, # noqa
 ) -> WolfResponse:
     """
     Async version of get_wolf_response.
@@ -588,6 +588,7 @@ async def get_wolf_response_async(
             prompt_type=prompt_type,
             model=real_model,
             temperature=temperature,
+            # max_tokens=max_tokens,
             max_tokens=MAX_TOKENS_GPT4,
             usage=current_usage,  # Pass the current usage object
         )
@@ -607,6 +608,7 @@ async def get_wolf_response_async(
             prompt_type=prompt_type,
             model=real_model,
             temperature=temperature,
+            # max_tokens=max_tokens,
             max_tokens=MAX_TOKENS_CLAUDE,
             usage=current_usage,  # Pass the current usage object
         )
