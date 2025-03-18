@@ -335,6 +335,9 @@ def create_sweep_visualization(sweep_stats, results, preset, output_dir):
         if sheep_history:
             sheep_max = max(sheep_max, max(sheep_history))
 
+    # Check if we should fit y-axis to sheep_max for each subplot
+    fit_sheep_max_axis = preset.get("fixed_parameters", {}).get("fit-sheep-max-axis", False)
+
     # Create the figure with appropriate size
     # Base size of 3 inches per plot, with extra space for labels
     fig_width = max(8, 2 + 2 * n_cols)
@@ -363,6 +366,7 @@ def create_sweep_visualization(sweep_stats, results, preset, output_dir):
             continue
 
         sim_results = matching_result["results"]
+        entry_config = matching_result["config"]  # Get the full config for this entry
 
         # Get history data
         sheep_history = sim_results.get("sheep_history", [])
@@ -397,8 +401,14 @@ def create_sweep_visualization(sweep_stats, results, preset, output_dir):
             ax2.set_ylim(0, 1)
             ax2.axis("off")  # Hide the second y-axis
 
-        # Set y-limit for sheep and wolves based on sheep_max
-        ax.set_ylim(0, sheep_max * 1.1)  # Add 10% margin
+        # Set y-limit for sheep and wolves
+        if fit_sheep_max_axis and "sheep_max" in entry_config:
+            # Use the sheep_max from the configuration for this specific subplot
+            subplot_sheep_max = entry_config.get("sheep_max")
+            ax.set_ylim(0, subplot_sheep_max * 1.1)  # Add 10% margin
+        else:
+            # Use the global maximum sheep population
+            ax.set_ylim(0, sheep_max * 1.1)  # Add 10% margin
 
         # Remove ticks and labels for a cleaner look
         ax.set_xticks([])
@@ -497,6 +507,9 @@ def create_prompt_sweep_visualization(sweep_stats, results, preset, output_dir):
         sheep_history = sim_results.get("sheep_history", [])
         if sheep_history:
             sheep_max = max(sheep_max, max(sheep_history))
+
+    # Check if we should fit y-axis to sheep_max for each subplot
+    fit_sheep_max_axis = preset.get("fixed_parameters", {}).get("fit-sheep-max-axis", False)
 
     # Create the figure with appropriate size
     fig_width = max(12, 2 + 2.5 * n_cols)
@@ -600,7 +613,13 @@ def create_prompt_sweep_visualization(sweep_stats, results, preset, output_dir):
             ax2.axis("off")  # Hide the second y-axis
 
         # Set y-limit for sheep and wolves
-        ax.set_ylim(0, sheep_max * 1.1)  # Add 10% margin
+        if fit_sheep_max_axis and "sheep_max" in entry_config:
+            # Use the sheep_max from the configuration for this specific subplot
+            subplot_sheep_max = entry_config.get("sheep_max")
+            ax.set_ylim(0, subplot_sheep_max * 1.1)  # Add 10% margin
+        else:
+            # Use the global maximum sheep population
+            ax.set_ylim(0, sheep_max * 1.1)  # Add 10% margin
 
         # Remove ticks and labels for a cleaner look
         ax.set_xticks([])
