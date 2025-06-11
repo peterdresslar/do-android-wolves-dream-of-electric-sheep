@@ -711,7 +711,7 @@
         "theta_start": 0.5,
         "randomize_theta": true,
         "k": 0.05,
-        "s_start": 3,
+        "s_start": 4,
         "w_start": 10,
         "churn_rate": 1.0,
         "decision_mode": "ai",
