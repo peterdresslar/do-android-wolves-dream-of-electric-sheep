@@ -93,7 +93,7 @@ def get_reference_ODE(model_params, model_time):
         dx_dt, x0, times, args=(alpha, beta, gamma, delta)
     )  # via cursor, verify this
     ode_df = pd.DataFrame(
-        {"t": times, "s": round4(integration[:, 0]), "w": round4(integration[:, 1])}
+        {"t": times, "s": np.round(integration[:, 0], 4), "w": np.round(integration[:, 1], 4)}
     )
     return ode_df
 
