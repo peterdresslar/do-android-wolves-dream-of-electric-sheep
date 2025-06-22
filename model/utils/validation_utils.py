@@ -42,7 +42,6 @@ def run_lv_partial_discretization(model_params: dict) -> pd.DataFrame:
     )
     time_steps = [i * params["dt"] for i in range(max_len)]
 
-
     # Create a DataFrame
     df = pd.DataFrame(
         {
