@@ -301,12 +301,11 @@ class ModelRun:
                 f"Agents starting wolves: {len([w for w in agents.wolves if w.alive])}"
             )
 
-        i = 0  # dont increment on first step, allowing start at zero
-        for _ in range(self.model.steps):
-            self.current_step += i
+        # The simulation starts at step 1.
+        for step in range(1, self.model.steps + 1):
+            self.current_step = step
             snapshot = self.step()
             self.snapshots.append(snapshot)
-            i = 1  # i learned this approach in BASIC
 
         end_time = time.time()
         runtime = end_time - start_time

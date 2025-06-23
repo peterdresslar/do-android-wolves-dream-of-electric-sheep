@@ -42,6 +42,10 @@ def run_lv_partial_discretization(model_params: dict) -> pd.DataFrame:
     )
     time_steps = [i * params["dt"] for i in range(max_len)]
 
+    print(
+        f"Lengths: len(time_steps): {len(time_steps)}, len(sheep_history): {len(results['sheep_history'])}, len(wolf_history): {len(results['wolf_history'])}"
+    )
+
     # Create a DataFrame
     df = pd.DataFrame(
         {
@@ -60,7 +64,7 @@ def run_lv_full_discretization(params: dict):
     pass
 
 
-def test_prop_partial_discretization_matches_ode():
+def test_prop_partial_discretization_matches_ode(*lines: int):
     """
     Hypothesis: the partial discretization should match the ODE model within error ??? with error sensitivity to time ???
 
@@ -97,10 +101,11 @@ def test_prop_partial_discretization_matches_ode():
     ode_results = run_lv_ode(model_params, model_time)
     partial_results = run_lv_partial_discretization(model_params)
 
+    lines = lines or 5
     print("ODE Results:")
-    print(ode_results.head())
+    print(ode_results.head(lines))
     print("\nPartial Discretization Results:")
-    print(partial_results.head())
+    print(partial_results.head(lines))
 
     # NEXT: Add numerical and visual analysis here
 

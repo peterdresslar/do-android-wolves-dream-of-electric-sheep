@@ -267,9 +267,10 @@ class Agents:
         """
         self.params = params
         self.initial_step = initial_step
-        self.current_step = initial_step  # Add step counter
+        self.current_step = initial_step
         self.threads = threads
         self.wolves = []
+        self.wolf_count_history = []
         self.average_thetas = []
         self.last_wolf_death_step = None
 
@@ -341,7 +342,10 @@ class Agents:
             wolf.handle_birth(initial_step, starting_theta_value)
             agents.wolves.append(wolf)
 
-        agents.average_thetas = []
+        # Initialize history with the t=0 state
+        initial_avg_theta = agents.get_mean_theta()
+        agents.wolf_count_history = [w_start]
+        agents.average_thetas = [initial_avg_theta]
 
         return agents
 
@@ -379,25 +383,11 @@ class Agents:
     # History methods for convenience, working with data from
     # our attached collection of wolves.
 
-    def get_living_wolves_count_step(self, step: int) -> int:
-        """
-        Get the number of living wolves at a given step.
-        """
-        # Use the alive_at_step method to check if each wolf was alive at this step
-        return sum(1 for wolf in self.wolves if wolf.alive_at_step(step))
-
     def get_living_wolf_count_history(self) -> list[int]:
         """
         Get the history of living wolf counts for all steps in the simulation.
         """
-        # Use our step counter to determine the correct length
-        # Include the initial step through current step (inclusive)
-        num_steps = self.current_step - self.initial_step + 1
-
-        return [
-            self.get_living_wolves_count_step(step)
-            for step in range(self.initial_step, self.initial_step + num_steps)
-        ]
+        return self.wolf_count_history
 
     def get_average_theta_history(self) -> list[float]:
         """
@@ -439,13 +429,16 @@ class Agents:
                 starting_theta=starting_theta,  # Set the starting theta
                 last_sheep_state=None,  # Initialize with None
                 last_wolves_count=None,  # Initialize with None
-                born_at_step=step,  # (added comma)
+                born_at_step=step,
                 died_at_step=None,
             )
 
             # Now handle_birth can properly initialize the wolf's state
             new_wolf.handle_birth(step, starting_theta)
             self.wolves.append(new_wolf)
+
+        # Record the new wolf count after births/deaths
+        self.wolf_count_history.append(self.living_wolves_count)
 
     def kill_wolves(self, step: int, net_wolves_change: int) -> None:
         """
@@ -462,6 +455,9 @@ class Agents:
         # Kill the oldest wolves first
         for wolf in wolves_by_oldest[:num_wolves]:
             wolf.handle_death(step)
+
+        # Record the new wolf count after births/deaths
+        self.wolf_count_history.append(self.living_wolves_count)
 
     def update_average_theta(self, append=True) -> float:
         """
@@ -508,6 +504,9 @@ class Agents:
             self.birth_wolves(step, net_wolves_change)
         elif net_wolves_change < 0:
             self.kill_wolves(step, abs(net_wolves_change))
+
+        # Record the new wolf count after births/deaths
+        self.wolf_count_history.append(self.living_wolves_count)
 
         # Check if wolves went extinct. Only fire the first time
         if self.living_wolves_count == 0 and self.last_wolf_death_step is None:

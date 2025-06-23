@@ -20,8 +20,8 @@ class Domain:
         # State variables
         self.sheep_state = starting_sheep
 
-        # History tracking (missing)
-        self.sheep_history = []
+        # Initialize history with the t=0 state
+        self.sheep_history = [starting_sheep]
 
         # Accumulators for changes in each step
         self.step_accumulated_ds = 0
