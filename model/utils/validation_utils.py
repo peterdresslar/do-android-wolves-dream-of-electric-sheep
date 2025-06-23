@@ -105,7 +105,7 @@ def test_prop_partial_discretization_matches_ode(model_params: dict, lines: int 
     }
 
     # Run both models
-    ode_results = run_lv_ode(model_params, model_time, cliff="none")
+    ode_results = run_lv_ode(model_params, model_time, cliff="wolves")
     partial_results = run_lv_partial_discretization(model_params)
 
     print("\n--- Model Results ---")
