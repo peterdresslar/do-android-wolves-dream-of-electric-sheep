@@ -66,9 +66,24 @@ def run_lv_full_discretization(params: dict):
     pass
 
 
-def test_prop_partial_discretization_matches_ode(lines: int = 5):
+def test_prop_partial_discretization_matches_ode(model_params: dict, lines: int = 5):
     """
     Hypothesis: the partial discretization should match the ODE model within error.
+
+    Model parameters must be passed in as a dictionary. For instance:
+
+    model_params = {
+        "alpha": 1.0,
+        "beta": 0.1,
+        "gamma": 1.5,
+        "delta": 0.75,
+        "s_start": 100,
+        "w_start": 10,
+        "dt": 0.02,
+        "steps": 1000,
+        "sheep_max": 1000000,
+        "eps": 0.0
+    }
 
     We will run both the ode and partial discretization models for a given set of parameters and time.
     We will then compare the results.
@@ -80,19 +95,7 @@ def test_prop_partial_discretization_matches_ode(lines: int = 5):
 
     Finally, simple line plots as well as phase space plots will be provided.
     """
-    # Define a base set of parameters for the comparison
-    model_params = {
-        "alpha": 1.0,
-        "beta": 0.1,
-        "gamma": 1.5,
-        "delta": 0.75,
-        "s_start": 100,
-        "w_start": 10,
-        "dt": 0.02,
-        "steps": 1000,
-        "sheep_max": 200,
-        "eps": 0.0
-    }
+     
 
     # The ODE solver needs N+1 points to match our discrete model
     # which includes the initial state plus N steps
@@ -102,7 +105,7 @@ def test_prop_partial_discretization_matches_ode(lines: int = 5):
     }
 
     # Run both models
-    ode_results = run_lv_ode(model_params, model_time, cliff="wolves")
+    ode_results = run_lv_ode(model_params, model_time, cliff="none")
     partial_results = run_lv_partial_discretization(model_params)
 
     print("\n--- Model Results ---")
@@ -163,6 +166,7 @@ def test_prop_partial_discretization_matches_ode(lines: int = 5):
     )
     axes[0].set_title("Sheep Population Over Time")
     axes[0].set_xlabel("Time")
+    axes[0].set_ylim(0, (model_params["s_start"]*10))
     axes[0].set_ylabel("Population")
     axes[0].legend()
     axes[0].grid(True)
@@ -178,6 +182,7 @@ def test_prop_partial_discretization_matches_ode(lines: int = 5):
     )
     axes[1].set_title("Wolf Population Over Time")
     axes[1].set_xlabel("Time")
+    axes[1].set_ylim(0, (model_params["w_start"]*10))
     axes[1].set_ylabel("Population")
     axes[1].legend()
     axes[1].grid(True)
@@ -196,6 +201,8 @@ def test_prop_partial_discretization_matches_ode(lines: int = 5):
     axes[2].set_title("Phase Space")
     axes[2].set_xlabel("Sheep Population")
     axes[2].set_ylabel("Wolf Population")
+    axes[2].set_xlim(0, (model_params["s_start"]*10))
+    axes[2].set_ylim(0, (model_params["w_start"]*10))
     axes[2].legend()
     axes[2].grid(True)
 

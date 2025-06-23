@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt  # type: ignore
 import numpy as np
 import pandas as pd  # type: ignore
 import seaborn as sns  # type: ignore
-from scipy.integrate import odeint
+from scipy.integrate import odeint, solve_ivp
 
 
 # Function to get the project root directory
@@ -81,41 +81,85 @@ def dx_dt(x, t, alpha, beta, gamma, delta):  # noqa
 
 def get_reference_ODE_with_cliff(model_params, model_time, cliff_type: str = "none"):
     """
-    Get the reference ODE solution, with a twist: "cliff"populations lower than 1 are considered 0.
+    Get the reference ODE solution using solve_ivp with event detection for extinction.
     The cliff type can be "none", "sheep", "wolves", or "both".
     """
     alpha = model_params["alpha"]
     beta = model_params["beta"]
     gamma = model_params["gamma"]
     delta = model_params["delta"]
+    eps = model_params.get("eps", 0.0)
 
     t_end = model_time["time"]
-    times = np.linspace(0, t_end, model_time["tmax"])
+    t_eval = np.linspace(0, t_end, model_time["tmax"] + 1)
+    
+    # Define the ODE system
+    def dx_dt_ivp(t, x):
+        s, w = x
+        # If populations are extinct (below 1), keep them at 0
+        if cliff_type in ["sheep", "both"] and s < 1:
+            s = 0
+        if cliff_type in ["wolves", "both"] and w < 1:
+            w = 0
+        
+        # the LV susyem
+        ds_dt = alpha * s - beta * s * w
+        dw_dt = -gamma * w + delta * beta * s * w + eps
+        return [ds_dt, dw_dt]
+    
+    # Define extinction events
+    events = []
+    
+    if cliff_type in ["sheep", "both"]:
+        def sheep_extinction(t, x):
+            return x[0] - 1  # Triggers when sheep population crosses 1
+        sheep_extinction.terminal = False
+        sheep_extinction.direction = -1  # Only trigger when crossing from above
+        events.append(sheep_extinction)
+    
+    if cliff_type in ["wolves", "both"]:
+        def wolf_extinction(t, x):
+            return x[1] - 1  # Triggers when wolf population crosses 1
+        wolf_extinction.terminal = False
+        wolf_extinction.direction = -1
+        events.append(wolf_extinction)
+    
+    # Initial conditions
     x0 = [model_params["s_start"], model_params["w_start"]]
-
-    integration = odeint(dx_dt, x0, times, args=(alpha, beta, gamma, delta))
-
-    # here, we will post-process the integration to set wolves to 0 *moving forward* if they are less than 1 at any point.
-    sheep_extinct = False
-    wolf_extinct = False
-    for i in range(len(integration)):
-        if integration[i, 0] < 1:
-            sheep_extinct = True
-        if integration[i, 1] < 1:
-            wolf_extinct = True
-
-        if sheep_extinct and cliff_type in ["sheep", "both"]:
-            integration[i, 0] = 0
-        if wolf_extinct and cliff_type in ["wolves", "both"]:
-            integration[i, 1] = 0
-
-    ode_df = pd.DataFrame(
-        {
-            "t": times,
-            "s": np.round(integration[:, 0], 4),
-            "w": np.round(integration[:, 1], 4),
-        }
+    
+    # Solve the ODE
+    solution = solve_ivp(
+        dx_dt_ivp, 
+        [0, t_end], 
+        x0, 
+        t_eval=t_eval,
+        events=events,
+        method='RK45',
+        rtol=1e-8,
+        atol=1e-10
     )
+    
+    # Post-process to ensure extinct populations stay at 0
+    s_values = solution.y[0]
+    w_values = solution.y[1]
+    
+    # Find when extinctions occurred
+    if cliff_type in ["sheep", "both"]:
+        sheep_extinct_idx = np.where(s_values < 1)[0]
+        if len(sheep_extinct_idx) > 0:
+            s_values[sheep_extinct_idx[0]:] = 0
+            
+    if cliff_type in ["wolves", "both"]:
+        wolf_extinct_idx = np.where(w_values < 1)[0]
+        if len(wolf_extinct_idx) > 0:
+            w_values[wolf_extinct_idx[0]:] = 0
+    
+    ode_df = pd.DataFrame({
+        "t": solution.t,
+        "s": np.round(s_values, 4),
+        "w": np.round(w_values, 4),
+    })
+    
     return ode_df
 
 
