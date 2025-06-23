@@ -35,6 +35,9 @@ def run_lv_partial_discretization(model_params: dict) -> pd.DataFrame:
     # We need to convert this to a DataFrame to match the ODE function's output.
     results = run_model(**params)
 
+    
+    print(results)
+
     # Ensure all histories have the same length
     max_len = max(
         len(results["sheep_history"]),

@@ -437,9 +437,6 @@ class Agents:
             new_wolf.handle_birth(step, starting_theta)
             self.wolves.append(new_wolf)
 
-        # Record the new wolf count after births/deaths
-        self.wolf_count_history.append(self.living_wolves_count)
-
     def kill_wolves(self, step: int, net_wolves_change: int) -> None:
         """
         For now we pick the oldest wolves, but this would not be a good strategy
@@ -455,9 +452,6 @@ class Agents:
         # Kill the oldest wolves first
         for wolf in wolves_by_oldest[:num_wolves]:
             wolf.handle_death(step)
-
-        # Record the new wolf count after births/deaths
-        self.wolf_count_history.append(self.living_wolves_count)
 
     def update_average_theta(self, append=True) -> float:
         """
