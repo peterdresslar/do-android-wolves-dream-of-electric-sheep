@@ -9,15 +9,15 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from model.model import run as run_model
-from model.utils.simulation_utils import get_reference_ODE
+from model.utils.simulation_utils import get_reference_ODE_with_cliff
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 
 
-def run_lv_ode(model_params: dict, model_time: dict) -> pd.DataFrame:
+def run_lv_ode(model_params: dict, model_time: dict, cliff: str) -> pd.DataFrame:
     """
     Run the LV ODE model.
     """
-    return get_reference_ODE(model_params, model_time)
+    return get_reference_ODE_with_cliff(model_params, model_time, cliff_type=cliff)
 
 
 def run_lv_partial_discretization(model_params: dict) -> pd.DataFrame:
@@ -91,7 +91,7 @@ def test_prop_partial_discretization_matches_ode(lines: int = 5):
         "dt": 0.02,
         "steps": 1000,
         "sheep_max": 200,
-        "eps": 0.0001,
+        "eps": 0.0
     }
 
     # The ODE solver needs N+1 points to match our discrete model
@@ -102,7 +102,7 @@ def test_prop_partial_discretization_matches_ode(lines: int = 5):
     }
 
     # Run both models
-    ode_results = run_lv_ode(model_params, model_time)
+    ode_results = run_lv_ode(model_params, model_time, cliff="wolves")
     partial_results = run_lv_partial_discretization(model_params)
 
     print("\n--- Model Results ---")

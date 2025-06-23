@@ -79,7 +79,11 @@ def dx_dt(x, t, alpha, beta, gamma, delta):  # noqa
     return [ds_dt, dw_dt]
 
 
-def get_reference_ODE(model_params, model_time):
+def get_reference_ODE_with_cliff(model_params, model_time, cliff_type: str = "none"):
+    """
+    Get the reference ODE solution, with a twist: "cliff"populations lower than 1 are considered 0.
+    The cliff type can be "none", "sheep", "wolves", or "both".
+    """
     alpha = model_params["alpha"]
     beta = model_params["beta"]
     gamma = model_params["gamma"]
@@ -89,11 +93,28 @@ def get_reference_ODE(model_params, model_time):
     times = np.linspace(0, t_end, model_time["tmax"])
     x0 = [model_params["s_start"], model_params["w_start"]]
 
-    integration = odeint(
-        dx_dt, x0, times, args=(alpha, beta, gamma, delta)
-    )  # via cursor, verify this
+    integration = odeint(dx_dt, x0, times, args=(alpha, beta, gamma, delta))
+
+    # here, we will post-process the integration to set wolves to 0 *moving forward* if they are less than 1 at any point.
+    sheep_extinct = False
+    wolf_extinct = False
+    for i in range(len(integration)):
+        if integration[i, 0] < 1:
+            sheep_extinct = True
+        if integration[i, 1] < 1:
+            wolf_extinct = True
+
+        if sheep_extinct and cliff_type in ["sheep", "both"]:
+            integration[i, 0] = 0
+        if wolf_extinct and cliff_type in ["wolves", "both"]:
+            integration[i, 1] = 0
+
     ode_df = pd.DataFrame(
-        {"t": times, "s": np.round(integration[:, 0], 4), "w": np.round(integration[:, 1], 4)}
+        {
+            "t": times,
+            "s": np.round(integration[:, 0], 4),
+            "w": np.round(integration[:, 1], 4),
+        }
     )
     return ode_df
 
@@ -428,7 +449,6 @@ def save_simulation_results(results, results_path=None):
     print("model_name", model_name)
     print("prompt_type", prompt_type)
     print("temperature", temperature)
-
 
     # Create a unique run directory name
     # Include temperature in directory name only for AI mode
