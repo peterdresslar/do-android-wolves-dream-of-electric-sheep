@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt  # type: ignore
 import numpy as np
 import pandas as pd  # type: ignore
 import seaborn as sns  # type: ignore
-from scipy.integrate import odeint, solve_ivp
+from scipy.integrate import solve_ivp
 
 
 # Function to get the project root directory
@@ -138,7 +138,7 @@ def get_reference_ODE_with_cliff(model_params, model_time, cliff_type: str = "no
         x0,
         t_eval=t_eval,
         events=events,
-        method="RK45",
+        method="DOP853",
         rtol=1e-8,
         atol=1e-10,
     )
