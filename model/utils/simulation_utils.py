@@ -75,7 +75,7 @@ def format4(x) -> str:
 def dx_dt(x, t, alpha, beta, gamma, delta):  # noqa
     s, w = x
     ds_dt = alpha * s - beta * s * w
-    dw_dt = -gamma * w + delta * beta * s * w
+    dw_dt = -gamma * w + delta * s * w
     return [ds_dt, dw_dt]
 
 
@@ -104,7 +104,7 @@ def get_reference_ODE_with_cliff(model_params, model_time, cliff_type: str = "no
 
         # the LV susyem
         ds_dt = alpha * s - beta * s * w
-        dw_dt = -gamma * w + delta * beta * s * w + eps
+        dw_dt = -gamma * w + delta * s * w
         return [ds_dt, dw_dt]
 
     # Define extinction events

@@ -237,8 +237,6 @@ class Wolf:
         # Wolf reproduction based on predation
         dw_dt += (
             self.delta  # conversion efficiency
-            * self.beta  # predation rate
-            * current_theta  # hunting intensity
             * s  # sheep population
             * 1  # this wolf
         )
