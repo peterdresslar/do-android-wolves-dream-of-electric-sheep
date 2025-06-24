@@ -235,10 +235,11 @@ class Wolf:
         dw_dt = -1 * self.gamma * 1  # gamma * this wolf
 
         # Wolf reproduction based on predation
+        # dw/dt = δ*((1-beta)*theta + beta)*sw - γw
+        # - γw is handled elsewhere
         dw_dt += (
             self.delta  # conversion efficiency
-            * self.beta  # predation rate
-            * current_theta # theta (hunting intensity) now applied to delta also
+            * (((1 - self.beta) * current_theta) + self.beta) # theta term attenuated by beta but washes out at 1.0
             * s  # sheep population
             * 1  # this wolf
         )
