@@ -246,12 +246,14 @@ class ModelRun:
         # 1. Reset Domain for new step
         domain.reset_accumulators()
 
-        # 2. Process wolves
+        # 2. Process wolves, which accumulates the predation effect on sheep
         agents.process_step_sync(domain, self.current_step)
 
-        # 3. Process wolf effects on the domain (apply accumulated changes)
-        # Note that in the next two steps
-        # we are effectively managing partial time across domain and agents
+        # 3. Add the sheep's intrinsic growth to the accumulator
+        growth_ds = domain.alpha * domain.sheep_state * domain.dt
+        domain.step_accumulated_ds += growth_ds
+
+        # 4. Apply all accumulated changes to the domain
         net_wolves_change = domain.accumulate_and_fit(params)
 
         if params.get("step_print"):
@@ -259,11 +261,11 @@ class ModelRun:
                 f"Step {self.current_step}: net_wolves_change: {net_wolves_change}: avg theta: {agents.get_mean_theta()}"
             )
 
-        # 4. Handle wolf population changes (moved to Agents class)
+        # 5. Handle wolf population changes based on the net change
         agents.handle_population_changes(net_wolves_change, self.current_step)
 
-        # 5. Process sheep growth
-        domain.process_sheep_growth(params)
+        # 6. Record the new sheep state for this step's history
+        domain.sheep_history.append(domain.sheep_state)
 
         snapshot = {
             "step": self.current_step,

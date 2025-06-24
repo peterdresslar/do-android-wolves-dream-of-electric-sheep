@@ -60,10 +60,6 @@ class Domain:
         self.step = state_dict.get("step", step)
 
     # In the reference notebook, this is ODE_accumulate_and_fit()
-    # This function is here because our sheep our being operated on, and they belong as a population
-    # to the domain.
-    # The wolves are also fractionalized here, which could be designed out. But, it would more likely
-    # be the case that we would simply agentize the sheep, and out this function would go.
     def accumulate_and_fit(self, params):
         ds_total = self.step_accumulated_ds
         dw_total = self.step_accumulated_dw
@@ -88,20 +84,3 @@ class Domain:
         self.accumulated_dw_remainder = new_remainder
 
         return net_wolves_change
-
-    # in the reference notebook, this is process_s_euler_forward()
-    # This function is here because our sheep are not agentized and still behave as domain
-    def process_sheep_growth(self, params):
-        """Process sheep growth according to the model parameters."""
-        alpha = self.alpha
-        dt = self.dt
-        s = self.sheep_state
-
-        ds_dt = alpha * s
-
-        new_s = max(0, s + ds_dt * dt)
-        self.sheep_state = new_s
-
-        # Apply sheep capacity limit
-        self.sheep_state = min(self.sheep_state, self.sheep_capacity)
-        self.sheep_history.append(self.sheep_state)
