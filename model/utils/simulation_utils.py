@@ -88,7 +88,7 @@ def get_reference_ODE_with_cliff(model_params, model_time, cliff_type: str = "no
     beta = model_params["beta"]
     gamma = model_params["gamma"]
     delta = model_params["delta"]
-    eps = model_params.get("eps", 0.0)
+    # eps = model_params.get("eps", 0.0)
 
     t_end = model_time["time"]
     t_eval = np.linspace(0, t_end, model_time["tmax"] + 1)
