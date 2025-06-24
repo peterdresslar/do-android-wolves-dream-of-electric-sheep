@@ -6,6 +6,7 @@ the effect of the gather_and_fit approach, and compare to a standard ODE solver 
 """
 
 import matplotlib.pyplot as plt
+import matplotlib.ticker as mticker
 import numpy as np
 import pandas as pd
 from model.model import run as run_model
@@ -116,8 +117,6 @@ def test_prop_partial_discretization_matches_ode(model_params: dict, lines: int 
 
     print(f"\nODE Results (Cliff) (first {lines} rows):")
     print(ode_results_cliff.head(lines))
-    print(f"\nODE Results (No Cliff) (first {lines} rows):")
-    print(ode_results_no_cliff.head(lines))
     print(f"\nPartial Discretization Results (first {lines} rows):")
     print(partial_results.head(lines))
 
@@ -148,58 +147,95 @@ def test_prop_partial_discretization_matches_ode(model_params: dict, lines: int 
 
     # --- Visualization ---
     fig, axes = plt.subplots(3, 1, figsize=(12, 18))
-    fig.suptitle("ODE vs. Partial Discretization Comparison", fontsize=16)
+    fig.suptitle("ODE (cliff and no cliff) vs. Partial Discretization Comparison", fontsize=16)
+
+    # Common y-limit for population plots
+    y_limit = model_params["w_start"] * 10
 
     # Sheep population plot
     axes[0].plot(
-        partial_results["t"],
+        partial_results.index,
         partial_results["s"],
         label="Partial Discretization",
         color="blue",
     )
-    axes[0].plot(ode_results_cliff["t"], ode_results_cliff["s"], label="ODE (Cliff)", color="orange", linestyle="--")
-    axes[0].plot(ode_results_no_cliff["t"], ode_results_no_cliff["s"], label="ODE (No Cliff)", color="green", linestyle=":")
+    axes[0].plot(
+        ode_results_cliff.index,
+        ode_results_cliff["s"],
+        label="ODE (Cliff)",
+        color="orange",
+        linestyle="--",
+    )
+    axes[0].plot(
+        ode_results_no_cliff.index,
+        ode_results_no_cliff["s"],
+        label="ODE (No Cliff)",
+        color="green",
+        linestyle=":",
+    )
     axes[0].set_title("Sheep Population Over Time")
-    axes[0].set_xlabel("Time")
-    axes[0].set_ylim(0, (model_params["s_start"]*2.5))
+    axes[0].set_xlabel("Steps")
+    axes[0].set_ylim(0, y_limit)
     axes[0].set_ylabel("Population")
     axes[0].legend()
     axes[0].grid(True)
+    axes[0].xaxis.set_major_locator(mticker.MultipleLocator(100))
 
     # Wolf population plot
     axes[1].plot(
-        partial_results["t"],
+        partial_results.index,
         partial_results["w"],
         label="Partial Discretization",
         color="blue",
     )
-    axes[1].plot(ode_results_cliff["t"], ode_results_cliff["w"], label="ODE (Cliff)", color="orange", linestyle="--")
-    axes[1].plot(ode_results_no_cliff["t"], ode_results_no_cliff["w"], label="ODE (No Cliff)", color="green", linestyle=":")
+    axes[1].plot(
+        ode_results_cliff.index,
+        ode_results_cliff["w"],
+        label="ODE (Cliff)",
+        color="orange",
+        linestyle="--",
+    )
+    axes[1].plot(
+        ode_results_no_cliff.index,
+        ode_results_no_cliff["w"],
+        label="ODE (No Cliff)",
+        color="green",
+        linestyle=":",
+    )
     axes[1].set_title("Wolf Population Over Time")
-    axes[1].set_xlabel("Time")
-    axes[1].set_ylim(0, (model_params["w_start"]*10))
+    axes[1].set_xlabel("Steps")
+    axes[1].set_ylim(0, y_limit)
     axes[1].set_ylabel("Population")
     axes[1].legend()
     axes[1].grid(True)
+    axes[1].xaxis.set_major_locator(mticker.MultipleLocator(100))
+
+    # --- Prepare data for Phase Space plot ---
+    # Find the point of wolf extinction in the discrete model
+    extinction_step = (partial_results['w'] == 0).idxmax()
+    if extinction_step > 0:
+        phase_space_results = partial_results.iloc[:extinction_step]
+    else:
+        # If wolves never go extinct, use the full dataset
+        phase_space_results = partial_results
 
     # Phase space plot
     axes[2].plot(
-        partial_results["s"],
-        partial_results["w"],
+        phase_space_results["s"],
+        phase_space_results["w"],
         label="Partial Discretization",
         color="blue",
     )
     axes[2].plot(
-        ode_results_cliff["s"], ode_results_cliff["w"], label="ODE (Cliff)", color="orange", linestyle="--"
-    )
-    axes[2].plot(
-        ode_results_no_cliff["s"], ode_results_no_cliff["w"], label="ODE (No Cliff)", color="green", linestyle=":"
+        ode_results_cliff["s"],
+        ode_results_cliff["w"],
+        label="ODE (Cliff)",
+        color="orange",
+        linestyle="--",
     )
     axes[2].set_title("Phase Space")
     axes[2].set_xlabel("Sheep Population")
     axes[2].set_ylabel("Wolf Population")
-    axes[2].set_xlim(0, (model_params["s_start"]*2.5))
-    axes[2].set_ylim(0, (model_params["w_start"]*10))
     axes[2].legend()
     axes[2].grid(True)
 
