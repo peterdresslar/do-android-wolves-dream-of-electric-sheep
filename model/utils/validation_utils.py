@@ -64,7 +64,36 @@ def run_lv_full_discretization(params: dict):
     pass
 
 
-def plot_partial_matches_ode(model_params: dict, partial_results: pd.DataFrame, ode_results_cliff: pd.DataFrame, ode_results_no_cliff: pd.DataFrame):
+def plot_forward_euler_vs_ode(t, s_euler, w_euler, s_exact, w_exact):
+    # This is just two plots, with inputs from functions including the forward euler solver.
+    plt.style.use('seaborn-v0_8-poster')
+    plt.figure(figsize = (12, 8))
+
+    plt.plot(t, s_euler, 'bo--', label='Approximate Sheep (Euler)')
+    plt.plot(t, s_exact, 'g-', label='Exact Sheep (odeint)')
+    plt.plot(t, w_euler, 'ro--', label='Approximate Wolves (Euler)')
+    plt.plot(t, w_exact, 'm-', label='Exact Wolves (odeint)')
+
+    plt.title('Forward Euler vs. odeint for Lotka-Volterra System')
+    plt.xlabel('Time (t)')
+    plt.ylabel('Population')
+    plt.grid()
+    plt.legend(loc='upper right')
+    plt.show()
+
+    # 4. Create the Phase Space Plot
+    plt.figure(figsize=(10, 10))
+    plt.plot(s_euler, w_euler, 'bo--', label='Approximate (Euler)')
+    plt.plot(s_exact, w_exact, 'g-', label='Exact (odeint)')
+    plt.title('Phase Space: Wolves vs. Sheep')
+    plt.xlabel('Sheep Population')
+    plt.ylabel('Wolf Population')
+    plt.grid()
+    plt.legend(loc='upper right')
+    plt.show()
+
+
+def plot_partial_matches_ode_with_cliff(model_params: dict, partial_results: pd.DataFrame, ode_results_cliff: pd.DataFrame, ode_results_no_cliff: pd.DataFrame):
      # --- Visualization ---
     fig, axes = plt.subplots(3, 1, figsize=(12, 18))
     fig.suptitle("ODE (cliff and no cliff) vs. Partial Discretization Comparison", fontsize=16)
