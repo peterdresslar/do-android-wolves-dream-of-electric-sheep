@@ -102,9 +102,9 @@ def get_reference_ODE_with_cliff(model_params, model_time, cliff_type: str = "no
         if cliff_type in ["wolves", "both"] and w < 1:
             w = 0
 
-        # the LV susyem
+        # the modified LV system
         ds_dt = alpha * s - beta * s * w
-        dw_dt = -gamma * w + delta * s * w
+        dw_dt = -gamma * w + beta * delta * s * w
         return [ds_dt, dw_dt]
 
     # Define extinction events
