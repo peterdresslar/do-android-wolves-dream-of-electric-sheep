@@ -77,6 +77,7 @@ def plot_forward_euler_vs_ode(t, s_euler, w_euler, s_exact, w_exact):
     plt.title('Forward Euler vs. odeint for Lotka-Volterra System')
     plt.xlabel('Time (t)')
     plt.ylabel('Population')
+    plt.ylim(0, 25)
     plt.grid()
     plt.legend(loc='upper right')
     plt.show()
