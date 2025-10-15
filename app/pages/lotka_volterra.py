@@ -221,8 +221,13 @@ def render_example_1() -> None:
         .properties(width="container")
     )
     st.caption("Figure 2")
-    st.altair_chart(phase_chart, use_container_width=True)
-    
+    s_null = alt.Chart(pd.DataFrame({'x': [gamma / delta]})).mark_rule(color='red', strokeDash=[4, 4]).encode(x='x:Q')
+    w_null = alt.Chart(pd.DataFrame({'y': [alpha / beta]})).mark_rule(color='blue', strokeDash=[4, 4]).encode(y='y:Q')
+    eq_pt = alt.Chart(pd.DataFrame({'Sheep': [gamma / delta], 'Wolves': [alpha / beta]})).mark_point(color='black', size=60)
+
+    st.altair_chart(phase_chart + s_null + w_null + eq_pt, use_container_width=True)
+    st.caption("Dashed lines: nullclines; dot: coexistence equilibrium (γ/δ, α/β).")
+        
 
 
     
@@ -324,7 +329,12 @@ def render_example_2() -> None:
         .properties(width="container")
     )
     st.caption("Figure 4")
-    st.altair_chart(phase_chart, use_container_width=True)
+    s_cap = alt.Chart(pd.DataFrame({'x': [K]})).mark_rule(color='orange').encode(x='x:Q')
+    allee_s = alt.Chart(pd.DataFrame({'x': [A]})).mark_rule(color='purple', strokeDash=[2, 2]).encode(x='x:Q')
+    allee_w = alt.Chart(pd.DataFrame({'y': [A]})).mark_rule(color='purple', strokeDash=[2, 2]).encode(y='y:Q')
+
+    st.altair_chart(phase_chart + s_cap + allee_s + allee_w, use_container_width=True)
+    st.caption("Orange: carrying capacity K; purple dashed: Allee thresholds A.")
 
     st.markdown("""
     There are two presets for example 2 that demonstrate the effects of the K cap and the A threshold. Preset 2a will be rescued by the K cap, while preset 2b will not.
@@ -334,7 +344,13 @@ def render_example_2() -> None:
     [Rosenzweig 1971](https://doi.org/10.1126/science.171.3969.385).
     """)
 
-def render_footer
+def render_footer() -> None:
+    st.markdown("""
+    ### Quick Navigation
+    - [Home](/)
+    - [Base Lotka-Volterra](/)
+    - [LV* with stability analysis](/)
+    """)
 
 def main() -> None:
     add_sidebar()
