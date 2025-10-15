@@ -276,6 +276,8 @@ def render_example_2() -> None:
     Here we can see that the modified LV* system exhibits a new possibility: the system can crash to zero as a result of one or the other species declining beneath the Allee threshold. 
     Using the sidebar controls for both the example 1 parameters and initial conditions as well as the example 2 modifying thresholds, it is possible to evaluate settings that lead to stability,
     and ones that lead to system collapse.
+
+    Please note that in this diagram we simply stop processing once either the sheep or the wolves crash to zero. The real dynamics would have the other species following a trajectory to a certain eventual crash (wolves) or explosion (sheep).
     """)
 
 def main() -> None:
