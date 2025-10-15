@@ -84,6 +84,30 @@ def reset_to_defaults() -> None:
     st.session_state.K = 1000
     st.session_state.A = 2
 
+def set_preset_2a() -> None:
+    # this will be rescued by the K cap
+    #1, .05, 1, .05, 75, 2, 100, 2
+    st.session_state.alpha = 1.0
+    st.session_state.beta = 0.05
+    st.session_state.gamma = 1.0
+    st.session_state.delta = 0.05
+    st.session_state.s_start = 75
+    st.session_state.w_start = 2
+    st.session_state.K = 100
+    st.session_state.A = 2
+
+def set_preset_2b() -> None:
+    # this will NOT be rescued by the higher K cap
+    #1, .05, 1, .05, 75, 2, 200, 2
+    st.session_state.alpha = 1.0
+    st.session_state.beta = 0.05
+    st.session_state.gamma = 1.0
+    st.session_state.delta = 0.05
+    st.session_state.s_start = 75
+    st.session_state.w_start = 2
+    st.session_state.K = 200
+    st.session_state.A = 2
+
 #--- Streamlit page building ---#
 def render_intro() -> None:
     st.markdown(r"""
@@ -135,8 +159,10 @@ def add_example_1_sidebar() -> None:
 def add_example_2_sidebar() -> None:
     # group for example 2. just carrying capacity K
     st.sidebar.markdown("### Example 2")
-    st.sidebar.number_input("K", key="K", value=1000, min_value=0, max_value=1000, step=1)
+    st.sidebar.number_input("K", key="K", value=200, min_value=0, max_value=1000, step=1)
     st.sidebar.number_input("A", key="A", value=2, min_value=0, max_value=10, step=1)
+    st.sidebar.button("Preset 2a", on_click=set_preset_2a)
+    st.sidebar.button("Preset 2b", on_click=set_preset_2b)
 
 def render_example_1() -> None:
     st.markdown("""
@@ -278,7 +304,7 @@ def render_example_2() -> None:
 
     Please note that in this diagram we simply stop processing once either the sheep or the wolves crash to zero. The real dynamics would have the other species following a trajectory to a certain eventual crash (wolves) or explosion (sheep).
     
-    Below we can see our phase portrait for the LV* system given the parameters and initial conditions we selected.
+    Below we can see our phase portrait for the LV* system given the parameters and initial conditions we selected. Unsurprisingly, system dynamics that crash below the A threshold clip into irretrievable states in the phase portrait.
     """)
 
     phase_df = pd.DataFrame({
@@ -299,6 +325,16 @@ def render_example_2() -> None:
     )
     st.caption("Figure 4")
     st.altair_chart(phase_chart, use_container_width=True)
+
+    st.markdown("""
+    There are two presets for example 2 that demonstrate the effects of the K cap and the A threshold. Preset 2a will be rescued by the K cap, while preset 2b will not.
+    The difference between the two presets is the value of the carrying capacity K. Preset 2a has a K of 100, while preset 2b has a K of 200. Perhaps somewhat paradoxically,
+    a lower K cap can lead to a more stable modified system in the presence of an Allee threshold. This counterintuitive behavior connects to the well-known
+    “paradox of enrichment” in predator–prey systems (Rosenzweig, 1971), where increasing carrying capacity can destabilize dynamics and heighten collapse risk; see
+    [Rosenzweig 1971](https://doi.org/10.1126/science.171.3969.385).
+    """)
+
+def render_footer
 
 def main() -> None:
     add_sidebar()
