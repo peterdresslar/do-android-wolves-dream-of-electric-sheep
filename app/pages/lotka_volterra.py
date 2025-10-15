@@ -340,17 +340,14 @@ def render_example_2() -> None:
     There are two presets for example 2 that demonstrate the effects of the K cap and the A threshold. Preset 2a will be rescued by the K cap, while preset 2b will not.
     The difference between the two presets is the value of the carrying capacity K. Preset 2a has a K of 100, while preset 2b has a K of 200. Perhaps somewhat paradoxically,
     a lower K cap can lead to a more stable modified system in the presence of an Allee threshold. This counterintuitive behavior connects to the well-known
-    “paradox of enrichment” in predator–prey systems (Rosenzweig, 1971), where increasing carrying capacity can destabilize dynamics and heighten collapse risk; see
-    [Rosenzweig 1971](https://doi.org/10.1126/science.171.3969.385).
+    “paradox of enrichment” in predator–prey systems (Rosenzweig, 1971), where increasing carrying capacity can destabilize dynamics and heighten collapse risk.
     """)
 
 def render_footer() -> None:
-    st.markdown("""
-    ### Quick Navigation
-    - [Home](/)
-    - [Base Lotka-Volterra](/)
-    - [LV* with stability analysis](/)
-    """)
+    st.divider()
+    st.markdown("### Quick Navigation")
+    st.page_link("pages/lotka_volterra_star_stability.py", label="Next: LV* with stability analysis", icon="➡️")
+    st.page_link("pages/home.py", label="Home", icon="🏠")
 
 def main() -> None:
     add_sidebar()
@@ -359,5 +356,6 @@ def main() -> None:
     add_example_2_sidebar()
     render_example_1()
     render_example_2()
+    render_footer()
 
 main()
