@@ -1,9 +1,30 @@
 import streamlit as st
 from scipy.integrate import solve_ivp
 import pandas as pd
+import numpy as np
+import altair as alt
+
+# Constant DT: since our solver parameters are hardcoded it makes sense to also use a constant DT
+DT = 0.02
+# the following are solve_ivp tuning parameters
+ATOL = 1e-8
+RTOL = 1e-8
+DENSE_OUTPUT = True
+
+#--- ODEs and helpers ---#
 
 def base_lv_ode(s: float, w: float, alpha: float, beta: float, gamma: float, delta: float) -> tuple[float, float]:
     ds_dt = alpha * s - beta * s * w
+    dw_dt = -gamma * w + delta * s * w
+    return ds_dt, dw_dt
+
+def lv_star_ode(s: float, w: float, alpha: float, beta: float, gamma: float, delta: float, K: float, A: float) -> tuple[float, float]:
+    if s >= K:
+        ds_dt = min(0.0, alpha * s - beta * s * w)  # at capacity we can shrink but not grow
+                                                    # note that alpha is still here since we might get a decline dampened by growth even at the cap.
+    else:
+        ds_dt = alpha * s - beta * s * w
+
     dw_dt = -gamma * w + delta * s * w
     return ds_dt, dw_dt
 
@@ -11,7 +32,48 @@ def base_lv_ode_ivp(t: float, x: tuple[float, float], alpha: float, beta: float,
     s, w = x
     return base_lv_ode(s, w, alpha, beta, gamma, delta)
 
+def lv_star_ode_ivp(t: float, x: tuple[float, float], alpha: float, beta: float, gamma: float, delta: float, K: float, A: float) -> tuple[float, float]:
+    s, w = x
+    return lv_star_ode(s, w, alpha, beta, gamma, delta, K, A)
 
+def allee_sheep_event(t: float, x: tuple[float, float], alpha: float, beta: float, gamma: float, delta: float, K: float, A: float) -> float:
+    return x[0] - A
+
+def allee_wolf_event(t: float, x: tuple[float, float], alpha: float, beta: float, gamma: float, delta: float, K: float, A: float) -> float:
+    return x[1] - A
+
+def allee_terminal_event(t: float, x: tuple[float, float], alpha: float, beta: float, gamma: float, delta: float, K: float, A: float) -> float:
+    return max(x[0] - A, x[1] - A)
+
+def reset_events() -> None:
+    allee_sheep_event.terminal = False
+    allee_wolf_event.terminal = False
+    allee_terminal_event.terminal = True
+
+def calculate_phase_space_vectors(alpha: float, beta: float, gamma: float, delta: float,
+                                  s0: float, w0: float,
+                                  t_max: float = 50.0) -> np.ndarray:  # removed dt parameter
+    reset_events()
+
+    t_eval = np.arange(0.0, t_max, DT)  # use global DT
+    sol = solve_ivp(
+        base_lv_ode_ivp,
+        [0.0, t_max],
+        [s0, w0],
+        args=(alpha, beta, gamma, delta),
+        method="RK45",
+        t_eval=t_eval,
+        rtol=RTOL,
+        atol=ATOL,
+        dense_output=DENSE_OUTPUT
+    )
+    s = sol.y[0]
+    w = sol.y[1]
+    s = np.maximum(s, 0.0)
+    w = np.maximum(w, 0.0)
+    return np.column_stack([s, w])
+
+#--- Streamlit page rendering ---#
 
 def configure_page() -> None:
     st.set_page_config(
@@ -56,6 +118,10 @@ def render_intro() -> None:
     $$
     """)
 
+def add_sidebar() -> None:
+    st.sidebar.header("Controls")
+    st.sidebar.slider('Time', key="T", value=50.0, min_value=1.0, max_value=250.0, step=1.0)
+
 def add_example_1_sidebar() -> None:
     # group for example 1. the four params and two initial conditions
     # section title for sidebar
@@ -70,7 +136,8 @@ def add_example_1_sidebar() -> None:
 def add_example_2_sidebar() -> None:
     # group for example 2. just carrying capacity K
     st.sidebar.markdown("### Example 2")
-    st.sidebar.number_input("K", value=1000, min_value=0, max_value=1000, step=1)
+    st.sidebar.number_input("K", key="K", value=1000, min_value=0, max_value=1000, step=1)
+    st.sidebar.number_input("A", key="A", value=2, min_value=0, max_value=10, step=1)
 
 def render_example_1() -> None:
     st.markdown("""
@@ -78,23 +145,31 @@ def render_example_1() -> None:
     As we can see from the equations above, we have four parameters and two initial conditions. When we apply fixed positive values to the parameters and pick positive values for the initial conditions, we will
     have a deterministic outcome for the system at any time point $t$. This outcome can be computed by integrating the ODEs of the system (1) for that time point to supply values for states $s(t)$ and $w(t)$.
     """)
+    reset_events()
+    T = st.session_state.T
     alpha = st.session_state.alpha
     beta = st.session_state.beta
     gamma = st.session_state.gamma
     delta = st.session_state.delta
     s_start = st.session_state.s_start
     w_start = st.session_state.w_start
+
+    t_eval = np.arange(0.0, T, DT)
+
     solution = solve_ivp(base_lv_ode_ivp,                  # base system of equations
-                        [0.0, 50.0],                       # time range
+                        [0.0, T],                          # time range
                         [s_start, w_start],                # initial conditions
-                        first_step=0.02,                   # first step size
-                        max_step=0.02,                     # max step size
+                        t_eval=t_eval,                     # time points to evaluate the solution at 
                         args=(alpha, beta, gamma, delta),  # parameters
                         method="RK45",                     # solver
-                        rtol=1e-8,                         # relative tolerance
-                        atol=1e-8)                         # absolute tolerance
+                        rtol=RTOL,                         
+                        atol=ATOL,                         
+                        dense_output=DENSE_OUTPUT          
+                        # here we do not need events, they are irrelevant to base LV
+                        )
     # add labels to the solution arrays by converting solution.y.T to a pandas dataframe and adding a columns field
     solution_df = pd.DataFrame(solution.y.T, columns=["Sheep", "Wolves"])
+    st.caption("Figure 1")
     st.line_chart(solution_df, x_label="Time", y_label="Population Density") # plot the solution
     
     st.markdown("""
@@ -103,17 +178,109 @@ def render_example_1() -> None:
     a phase space plot, where we simply compare the sheep and wolf outcomes, we can see this closed oscillation more clearly.
     """)
 
+    
+    phase_df = pd.DataFrame({
+        "t": solution.t,
+        "Sheep": solution.y[0],
+        "Wolves": solution.y[1],
+    })
+    phase_chart = (
+        alt.Chart(phase_df)
+        .mark_line()
+        .encode(
+            x=alt.X("Sheep:Q", title="Sheep", sort=None),
+            y=alt.Y("Wolves:Q", title="Wolves"),
+            order="t:Q",
+            tooltip=["t:Q", "Sheep:Q", "Wolves:Q"],
+        )
+        .properties(width="container")
+    )
+    st.caption("Figure 2")
+    st.altair_chart(phase_chart, use_container_width=True)
+    
+
 
     
 def render_example_2() -> None:
+    st.markdown(r"""
+    ### Example 2: LV*: Lotka-Volterra with a carrying capacity $K$ and simple Allee effect
+    Early modifications to the Lotka-Volterra system were made to account for the fact that the prey population cannot grow indefinitely. The carrying capacity $K$ was introduced to limit the maximum population size of the prey in particular,
+    which in turn limits the effect maximum population size of the predators.
+
+    The Allee effect was an early extension of the Lotka-Volterra system devised to account for the fact that the prey population cannot grow indefinitely. The Allee effect is a parameter that limits the minimum population size of the prey.
+
+    Here we implement both of these effects in our system in a simple manner. We add a carrying capacity $K$ to as an absolute limit on the prey growth function and a simple Allee threshold value $A$, below which either the prey population or the predator population will crash to zero.
+    Describing these in terms of a system of equations for our LV*, we have:
+
+    $$
+    \begin{aligned}
+    \dot s &= \alpha s - \beta sw \\
+    \dot w &= -\gamma w + \delta sw
+    \end{aligned}
+    \tag{2}
+    $$
+
+    subject to:
+
+    $$
+    \begin{cases}
+    s(t) = \min(s(t), K) \\[0.5em]
+    s(t) = 0 & \text{if } s(t) < A \\[0.5em]
+    w(t) = 0 & \text{if } w(t) < A
+    \end{cases}
+    \tag{2a}
+    $$
+    """)
+    reset_events()
+    T = st.session_state.T
+    A = st.session_state.A
+    K = st.session_state.K
+    s_start = st.session_state.s_start
+    w_start = st.session_state.w_start
+    alpha = st.session_state.alpha
+    beta = st.session_state.beta
+    gamma = st.session_state.gamma
+    delta = st.session_state.delta
+
+    t_eval = np.arange(0.0, T, DT)
+
+    steps = int(round(T / DT)) # for use in the chart
+
+    lv_star_solution = solve_ivp(lv_star_ode_ivp,
+                        [0.0, T],
+                        [s_start, w_start],
+                        args=(alpha, beta, gamma, delta, K, A),
+                        t_eval=t_eval,
+                        method="RK45",
+                        rtol=RTOL,
+                        atol=ATOL,
+                        dense_output=DENSE_OUTPUT,
+                        events=[allee_sheep_event, allee_wolf_event, allee_terminal_event]  # events that change system trajectory
+                        )
+
+    # post process: we do want the chart to show the entire time range generated from T even though our arrays stop.
+    # this makes it easier to compare with the base LV solution.
+    lv_star_solution_df = pd.DataFrame(
+        lv_star_solution.y.T,
+        index=lv_star_solution.t,
+        columns=["Sheep", "Wolves"],
+    ).reindex(t_eval).fillna(0.0)
+
+    # match Example 1's x-axis (sample index 0..T/DT)
+    lv_star_solution_df.index = np.arange(len(t_eval))
+
+    st.caption("Figure 3")
+    st.line_chart(lv_star_solution_df, x_label="Time", y_label="Population Density") # plot the solution
+        
     st.markdown("""
-    ### Example 2: Lotka-Volterra with a carrying capacity $K$
-    
+    Here we can see that the modified LV* system exhibits a new possibility: the system can crash to zero as a result of one or the other species declining beneath the Allee threshold. 
+    Using the sidebar controls for both the example 1 parameters and initial conditions as well as the example 2 modifying thresholds, it is possible to evaluate settings that lead to stability,
+    and ones that lead to system collapse.
     """)
 
 def main() -> None:
     configure_page()
-    render_sidebar()
+    add_sidebar()
     render_intro()
     add_example_1_sidebar()
     add_example_2_sidebar()
