@@ -12,7 +12,6 @@ RTOL = 1e-8
 DENSE_OUTPUT = True
 
 #--- ODEs and helpers ---#
-
 def base_lv_ode(s: float, w: float, alpha: float, beta: float, gamma: float, delta: float) -> tuple[float, float]:
     ds_dt = alpha * s - beta * s * w
     dw_dt = -gamma * w + delta * s * w
@@ -73,25 +72,24 @@ def calculate_phase_space_vectors(alpha: float, beta: float, gamma: float, delta
     w = np.maximum(w, 0.0)
     return np.column_stack([s, w])
 
-#--- Streamlit page rendering ---#
+#--- Streamlit helper ---#
+def reset_to_defaults() -> None:
+    st.session_state.alpha = 1.0
+    st.session_state.beta = 0.1
+    st.session_state.gamma = 1.5
+    st.session_state.delta = 0.75
+    st.session_state.s_start = 10
+    st.session_state.w_start = 10
+    st.session_state.T = 50.0
+    st.session_state.K = 1000
+    st.session_state.A = 2
 
-def configure_page() -> None:
-    st.set_page_config(
-        page_title="Do Android Wolves Dream of Electric Sheep?",
-        page_icon="🐺",
-        layout="wide",
-        initial_sidebar_state="expanded",
-    )
-
-def render_sidebar() -> None:
-    pass
-        
-
+#--- Streamlit page building ---#
 def render_intro() -> None:
     st.markdown(r"""
     ### Tracing from Volterra to our implementation
     The Lotka-Volterra system comprises two ordinary differential equations (ODEs) that describe the dynamics of two interacting species in which one species (predators) consumes members of the other species (prey).
-    We acknowledge that Diz-Pita & Otero-Espinar present the system in a way that faithfully updates Volterra's original two-step development, using the factored-rate form:
+    We acknowledge that Diz-Pita & Otero-Espinar present the system in a way that faithfully updates Prof. Volterra's original two-step development, using the factored-rate form:
     $$
     \dot x = x\,(a - b\,y),\qquad \dot y = y\,(-c + d\,x).
     $$
@@ -120,6 +118,7 @@ def render_intro() -> None:
 
 def add_sidebar() -> None:
     st.sidebar.header("Controls")
+    st.sidebar.button("Reset to defaults", on_click=reset_to_defaults)
     st.sidebar.slider('Time', key="T", value=50.0, min_value=1.0, max_value=250.0, step=1.0)
 
 def add_example_1_sidebar() -> None:
@@ -278,10 +277,30 @@ def render_example_2() -> None:
     and ones that lead to system collapse.
 
     Please note that in this diagram we simply stop processing once either the sheep or the wolves crash to zero. The real dynamics would have the other species following a trajectory to a certain eventual crash (wolves) or explosion (sheep).
+    
+    Below we can see our phase portrait for the LV* system given the parameters and initial conditions we selected.
     """)
 
+    phase_df = pd.DataFrame({
+        "t": lv_star_solution.t,
+        "Sheep": lv_star_solution.y[0],
+        "Wolves": lv_star_solution.y[1],
+    })
+    phase_chart = (
+        alt.Chart(phase_df)
+        .mark_line()
+        .encode(
+            x=alt.X("Sheep:Q", title="Sheep", sort=None),
+            y=alt.Y("Wolves:Q", title="Wolves"),
+            order="t:Q",
+            tooltip=["t:Q", "Sheep:Q", "Wolves:Q"],
+        )
+        .properties(width="container")
+    )
+    st.caption("Figure 4")
+    st.altair_chart(phase_chart, use_container_width=True)
+
 def main() -> None:
-    configure_page()
     add_sidebar()
     render_intro()
     add_example_1_sidebar()
@@ -289,5 +308,4 @@ def main() -> None:
     render_example_1()
     render_example_2()
 
-if __name__ == "__main__":
-    main()
+main()
