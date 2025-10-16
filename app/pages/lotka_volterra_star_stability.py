@@ -156,7 +156,7 @@ def render_analysis() -> None:
 def render_footer() -> None:
     st.divider()
     st.markdown("### Quick Navigation")
-    st.page_link("pages/lv_star_plus_theta.py", label="Next: LV* with theta as a programmed variable", icon="➡️")
+    st.page_link("pages/lv_star_with_theta.py", label="Next: LV* with theta as a programmed variable", icon="➡️")
     st.page_link("pages/home.py", label="Home", icon="🏠")
 
 
