@@ -4,6 +4,8 @@ import pandas as pd
 import numpy as np
 import altair as alt
 
+from utils.lv_core import allee_sheep_event, allee_wolf_event, allee_terminal_event, reset_events
+
 # Constant DT: since our solver parameters are hardcoded it makes sense to also use a constant DT
 DT = 0.02
 # the following are solve_ivp tuning parameters
@@ -35,19 +37,7 @@ def lv_star_ode_ivp(t: float, x: tuple[float, float], alpha: float, beta: float,
     s, w = x
     return lv_star_ode(s, w, alpha, beta, gamma, delta, K, A)
 
-def allee_sheep_event(t: float, x: tuple[float, float], alpha: float, beta: float, gamma: float, delta: float, K: float, A: float) -> float:
-    return x[0] - A
 
-def allee_wolf_event(t: float, x: tuple[float, float], alpha: float, beta: float, gamma: float, delta: float, K: float, A: float) -> float:
-    return x[1] - A
-
-def allee_terminal_event(t: float, x: tuple[float, float], alpha: float, beta: float, gamma: float, delta: float, K: float, A: float) -> float:
-    return max(x[0] - A, x[1] - A)
-
-def reset_events() -> None:
-    allee_sheep_event.terminal = False
-    allee_wolf_event.terminal = False
-    allee_terminal_event.terminal = True
 
 def calculate_phase_space_vectors(alpha: float, beta: float, gamma: float, delta: float,
                                   s0: float, w0: float,
