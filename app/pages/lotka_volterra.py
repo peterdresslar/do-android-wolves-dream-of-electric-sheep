@@ -72,6 +72,22 @@ def calculate_phase_space_vectors(alpha: float, beta: float, gamma: float, delta
     w = np.maximum(w, 0.0)
     return np.column_stack([s, w])
 
+def init_example():
+    reset_events()
+    T = st.session_state.T
+    alpha = st.session_state.alpha
+    beta = st.session_state.beta
+    gamma = st.session_state.gamma
+    delta = st.session_state.delta
+    s_start = st.session_state.s_start
+    w_start = st.session_state.w_start
+    A = st.session_state.A
+    K = st.session_state.K
+
+    t_eval = np.arange(0.0, T, DT)
+    return T, t_eval, alpha, beta, gamma, delta, s_start, w_start, A, K
+
+
 #--- Streamlit helper ---#
 def reset_to_defaults() -> None:
     st.session_state.alpha = 1.0
@@ -170,16 +186,8 @@ def render_example_1() -> None:
     As we can see from the equations above, we have four parameters and two initial conditions. When we apply fixed positive values to the parameters and pick positive values for the initial conditions, we will
     have a deterministic outcome for the system at any time point $t$. This outcome can be computed by integrating the ODEs of the system (1) for that time point to supply values for states $s(t)$ and $w(t)$.
     """)
-    reset_events()
-    T = st.session_state.T
-    alpha = st.session_state.alpha
-    beta = st.session_state.beta
-    gamma = st.session_state.gamma
-    delta = st.session_state.delta
-    s_start = st.session_state.s_start
-    w_start = st.session_state.w_start
-
-    t_eval = np.arange(0.0, T, DT)
+    
+    T, t_eval, alpha, beta, gamma, delta, s_start, w_start, A, K = init_example()
 
     solution = solve_ivp(base_lv_ode_ivp,                  # base system of equations
                         [0.0, T],                          # time range
@@ -261,18 +269,8 @@ def render_example_2() -> None:
     \tag{2a}
     $$
     """)
-    reset_events()
-    T = st.session_state.T
-    A = st.session_state.A
-    K = st.session_state.K
-    s_start = st.session_state.s_start
-    w_start = st.session_state.w_start
-    alpha = st.session_state.alpha
-    beta = st.session_state.beta
-    gamma = st.session_state.gamma
-    delta = st.session_state.delta
 
-    t_eval = np.arange(0.0, T, DT)
+    T, t_eval, alpha, beta, gamma, delta, s_start, w_start, A, K = init_example()
 
     steps = int(round(T / DT)) # for use in the chart
 
