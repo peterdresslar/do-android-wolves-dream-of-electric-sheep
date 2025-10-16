@@ -15,7 +15,6 @@ def base_lv_ode(
     dw_dt = -gamma * w + delta * s * w
     return ds_dt, dw_dt
 
-
 def lv_star_ode(
     s: float,
     w: float,
@@ -35,6 +34,24 @@ def lv_star_ode(
     dw_dt = -gamma * w + delta * s * w
     return ds_dt, dw_dt
 
+def lv_star_with_theta_ode(
+    s: float,
+    w: float,
+    alpha: float,
+    beta: float,
+    gamma: float,
+    delta: float,
+    K: float,
+    A: float,
+    theta: float,
+) -> Tuple[float, float]:
+    if s >= K:
+        ds_dt = min(0.0, alpha * s - theta * beta * s * w)
+    else:
+        ds_dt = alpha * s - theta * beta * s * w
+
+    dw_dt = -gamma * w + theta * delta * beta * s * w
+    return ds_dt, dw_dt
 
 def base_lv_ode_ivp(
     t: float,
@@ -46,7 +63,6 @@ def base_lv_ode_ivp(
 ) -> Tuple[float, float]:
     s, w = x
     return base_lv_ode(s, w, alpha, beta, gamma, delta)
-
 
 def lv_star_ode_ivp(
     t: float,
@@ -60,6 +76,21 @@ def lv_star_ode_ivp(
 ) -> Tuple[float, float]:
     s, w = x
     return lv_star_ode(s, w, alpha, beta, gamma, delta, K, A)
+
+def lv_star_with_theta_ode_ivp(
+    t: float,
+    x: Tuple[float, float],
+    alpha: float,
+    beta: float,
+    gamma: float,
+    delta: float,
+    K: float,
+    A: float,
+    theta: float,
+) -> Tuple[float, float]:
+
+    s, w = x
+    return lv_star_with_theta_ode(s, w, alpha, beta, gamma, delta, K, A, theta)
 
 
 def allee_sheep_event(
