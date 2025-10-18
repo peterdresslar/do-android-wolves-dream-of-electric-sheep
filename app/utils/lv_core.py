@@ -1,8 +1,5 @@
 from __future__ import annotations
 
-from typing import Tuple
-
-
 def allee_sheep_event(
     t: float,
     x: tuple[float, float],
@@ -58,7 +55,7 @@ def base_lv_ode(
     beta: float,
     gamma: float,
     delta: float,
-) -> Tuple[float, float]:
+) -> tuple[float, float]:
     ds_dt = alpha * s - beta * s * w
     dw_dt = -gamma * w + delta * s * w
     return ds_dt, dw_dt
@@ -73,7 +70,7 @@ def lv_star_ode(
     delta: float,
     K: float,
     A: float,
-) -> Tuple[float, float]:
+) -> tuple[float, float]:
     if s >= K:
         # At capacity we can shrink but not grow
         ds_dt = min(0.0, alpha * s - beta * s * w)
@@ -94,7 +91,31 @@ def lv_star_with_theta_ode(
     K: float,
     A: float,
     theta: float,
-) -> Tuple[float, float]:
+) -> tuple[float, float]:
+    if s >= K:
+        ds_dt = min(0.0, alpha * s - theta * beta * s * w)
+    else:
+        ds_dt = alpha * s - theta * beta * s * w
+
+    dw_dt = -gamma * w + theta * delta * beta * s * w
+    return ds_dt, dw_dt
+
+def lv_star_with_adaptive_theta_ode(
+    s: float,
+    w: float,
+    alpha: float,
+    beta: float,
+    gamma: float,
+    delta: float,
+    K: float,
+    A: float,
+    k: float,
+) -> tuple[float, float]:
+    # Compute theta based on current sheep population
+    epsilon = 1e-8
+    theta = (s + epsilon) / ((s + epsilon) + (k * K))
+    
+    # Now use theta just like in lv_star_with_theta_ode
     if s >= K:
         ds_dt = min(0.0, alpha * s - theta * beta * s * w)
     else:
@@ -106,33 +127,33 @@ def lv_star_with_theta_ode(
 
 def base_lv_ode_ivp(
     t: float,
-    x: Tuple[float, float],
+    x: tuple[float, float],
     alpha: float,
     beta: float,
     gamma: float,
     delta: float,
-) -> Tuple[float, float]:
+) -> tuple[float, float]:
     s, w = x
     return base_lv_ode(s, w, alpha, beta, gamma, delta)
 
 
 def lv_star_ode_ivp(
     t: float,
-    x: Tuple[float, float],
+    x: tuple[float, float],
     alpha: float,
     beta: float,
     gamma: float,
     delta: float,
     K: float,
     A: float,
-) -> Tuple[float, float]:
+) -> tuple[float, float]:
     s, w = x
     return lv_star_ode(s, w, alpha, beta, gamma, delta, K, A)
 
 
 def lv_star_with_theta_ode_ivp(
     t: float,
-    x: Tuple[float, float],
+    x: tuple[float, float],
     alpha: float,
     beta: float,
     gamma: float,
@@ -140,10 +161,24 @@ def lv_star_with_theta_ode_ivp(
     K: float,
     A: float,
     theta: float,
-) -> Tuple[float, float]:
+) -> tuple[float, float]:
 
     s, w = x
     return lv_star_with_theta_ode(s, w, alpha, beta, gamma, delta, K, A, theta)
+
+def lv_star_with_adaptive_theta_ode_ivp(
+    t: float,
+    x: tuple[float, float],
+    alpha: float,
+    beta: float,
+    gamma: float,
+    delta: float,
+    K: float,
+    A: float,
+    k: float,
+) -> tuple[float, float]:
+    s, w = x
+    return lv_star_with_adaptive_theta_ode(s, w, alpha, beta, gamma, delta, K, A, k)
 
 
 def reset_events() -> None:
