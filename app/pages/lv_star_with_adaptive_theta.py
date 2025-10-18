@@ -79,13 +79,13 @@ def add_example_1_sidebar() -> None:
         "alpha", key="alpha", value=1.0, min_value=0.0, max_value=10.0, step=0.1
     )
     st.sidebar.number_input(
-        "beta", key="beta", value=0.1, min_value=0.0, max_value=10.0, step=0.1
+        "beta", key="beta", value=1.0, min_value=0.0, max_value=10.0, step=0.1
     )
     st.sidebar.number_input(
-        "gamma", key="gamma", value=1.5, min_value=0.0, max_value=10.0, step=0.1
+        "gamma", key="gamma", value=1.0, min_value=0.0, max_value=10.0, step=0.1
     )
     st.sidebar.number_input(
-        "delta", key="delta", value=0.75, min_value=0.0, max_value=10.0, step=0.1
+        "delta", key="delta", value=1.0, min_value=0.0, max_value=10.0, step=0.1
     )
     st.sidebar.number_input(
         "s_start", key="s_start", value=10, min_value=0, max_value=1000, step=1
