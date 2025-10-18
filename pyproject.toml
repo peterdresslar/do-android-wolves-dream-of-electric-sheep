@@ -3,7 +3,7 @@ name = "do-android-wolves-dream-of-electric-sheep"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.10,<3.12"
+requires-python = ">=3.12"
 dependencies = [
     "openai>=1.61.1",
     "pytest-asyncio>=0.25.3",
@@ -26,7 +26,7 @@ dependencies = [
 ]
 
 [tool.ruff]
-target-version = "py310"
+target-version = "py312"
 exclude = ["alembic"]
 
 [tool.ruff.lint]
